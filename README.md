@@ -23,7 +23,7 @@
 
 ### O Problema: Assimetria de Informação no Microcrédito
 
-O mercado de microcrédito informal — popularmente conhecido como crédito *"gota a gota"* — representa uma das maiores falhas estruturais do sistema financeiro latino-americano. Microempreendedores formais e informais, desprovidos de histórico de crédito bancário, são sistematicamente excluídos das instituições financeiras tradicionais, sendo forçados a recorrer a agiotas com taxas de juros predatórias que comprometem a sustentabilidade de seus negócios.
+O mercado de crédito informal de alta frequência representa uma das maiores falhas estruturais do sistema financeiro latino-americano. Microempreendedores formais e informais, desprovidos de histórico de crédito bancário tradicional, são sistematicamente excluídos do sistema financeiro convencional. Consequentemente, são forçados a recorrer a fontes alternativas não regulamentadas, sujeitando-se a um custo de capital desproporcional e estruturação predatória que comprometem a sustentabilidade e escalabilidade de seus negócios.
 
 ### A Solução: *Revealed Preferences* como Sinal de Crédito
 
@@ -196,6 +196,7 @@ Os dados transacionais brutos contidos em `data/raw/` são **omitidos do version
 - **Kalbfleisch, J. D. & Prentice, R. L.** (2002). *The Statistical Analysis of Failure Time Data* (2nd ed.). Wiley.
 - **Kvamme, H., Borgan, Ø., & Scheel, I.** (2019). Time-to-event prediction with neural networks and Cox regression. *Journal of Machine Learning Research*, 20(129), 1–30.
 - **Davidson-Pilon, C.** (2019). *lifelines: survival analysis in Python*. Journal of Open Source Software, 4(40), 1317.
+- **Kim, Jong-Min (Deep Learning em Análise de Sobrevivência):** Literatura seminal recomendada pela orientação (Prof. Dr. Vicente Garibay Cancho) que fundamenta matematicamente a transição dos modelos clássicos de riscos proporcionais para arquiteturas de Redes Neurais baseadas em cópulas e funções de perda adaptadas à censura.
 
 ---
 
