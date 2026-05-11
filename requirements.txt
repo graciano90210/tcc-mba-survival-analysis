@@ -1,0 +1,8 @@
+pandas
+numpy
+lifelines
+scikit-learn
+selenium
+jupyter
+matplotlib
+seaborn
