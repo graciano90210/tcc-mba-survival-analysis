@@ -3,6 +3,8 @@ numpy
 lifelines
 scikit-learn
 selenium
+webdriver-manager
+python-dotenv
 jupyter
 matplotlib
 seaborn
