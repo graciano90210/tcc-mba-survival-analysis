@@ -1,7 +1,11 @@
 venv/
 data/raw/
+data/processed/
+logs/
 __pycache__/
 .ipynb_checkpoints/
 *.pyc
 *.pyo
 .env
+*.xlsx
+*.docx

@@ -17,6 +17,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -181,40 +182,65 @@ class ListoMasivoExtractor(ListoDataExtractor):
         mainFrame. Na inicialização do formulário fresco, SELECT2 lê o valor
         do <select> subjacente — então Select().select_by_value() funciona
         corretamente logo após a repopulação AJAX das opções.
+
+        Reintentos: hasta 3 intentos ante StaleElementReferenceException,
+        con 3 s de pausa entre cada uno (el AJAX de rutas puede no haber
+        terminado cuando el SELECT ya fue encontrado pero aún no estabilizado).
         """
-        espera = WebDriverWait(self.driver, 20)
+        MAX_INTENTOS = 3
 
-        self.driver.switch_to.default_content()
-        self.driver.switch_to.frame(0)
-        espera.until(EC.frame_to_be_available_and_switch_to_it("leftFrame"))
+        for intento in range(1, MAX_INTENTOS + 1):
+            try:
+                espera = WebDriverWait(self.driver, 20)
 
-        def _js_click(xpath: str) -> None:
-            el = espera.until(EC.presence_of_element_located((By.XPATH, xpath)))
-            self.driver.execute_script("arguments[0].click();", el)
+                self.driver.switch_to.default_content()
+                self.driver.switch_to.frame(0)
+                espera.until(EC.frame_to_be_available_and_switch_to_it("leftFrame"))
 
-        _js_click("//op[normalize-space()='Reportes']")
-        _js_click("//op[normalize-space()='Recaudador']")
-        _js_click("//a[contains(@href,'ReportePlanillaReacudadorConAbono')]")
+                def _js_click(xpath: str) -> None:
+                    el = espera.until(EC.presence_of_element_located((By.XPATH, xpath)))
+                    self.driver.execute_script("arguments[0].click();", el)
 
-        self.driver.switch_to.default_content()
-        self.driver.switch_to.frame(0)
-        espera.until(EC.frame_to_be_available_and_switch_to_it("mainFrame"))
-        espera.until(EC.presence_of_element_located((By.ID, "sltOficina")))
+                _js_click("//op[normalize-space()='Reportes']")
+                _js_click("//op[normalize-space()='Recaudador']")
+                _js_click("//a[contains(@href,'ReportePlanillaReacudadorConAbono')]")
 
-        Select(self.driver.find_element(By.ID, "sltOficina")).select_by_value(id_ofi)
+                self.driver.switch_to.default_content()
+                self.driver.switch_to.frame(0)
+                espera.until(EC.frame_to_be_available_and_switch_to_it("mainFrame"))
+                espera.until(EC.presence_of_element_located((By.ID, "sltOficina")))
 
-        espera.until(
-            lambda d: any(
-                o.get_attribute("value") == id_rta
-                for o in d.find_elements(By.CSS_SELECTOR, "#cmbRutas option")
-            )
-        )
-        Select(self.driver.find_element(By.ID, "cmbRutas")).select_by_value(id_rta)
-        Select(self.driver.find_element(By.ID, "cmbFiltro")).select_by_value("2")
+                # Pausa extra para que el AJAX de rutas se estabilice antes de interactuar
+                time.sleep(2)
 
-        self.logger.info(
-            "  Selects → OFI %s | RTA %s | Detallado", id_ofi, id_rta
-        )
+                Select(self.driver.find_element(By.ID, "sltOficina")).select_by_value(id_ofi)
+
+                espera.until(
+                    lambda d: any(
+                        o.get_attribute("value") == id_rta
+                        for o in d.find_elements(By.CSS_SELECTOR, "#cmbRutas option")
+                    )
+                )
+
+                time.sleep(1)  # margen para que SELECT2 termine de inicializar
+
+                Select(self.driver.find_element(By.ID, "cmbRutas")).select_by_value(id_rta)
+                Select(self.driver.find_element(By.ID, "cmbFiltro")).select_by_value("2")
+
+                self.logger.info(
+                    "  Selects → OFI %s | RTA %s | Detallado", id_ofi, id_rta
+                )
+                return  # éxito
+
+            except StaleElementReferenceException:
+                if intento < MAX_INTENTOS:
+                    self.logger.warning(
+                        "  [STALE] OFI %s / RTA %s — intento %d/%d, reintentando en 3 s...",
+                        id_ofi, id_rta, intento, MAX_INTENTOS,
+                    )
+                    time.sleep(3)
+                else:
+                    raise  # agota reintentos → el caller lo captura como ERROR-SELECT
 
     def _validar_presencia_de_abonos(self) -> bool:
         """
@@ -388,6 +414,20 @@ class ListoMasivoExtractor(ListoDataExtractor):
                     )
 
                     try:
+                        # Early-exit: si el archivo ya existe, saltar sin
+                        # tocar el formulario ni descargar nada.
+                        nombre_bloque = (
+                            f"planilla_abonos_"
+                            f"{cursor.strftime('%Y%m%d')}_"
+                            f"{fecha_hasta.strftime('%Y%m%d')}.xlsx"
+                        )
+                        if (dir_destino / nombre_bloque).exists():
+                            self.logger.info(
+                                "[YA EXISTE] %s — bloque omitido.", nombre_bloque
+                            )
+                            cursor = fecha_hasta + timedelta(days=1)
+                            continue
+
                         self._cerrar_modal_si_existe()
 
                         campo_fecha = espera.until(
@@ -478,10 +518,10 @@ if __name__ == "__main__":
         extractor.login(ListoDataExtractor.URL_LISTO, usuario, contrasena, ruta)
         time.sleep(8)  # margen extra para que el frameset cargue con sesiones simultáneas
         extractor.ejecutar_maraton_extractora(
-            # OFI_23 / RTA_82 (JUAN SP) ya está completa en data/raw/*.xlsx
-            # Arrancamos desde la siguiente ruta de SAO PAULO.
-            id_oficina_inicio="23",
-            id_ruta_inicio="96",
+            # OFI_23 completa (1.630 arch.) | OFI_31 completa (1.163 arch.)
+            # OFI_44 completa salvo RTA_114 que falló por stale element.
+            id_oficina_inicio="44",
+            id_ruta_inicio="114",
         )
     finally:
         extractor.cerrar()
