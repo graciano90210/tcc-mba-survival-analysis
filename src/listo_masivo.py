@@ -174,33 +174,44 @@ class ListoMasivoExtractor(ListoDataExtractor):
 
     def _seleccionar_oficina_y_ruta(self, id_ofi: str, id_rta: str) -> None:
         """
-        Cambia sltOficina y cmbRutas en mainFrame sin re-navegar el menú.
-        Espera el AJAX de repoblación entre ambos cambios.
+        Navega ao menu e reabre o formulário para a oficina/ruta indicada.
+
+        Re-navegar é necessário porque SELECT2 (widget de cmbRutas) ignora
+        eventos nativos e o jQuery ($) não está disponível no contexto do
+        mainFrame. Na inicialização do formulário fresco, SELECT2 lê o valor
+        do <select> subjacente — então Select().select_by_value() funciona
+        corretamente logo após a repopulação AJAX das opções.
         """
         espera = WebDriverWait(self.driver, 20)
 
-        self.driver.execute_script(
-            "var s=document.getElementById('sltOficina');"
-            "s.value=arguments[0];"
-            "s.dispatchEvent(new Event('change',{bubbles:true}));",
-            id_ofi,
-        )
+        self.driver.switch_to.default_content()
+        self.driver.switch_to.frame(0)
+        espera.until(EC.frame_to_be_available_and_switch_to_it("leftFrame"))
+
+        def _js_click(xpath: str) -> None:
+            el = espera.until(EC.presence_of_element_located((By.XPATH, xpath)))
+            self.driver.execute_script("arguments[0].click();", el)
+
+        _js_click("//op[normalize-space()='Reportes']")
+        _js_click("//op[normalize-space()='Recaudador']")
+        _js_click("//a[contains(@href,'ReportePlanillaReacudadorConAbono')]")
+
+        self.driver.switch_to.default_content()
+        self.driver.switch_to.frame(0)
+        espera.until(EC.frame_to_be_available_and_switch_to_it("mainFrame"))
+        espera.until(EC.presence_of_element_located((By.ID, "sltOficina")))
+
+        Select(self.driver.find_element(By.ID, "sltOficina")).select_by_value(id_ofi)
+
         espera.until(
             lambda d: any(
                 o.get_attribute("value") == id_rta
                 for o in d.find_elements(By.CSS_SELECTOR, "#cmbRutas option")
             )
         )
-        # SELECT2 requires JS dispatch — Select().select_by_value() only sets the
-        # underlying <select> value but does not trigger the SELECT2 visual update,
-        # causing the form to submit whichever route was previously active.
-        self.driver.execute_script(
-            "var sel=document.getElementById('cmbRutas');"
-            "sel.value=arguments[0];"
-            "sel.dispatchEvent(new Event('change',{bubbles:true}));",
-            id_rta,
-        )
+        Select(self.driver.find_element(By.ID, "cmbRutas")).select_by_value(id_rta)
         Select(self.driver.find_element(By.ID, "cmbFiltro")).select_by_value("2")
+
         self.logger.info(
             "  Selects → OFI %s | RTA %s | Detallado", id_ofi, id_rta
         )
