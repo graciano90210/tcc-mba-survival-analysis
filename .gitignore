@@ -9,3 +9,5 @@ __pycache__/
 .env
 *.xlsx
 *.docx
+!documentotcc/Projeto_Pesquisa_TCC_V*.docx
+!documentotcc/TCC_V*_Español_Completo.docx
