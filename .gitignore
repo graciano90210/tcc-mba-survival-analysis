@@ -11,5 +11,5 @@ __pycache__/
 *.pdf
 *.docx
 !documentotcc/Projeto_Pesquisa_TCC_V2[1-9]*.docx
-!documentotcc/TCC_V*_Español_Completo.docx
+!documentotcc/TCC_V*_Espa?ol_Completo.docx
 documentotcc/.~lock.*
