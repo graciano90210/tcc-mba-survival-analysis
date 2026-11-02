@@ -36,13 +36,13 @@ Se marca con [x] cuando queda resuelto. Última actualización: 02/11/2026.
 ## Adelanto para Isadora (enviar el domingo 08/11/2026)
 Recomendaciones de Isadora y dónde se atienden:
 - [x] 1. Resumo simple (V26); barreras de la extracción explicadas sin jerga y *Data Stitching* definido (§4.1 y §4.2, 02/11).
-- [ ] 2. Justificar granularidad diaria contra mensual (§4, mié 4): 7 días alerta antes que 10 (73% contra 61%
+- [x] 2. Justificar granularidad diaria contra mensual (§5.3, 02/11): 7 días alerta antes que 10 (73% contra 61%
       en el día 14); lo mensual no ve pago incompleto ni domingos/feriados.
 - [ ] 3. Referencias recientes, contexto socioeconómico, comparación entre clases sociales (§2, vie 6; regiones
       por DDD ya disponibles, clases con CNEFE/renta como trabajo en curso).
 - [x] 4. Reducir travessões (hecho el 02/11 en toda la V27).
 - [ ] 5. Artículos contemporáneos de supervivencia y métricas de crédito después de 2002 (§2, vie 6).
-- [ ] 6. Sentido práctico de covariables que cambian por bloque: riesgo actualizado cada semana (§4, mié 4).
+- [x] 6. Sentido práctico de covariables que cambian por bloque: riesgo actualizado cada semana (§5.3, 02/11).
 - [x] 7. Tratamiento de datos ausentes o inconsistentes: §4.3 con tabla de auditoría (02/11).
 - [ ] 8. Itálico en todos los términos extranjeros (sáb 7).
 - [ ] 9. Párrafo de transición del EDA a los modelos (§5, jue 5).

@@ -193,7 +193,8 @@ def add_centered(doc, text, size=12, bold=False, spacing=1.5):
     return p
 
 
-def add_table_data(doc, headers, rows, caption_text, table_num, fonte=FONTE_PADRAO):
+def add_table_data(doc, headers, rows, caption_text, table_num, fonte=FONTE_PADRAO, larguras=None):
+    """larguras: lista com a largura de cada coluna em cm (padrão: colunas iguais)."""
     table_num = _numero("tab", table_num)
     REGISTRO["tabelas"].append((table_num, caption_text))
     cap = doc.add_paragraph()
@@ -217,6 +218,13 @@ def add_table_data(doc, headers, rows, caption_text, table_num, fonte=FONTE_PADR
             cells[c_idx].text = _refs(str(val))
             for r in cells[c_idx].paragraphs[0].runs:
                 r.font.name = "Arial"; r.font.size = Pt(10)
+    if larguras:
+        table.autofit = False
+        for col, w in zip(table.columns, larguras):
+            col.width = Cm(w)
+        for row in table.rows:
+            for cell, w in zip(row.cells, larguras):
+                cell.width = Cm(w)
     _add_fonte(doc, fonte)
     doc.add_paragraph()
     return table
@@ -1036,7 +1044,8 @@ def build_secao_3(doc):
          ["Extração longa sujeita a quedas",
           "Uma falha obrigaria a recomeçar do zero",
           "O robô guarda o último relatório baixado, retoma desse ponto e pula os já existentes"]],
-        "Principais dificuldades da extração e soluções adotadas", "barreiras")
+        "Principais dificuldades da extração e soluções adotadas", "barreiras",
+        larguras=[4.2, 5.4, 6.4])
     add_body(doc,
         "Ao final, foram baixados 3.962 relatórios de 3 escritórios e 17 rotas, cobrindo o "
         "período de 1º de janeiro de 2020 a 15 de maio de 2026.")
@@ -1097,7 +1106,8 @@ def build_secao_3(doc):
          ["Domingos e feriados",
           "Não há cobrança nesses dias",
           "O atraso é medido em dias de cobrança, por estado"]],
-        "Auditoria dos dados: problemas encontrados e tratamento", "auditoria")
+        "Auditoria dos dados: problemas encontrados e tratamento", "auditoria",
+        larguras=[5.0, 5.5, 5.5])
     add_body(doc,
         "Dos 28.849 créditos lidos, 699 foram excluídos pelos critérios da Tabela "
         "{tab:auditoria} e 1 por não ter dados de contrato, restando 28.149 créditos de "
@@ -1178,7 +1188,7 @@ def build_secao_3(doc):
         "externas; (3) comprometimento: gerenciado com entregas iterativas por Sprint; "
         "(4) recursos humanos: risco baixo por ser pesquisa individual; "
         "(5) fornecedores: mitigado pela independência do Sistema ATLAS (solução in-house); "
-        "(6) segurança da informação: LGPD + .gitignore + pseudonimização; "
+        "(6) segurança da informação: LGPD, exclusão dos dados do repositório e pseudonimização; "
         "(7) expectativas de tempo: cronograma CRISP-DS com 7 Sprints Scrum.")
     add_body(doc,
         "A formatação deste documento e pequenos trechos de código contaram com apoio pontual "
@@ -1189,176 +1199,144 @@ def build_secao_3(doc):
 # ── SEÇÃO 4 ──────────────────────────────────────────────────────────────────
 
 def build_secao_4(doc):
-    add_heading(doc, "5  ENGENHARIA DE VARIÁVEIS E DEFINIÇÃO DO EVENTO TARGET", level=1)
+    add_heading(doc, "5  DEFINIÇÃO DO EVENTO E ENGENHARIA DE ATRIBUTOS", level=1)
+    add_body(doc,
+        "Este capítulo apresenta as ideias de análise de sobrevivência usadas no trabalho, "
+        "explica como foi definido o desfecho de cada crédito e mostra como os pagamentos "
+        "diários foram transformados nas variáveis que alimentam os modelos.")
 
-    add_heading(doc, "5.1  Fundamentos Teóricos da Análise de Sobrevivência", level=2)
+    add_heading(doc, "5.1  Conceitos de Análise de Sobrevivência", level=2)
     add_body(doc,
-        "Diferentemente da regressão logística, que estimaria a probabilidade de default do "
-        "microempreendedor em um ponto fixo do tempo, sem capturar quando isso ocorre, este "
-        "trabalho recorre à análise de sobrevivência (Kalbfleisch e Prentice, 2002): um "
-        "ferramental que incorpora explicitamente a dimensão temporal, distinguindo os "
-        "créditos que efetivamente entraram em default daqueles observados sem esse desfecho "
-        "até o corte do estudo (censurados).")
+        "A análise de sobrevivência estuda o tempo até a ocorrência de um evento "
+        "(Kalbfleisch e Prentice, 2002; Klein e Moeschberger, 2003). Aqui, o tempo é contado "
+        "em dias desde o desembolso do crédito, e o evento de interesse é o default. A "
+        "diferença em relação a uma regressão logística comum é que a análise de "
+        "sobrevivência considera não só se o evento acontece, mas também quando, e aproveita "
+        "a informação dos créditos que ainda estão em andamento.")
+    add_body(doc,
+        "Esses créditos em andamento são chamados de censurados. Em 15 de maio de 2026, data "
+        "de corte do estudo, alguns créditos ainda estavam abertos: sabe-se que até ali não "
+        "houve default, mas não se sabe o que acontecerá depois. Descartá-los ou tratá-los "
+        "como bons pagadores distorceria o resultado; a análise de sobrevivência os usa até o "
+        "último dia observado.")
+    add_body(doc,
+        "Duas funções resumem esse tipo de dado. A função de sobrevivência, S(t), é a "
+        "probabilidade de o crédito ainda não ter sofrido o evento no dia t:")
+    add_formula(doc, "S(t) = P(T > t)")
+    add_body(doc, indent_first=False, text=
+        "em que T é o dia em que o evento ocorre. A função de risco, h(t), é a chance de o "
+        "evento acontecer exatamente no dia t entre os créditos que chegaram até ali sem ele. "
+        "O estimador de Kaplan e Meier (1958) calcula S(t) diretamente dos dados, sem supor "
+        "nenhuma forma para a distribuição do tempo.")
+    add_body_italico(doc,
+        "Neste problema, porém, cada crédito pode terminar de duas formas que competem "
+        "entre si: em default (o cliente abandona o crédito) ou em cura (o cliente paga tudo). "
+        "Uma impede a outra, situação chamada de riscos competitivos. Tratar a cura como "
+        "simples censura, como faz o Kaplan-Meier comum, superestima o risco, porque supõe que "
+        "quem já pagou tudo ainda poderia entrar em default. A medida correta é a função de "
+        "incidência acumulada (CIF, *cumulative incidence function*), que dá a probabilidade "
+        "de o crédito ter terminado em default até o dia t, considerando que a maioria termina "
+        "antes em cura.")
+    add_body_italico(doc,
+        "Para relacionar o risco com as características do crédito e do cliente, o modelo de "
+        "Cox (1972) é a referência clássica. Ele estima quanto cada variável multiplica o "
+        "risco de default, medida chamada razão de risco (*hazard ratio*): uma razão de 2 "
+        "indica risco duas vezes maior. O modelo de Fine e Gray (1999) adapta essa ideia aos "
+        "riscos competitivos e modela diretamente a incidência acumulada de default. Por isso "
+        "ele é o modelo principal deste trabalho, como detalhado no Capítulo 7.")
 
-    add_heading(doc, "5.1.1  Função de Sobrevivência e Função de Risco", level=3)
+    add_heading(doc, "5.2  Definição dos Desfechos", level=2)
     add_body(doc,
-        "Neste trabalho, T representa o tempo até a inadimplência técnica de um crédito "
-        "(dias_sem_pagar maior ou igual a 120), e a probabilidade de o crédito permanecer ativo além de um "
-        "instante t é dada pela função de sobrevivência:")
-    add_formula(doc, "S(t) = P(T > t) = 1 − F(t)")
-    add_body(doc,
-        "em que F(t) é a função de distribuição acumulada de T. Já a taxa instantânea de "
-        "default no momento t, condicional a o crédito ainda estar ativo até ali, é capturada "
-        "pela função de risco:")
-    add_formula(doc, "h(t) = lim[Δt→0] P(t ≤ T < t+Δt | T ≥ t) / Δt = f(t) / S(t)")
-    add_body(doc, "As duas funções não são independentes: conhecendo uma, a outra fica determinada:")
-    add_formula(doc, "S(t) = exp(−∫₀ᵗ h(u) du) = exp(−H(t))")
-    add_body(doc,
-        "com H(t) sendo o risco acumulado até t. É justamente h(t) que o Modelo de Cox modela "
-        "como função das covariáveis do crédito, tornando essa relação o alicerce matemático "
-        "de toda a Seção 6.")
-
-    add_heading(doc, "5.1.2  Tipos de Censura e Truncação à Esquerda", level=3)
-    add_body(doc,
-        "A censura à direita (right censoring) ocorre quando o evento não ocorreu antes do fim "
-        "da observação, aplicável aos créditos ativos no corte do estudo (15 de maio de 2026). "
-        "A truncação à esquerda (left truncation) ocorre quando o primeiro snapshot de um crédito "
-        "corresponde a uma data posterior ao seu desembolso. O formato Counting Process trata "
-        "corretamente ambos os fenômenos (Therneau e Grambsch, 2000).")
-
-    add_heading(doc, "5.1.3  Estimador de Kaplan-Meier", level=3)
-    add_body(doc,
-        "Para estimar S(t) diretamente a partir da carteira de crédito, sem impor uma forma "
-        "distribucional a T, recorre-se ao estimador de Kaplan e Meier (1958). Denotando por "
-        "dⱼ o número de créditos que entram em default e por nⱼ o número de créditos ainda em "
-        "risco em cada tempo de evento tⱼ, o estimador é o produto:")
-    add_formula(doc, "Ŝ(t) = ∏[j: tⱼ ≤ t] (1 − dⱼ/nⱼ)")
-    add_body(doc,
-        "Três características tornam esse estimador adequado à carteira analisada: converge "
-        "para o S(t) verdadeiro à medida que a amostra cresce, dispensa qualquer suposição "
-        "sobre a forma de T, e trata corretamente a censura, créditos ainda ativos continuam "
-        "contribuindo ao denominador nⱼ até o instante em que deixam de ser observados. A "
-        "incerteza da estimativa é quantificada pela fórmula de Greenwood: "
-        "Var[Ŝ(t)] = Ŝ(t)² × Σ[dⱼ/(nⱼ(nⱼ−dⱼ))].")
-
-    add_heading(doc, "5.1.4  Teste de Log-Rank", level=3)
-    add_body(doc,
-        "Comparar as curvas de sobrevivência entre grupos de crédito (por exemplo, entre "
-        "escritórios) sem assumir uma forma paramétrica é o papel do teste de log-rank de "
-        "Mantel (1966), utilizado na Seção 5.6.4 para contrastar OFI_23 e OFI_44. A hipótese "
-        "testada é a igualdade das curvas entre grupos ao longo de todo o período "
-        "(H₀: S₁(t) = S₂(t) para todo t), e o estatístico resultante segue uma distribuição "
-        "χ² com (k−1) graus de liberdade sob H₀, com maior poder para detectar diferenças "
-        "concentradas na cauda da distribuição, justamente onde estão os créditos de maior risco.")
-
-    add_heading(doc, "5.1.5  Processo de Contagem de Anderson-Gill", level=3)
-    add_body(doc,
-        "Quando as covariáveis mudam ao longo do seguimento (como saldo devedor, cuotas "
-        "atrasadas e dias_sem_pagar), é necessário o marco do Processo de Contagem de "
-        "Anderson e Gill (1982). O indivíduo i é representado por uma sequência de intervalos:")
-    add_formula(doc, "(t_start₁, t_stop₁, δ₁, X_{i1}), (t_start₂, t_stop₂, δ₂, X_{i2}), ...")
-    add_body(doc,
-        "Restrições: (1) intervalos contíguos: t_start[k] = t_stop[k−1]; (2) evento δ=1 apenas "
-        "no último intervalo; (3) intervalos abertos à esquerda e fechados à direita: (t_start, t_stop]. "
-        "Implementado em lifelines.CoxTimeVaryingFitter e pycox.")
-
-    add_heading(doc, "5.2  Definição Operacional da Inadimplência na Alta Frequência", level=2)
-    add_body(doc,
-        "A definição do evento requer atenção especial no contexto de microcrédito diário. "
-        "O campo CUOTAS_ATRASADAS registra o número de cotas diárias pendentes no snapshot: "
-        "para créditos de 20 a 40 dias, seu máximo teórico é exatamente CUOTAS_PACTADAS. "
-        "O umbral original de 120 cotas atrasadas é operacionalmente impossível, produzindo "
-        "zero eventos. A definição adotada é o castigo de carteira operativo da instituição:")
-    add_formula(doc, "E_i = 𝟙[dias_sem_pagar_{it} ≥ 120 dias calendário]")
-    add_body(doc,
-        "Este umbral, equivalente a 4 meses de inatividade financeira total, distingue "
-        "mora transitória (cronômetro reiniciado por qualquer abono) de abandono real "
-        "(inatividade superior a 4 vezes o prazo máximo do crédito). "
-        "Critério de inclusão: coorte diária com CUOTAS_PACTADAS até 40.")
-
-    add_heading(doc, "5.3  Estrutura Bimodal de Atributos e Estratégia de Proxy", level=2)
-    add_body(doc,
-        "As covariáveis disponíveis dividem-se em dois grupos: (1) Variáveis Estáticas: "
-        "parâmetros do crédito (valor total, valor da cota, cotas pactadas); (2) Variáveis "
-        "Dinâmicas (Heartbeat), vetor longitudinal de pagamentos, cuotas atrasadas, "
-        "intensidade transacional dos abonos e dias com abono, capturando a 'frequência "
-        "cardíaca' financeira do empreendedor. Os identificadores ofi_id e rta_id atuam "
-        "como proxies geodemográficos para capturar o comportamento de risco local.")
-
-    add_heading(doc, "5.4  Formatação Anderson-Gill (Counting Process)", level=2)
-    add_body(doc,
-        "A Matriz Mestra é transformada em intervalos longitudinais contínuos (t_start, t_stop]. "
-        "Dois desafios matemáticos críticos foram resolvidos:")
-    add_labeled(doc, "Left Truncation:",
-        "t_start(primeira linha) = max(0, data_ini_bloco − DATA_CRÉDITO) em dias. "
-        "Previne tempos de vida negativos que colapsariam a função de verossimilhança.")
-    add_labeled(doc, "Continuidade de Markov:",
-        "t_start[n] = t_stop[n−1] via shift(), eliminando gaps temporais que fariam o modelo "
-        "assumir o desaparecimento artificial do cliente entre snapshots.")
-    add_formula(doc, "t_stop[t] = (data_fim_bloco[t] − DATA_CRÉDITO).dias + 1")
-    add_formula(doc, "t_start[t] = t_stop[t−1]  para  t > 1")
-
-    add_heading(doc, "5.5  Construção do Dataset de Sobrevivência", level=2)
-    add_body(doc,
-        "A granularidade de 10 dias adotada para os intervalos (t_start, t_stop] merece "
-        "uma justificativa explícita, já que o Sistema ATLAS restringe a extração a blocos "
-        "de 10 dias, mas o relatório subjacente traz, em cada extração, colunas de "
-        "pagamento diário, a granularidade diária, portanto, está disponível na origem. "
-        "A opção por reportar o cronômetro dias_sem_pagar a cada 10 dias, e não "
-        "diariamente, é um compromisso consciente entre fidelidade temporal e "
-        "viabilidade computacional: monitorar a cada 10 dias um evento cujo limiar é de "
-        "120 dias equivale a uma frequência de amostragem cerca de 12 vezes maior do que a "
-        "escala do próprio fenômeno, de forma análoga ao teorema da amostragem, e o "
-        "cronômetro dias_sem_pagar preserva precisão diária internamente via forward-fill, "
-        "não perdendo informação na definição do evento. Reconstruir o dataset em "
-        "granularidade diária multiplicaria o número de linhas em cerca de 10 vezes "
-        "(de ~301 mil para ~3 milhões), tornando o treinamento do Cox e do DeepSurv "
-        "substancialmente mais custoso sem benefício claro para esse objetivo específico. "
-        "Para não descartar por completo o sinal diário disponível na origem, duas novas "
-        "covariáveis foram incorporadas a cada bloco de 10 dias: variabilidade_pago_diario "
-        "(desvio-padrão do pagamento diário dentro do bloco) e "
-        "dias_desde_ultimo_abono_no_bloco (recência do último pagamento dentro do próprio "
-        "bloco, complementando dias_sem_pagar, que mede a recência ao longo de todo o "
-        "histórico do crédito). A reconstrução em granularidade diária permanece como "
-        "direção de trabalho futuro caso o Sprint 5 revele que o sinal agregado por bloco "
-        "é insuficiente.")
-    add_body(doc,
-        "O dataset final no formato Counting Process contém as seguintes variáveis:")
-
+        "O desfecho de cada crédito foi reconstruído a partir das datas reais dos "
+        "pagamentos, com as regras confirmadas pela operação da instituição e resumidas na "
+        "Tabela {tab:desfechos}.")
     add_table_data(doc,
-        ["Coorte", "Critério", "Créditos"],
-        [["Diária (incluída)", "CUOTAS_PACTADAS até 40", "28.386"],
-         ["Semanal/quinzenal/mensal (excluída)", "CUOTAS_PACTADAS acima de 40", "Não incluída"]],
-        "Filtro de coorte diária: critério e créditos retidos", table_num=9)
+        ["Desfecho", "Regra", "Créditos", "%"],
+        [["Default",
+          "120 dias corridos sem nenhum pagamento, contados do último pagamento (ou do desembolso, se nunca pagou)",
+          "200", "0,71"],
+         ["Cura",
+          "Pagamento acumulado de pelo menos 98% do total antes de qualquer silêncio de 120 dias",
+          "27.191", "96,60"],
+         ["Censura",
+          "Nenhum dos dois até 15 de maio de 2026",
+          "758", "2,69"],
+         ["Total", "", "28.149", "100,00"]],
+        "Definição dos desfechos e quantidade de créditos em cada um", "desfechos",
+        larguras=[2.3, 9.7, 2.2, 1.8])
+    add_body(doc,
+        "O limite de 120 dias é a regra que a própria instituição usa para considerar um "
+        "crédito perdido. Ele separa o atraso passageiro do abandono: um comerciante pode "
+        "ficar doente ou viajar por um ou dois meses e depois voltar a pagar, e nos dados há "
+        "créditos que se recuperam depois de mais de um mês sem pagamento. Meses depois do "
+        "abandono, a instituição faz a baixa contábil do crédito com um lançamento pelo "
+        "saldo; esse lançamento não é pagamento do cliente e não altera o desfecho, que já "
+        "foi marcado no dia 120.")
+    add_body(doc,
+        "O default é raro: 200 créditos em 28.149, ou 0,71%. Essa raridade orienta a escolha "
+        "das métricas de avaliação, que precisam medir se o modelo encontra esses poucos "
+        "casos entre milhares de créditos bons (Capítulo 7).")
 
-    add_table_data(doc,
-        ["Variável", "Tipo", "Descrição"],
-        [["t_start", "Contínua", "Início do intervalo (dias desde o desembolso)"],
-         ["t_stop",  "Contínua", "Fim do intervalo (dias desde o desembolso)"],
-         ["evento",  "Binária",  "1 = default (dias_sem_pagar maior ou igual a 120), 0 = censura"],
-         ["dias_sem_pagar", "Discreta", "Cronômetro de inatividade financeira"]],
-        "Variáveis de tempo e evento do dataset de sobrevivência", table_num=10)
+    add_heading(doc, "5.3  Granularidade dos Dados: Dados Diários e Blocos de 7 Dias", level=2)
+    add_body(doc,
+        "Os créditos estudados duram de 20 a 50 dias e são pagos diariamente. Em uma visão "
+        "mensal, como a dos modelos tradicionais de crédito, um crédito inteiro caberia em "
+        "uma ou duas fotografias, e não seria possível ver o que realmente antecede o "
+        "abandono: semanas sem pagamento, parcelas pagas pela metade ou a retomada depois de "
+        "um atraso. Os registros diários permitem medir esses comportamentos e também "
+        "distinguir os dias em que simplesmente não há cobrança, como domingos e feriados, "
+        "dos dias em que o cliente deixou de pagar.")
+    add_body(doc,
+        "Isso não exige recalcular o modelo todos os dias. A vida de cada crédito é dividida "
+        "em blocos, e no início de cada bloco as variáveis são recalculadas usando apenas a "
+        "informação disponível naquele dia, sem nenhuma informação do futuro. Esse formato, "
+        "em que o mesmo crédito aparece em vários intervalos consecutivos, é o processo de "
+        "contagem de Andersen e Gill (1982). O bloco principal tem 7 dias, um ciclo completo "
+        "de cobrança (segunda a sábado, com o domingo livre); blocos de 10 dias, o tamanho "
+        "das janelas de extração, foram usados como comparação. Com blocos de 7 dias, os "
+        "28.149 créditos geram 126.132 intervalos, contra 93.117 com blocos de 10 dias. O "
+        "bloco de 7 dias deu o alerta mais cedo, como mostra o Capítulo 7.")
+    add_body(doc,
+        "Na prática, recalcular as variáveis a cada bloco significa que o risco de cada "
+        "cliente é atualizado toda semana, e não fica congelado no dia da concessão. Um "
+        "cliente que paga bem na primeira semana e passa a pagar metade da parcela na "
+        "terceira tem o risco aumentado já na terceira semana. É a mesma lógica do "
+        "acompanhamento que a operação faz: a cada semana, uma lista dos clientes que mais "
+        "precisam de atenção, para priorizar contatos e visitas antes que o atraso vire perda.")
 
+    add_heading(doc, "5.4  Variáveis dos Modelos", level=2)
+    add_body(doc,
+        "As variáveis foram organizadas em três grupos, descritos na Tabela {tab:variaveis}. "
+        "As do crédito atual mudam a cada bloco; as do contrato são fixas; e as do histórico "
+        "resumem como o mesmo cliente pagou os créditos anteriores, considerando apenas os "
+        "que já estavam fechados no dia do novo desembolso. Esse último grupo nasceu de uma "
+        "observação da operação: o cliente que está passando aperto costuma mostrar isso "
+        "antes, pagando parcelas incompletas, atrasando ou fazendo um pagamento alto no fim "
+        "apenas para conseguir renovar.")
     add_table_data(doc,
-        ["Variável", "Fórmula", "Interpretação"],
-        [["cuotas_atrasadas",       "CUOTAS_ATRASADAS",                 "Dias em mora no snapshot"],
-         ["pago_promedio_diario",   "Σ(pagamentos_bloco) / dias_bloco", "Fluxo médio de pagamentos (BRL)"],
-         ["dias_con_abono",         "#{dias com abono > 0} no bloco",   "Frequência de pagamento no período"],
-         ["variabilidade_pago_diario", "Desvio-padrão do pagamento diário no bloco", "Regularidade do pagamento (BRL)"],
-         ["dias_desde_ultimo_abono_no_bloco", "fim_bloco − data do último pagamento no bloco", "Recência do pagamento dentro do bloco"],
-         ["intensidade_recuperacao","VALOR_ÚLTIMO_ABONO / VALOR_COTA",  "Fração da cota paga (clip [0,10])"],
-         ["ratio_atraso",           "CUOTAS_ATRASADAS / CUOTAS_PACTADAS","Fração do prazo em mora (clip [0,1])"],
-         ["saldo_relativo",         "SALDO / TOTAL_CRÉDITO",             "Fração do crédito pendente (clip [0,1])"]],
-        "Covariáveis tempo-variantes e suas fórmulas", table_num=11)
-
-    add_table_data(doc,
-        ["Variável", "Descrição"],
-        [["total_credito",  "Montante original do crédito (BRL)"],
-         ["valor_cota",     "Valor da cota diária pactuada (BRL)"],
-         ["cotas_pactadas", "Prazo do crédito em dias"],
-         ["ofi_id",         "Identificador de escritório (proxy geográfico)"],
-         ["rta_id",         "Identificador de rota (proxy de zona/cobrador)"]],
-        "Covariáveis estáticas do modelo", table_num=12)
+        ["Grupo", "Variável", "O que mede"],
+        [["Crédito atual", "Atraso relativo", "Parcelas em atraso medidas em dias de cobrança, dividido pelo prazo"],
+         ["Crédito atual", "Saldo relativo", "Parte do total que ainda falta pagar"],
+         ["Crédito atual", "Dias com pagamento no bloco anterior", "Em quantos dias da semana anterior o cliente pagou"],
+         ["Crédito atual", "Pagamento relativo no bloco anterior", "Valor pago por dia na semana anterior dividido pela parcela"],
+         ["Crédito atual", "Percentual de pagamentos incompletos", "Pagamentos menores que 90% da parcela, desde o desembolso"],
+         ["Crédito atual", "Dias sem cobrança no bloco", "Domingos e feriados da semana, conhecidos de antemão"],
+         ["Contrato", "Valor do crédito", "Valor total, em escala logarítmica"],
+         ["Contrato", "Prazo", "Prazo pactuado (20, 24, 30, 40 ou 50 dias)"],
+         ["Contrato", "Escritório", "São Paulo, Sociedades Brasil ou Cabo Frio"],
+         ["Histórico", "Primeiro crédito", "Indica se o cliente não tem créditos anteriores"],
+         ["Histórico", "Pontualidade no crédito anterior", "Dias com pagamento divididos pelos dias esperados"],
+         ["Histórico", "Prazo usado no crédito anterior", "Dias até fechar divididos pelo prazo pactuado"],
+         ["Histórico", "Último pagamento do crédito anterior", "Valor do último pagamento dividido pela parcela"],
+         ["Histórico", "Parcelas incompletas nos créditos anteriores", "Percentual médio de pagamentos menores que 90% da parcela"]],
+        "Variáveis usadas nos modelos", "variaveis", larguras=[2.6, 5.4, 8.0])
+    add_body(doc,
+        "Os dias sem pagamento, contados em dias de cobrança, são usados apenas em um modelo "
+        "de referência, porque estão ligados à própria definição do default, como explicado "
+        "no Capítulo 7. Os campos do sistema que mostram o estado do crédito no dia da "
+        "descarga não foram usados (Seção 4.3), e, quando o cliente não tem créditos "
+        "anteriores, as variáveis de histórico são preenchidas com a mediana do conjunto de "
+        "treino, junto com o indicador de primeiro crédito.")
 
     # ── 4.6 EDA ──────────────────────────────────────────────────────────────
     add_heading(doc, "5.6  Análise Exploratória de Dados (EDA)", level=2)
