@@ -226,7 +226,7 @@ def build_resumo(doc):
         "preditivo de risco de crédito dinâmico utilizando Análise de Sobrevivência com "
         "covariáveis dependentes do tempo, fundamentado em dados de alta frequência de uma "
         "instituição de microcrédito de pagamento diário. Um pipeline de extração automatizado "
-        "(RPA com Selenium) coletou 3.962 planilhas Excel do Sistema LISTO, cobrindo três "
+        "(RPA com Selenium) coletou 3.962 planilhas Excel do Sistema ATLAS, cobrindo três "
         "escritórios e 17 rotas no período 2020–2026, resultando em uma Matriz Mestra de 344.869 "
         "linhas e 2.358 colunas. Após engenharia de características no formato Counting Process "
         "(Anderson e Gill, 1982), o dataset de sobrevivência final contém 28.386 créditos únicos, "
@@ -268,7 +268,7 @@ def build_abstract(doc):
         "research develops a dynamic credit risk prediction model using Survival Analysis with "
         "time-varying covariates, grounded in high-frequency data from a daily-payment microcredit "
         "institution. An automated extraction pipeline (RPA with Selenium) collected 3,962 Excel "
-        "spreadsheets from the LISTO System, covering three offices and 17 routes over the period "
+        "spreadsheets from the ATLAS System, covering three offices and 17 routes over the period "
         "2020–2026, resulting in a Master Matrix of 344,869 rows and 2,358 columns. After feature "
         "engineering in the Counting Process format (Anderson and Gill, 1982), the final survival "
         "dataset contains 28,386 unique credits, 301,434 time intervals, and 425 write-off events "
@@ -392,7 +392,7 @@ def build_sumario(doc):
         (2, "4.3", "Estrutura Bimodal de Atributos e Estratégia de Proxy"),
         (2, "4.4", "Formatação Anderson-Gill (Counting Process)"),
         (2, "4.5", "Construção do Dataset de Sobrevivência"),
-        (3, "4.5.1", "Fonte de Dados: Sistema LISTO e Data Lake"),
+        (3, "4.5.1", "Fonte de Dados: Sistema ATLAS e Data Lake"),
         (3, "4.5.2", "Filtro de Coorte Diária"),
         (3, "4.5.3", "Cronômetro de Inatividade Financeira (forward-fill)"),
         (3, "4.5.4", "Correções do Formato Counting Process"),
@@ -511,10 +511,10 @@ def build_secao_3(doc):
     add_heading(doc, "3.1  Contexto e Resolução de Barreiras via Automação (RPA)", level=2)
     add_body(doc,
         "A construção de modelos de análise de sobrevivência exige séries longitudinais precisas. "
-        "A fonte primária é o Sistema corporativo LISTO que não expõe APIs REST e restringe "
+        "A fonte primária é o Sistema corporativo ATLAS que não expõe APIs REST e restringe "
         "extrações a janelas de 10 dias em uma interface web baseada em frames aninhados e "
         "autenticação complexa. Para contornar isso, desenvolveu-se a classe orientada a objetos "
-        "ListoDataExtractor em Python 3.12 (Selenium WebDriver). O robô gerencia dinamicamente o "
+        "AtlasDataExtractor em Python 3.12 (Selenium WebDriver). O robô gerencia dinamicamente o "
         "switching entre iframes, injetando JavaScript diretamente no DOM para ignorar bloqueios, "
         "e implementa um mecanismo de retry com três tentativas para lidar com erros de elemento "
         "obsoleto (StaleElementReferenceException) nos controles SELECT2."
@@ -769,9 +769,9 @@ def build_secao_4(doc):
     # ── 4.5 Construção do Dataset ────────────────────────────────────────────
     add_heading(doc, "4.5  Construção do Dataset de Sobrevivência", level=2)
 
-    add_heading(doc, "4.5.1  Fonte de Dados: Sistema LISTO e Data Lake", level=3)
+    add_heading(doc, "4.5.1  Fonte de Dados: Sistema ATLAS e Data Lake", level=3)
     add_body(doc,
-        "O Sistema LISTO (Livro de Informes e Supervisão de Transações Operativas) é a "
+        "O Sistema ATLAS é a "
         "plataforma de gestão creditícia da instituição parceira. Os dados brutos foram "
         "extraídos mediante o pipeline ETL automatizado com Selenium WebDriver, baixando "
         "relatórios Excel (Planilha de Abonos) para cada combinação de escritório e rota "
@@ -1245,7 +1245,7 @@ def build_secao_7(doc):
     )
     sprints = [
         ("Sprint 1 (Jan–Mar 2026) — ETL/Pipeline [CONCLUÍDO]:",
-         "Desenvolvimento do extrator Selenium (ListoDataExtractor), extração de 3.962 "
+         "Desenvolvimento do extrator Selenium (AtlasDataExtractor), extração de 3.962 "
          "arquivos Excel (3 escritórios, 17 rotas, 2020–2026), consolidação da Matriz "
          "Mestra (344.869 × 2.358) e otimização de memória (−49% RAM)."),
         ("Sprint 2 (Mar–Mai 2026) — Feature Engineering + EDA [CONCLUÍDO]:",

@@ -1,0 +1,2198 @@
+"""
+gerar_tcc_v26.py — Gerador do TCC V26 (Português). [EM CONSTRUÇÃO]
+
+Novidades vs. V25:
+  - §8 Cronograma reestruturado: meta de conclusão em dezembro de 2026
+    (entrega oficial em fevereiro de 2027), com as tarefas pendentes após a
+    reconstrução do dataset (src/reconstruir_dataset.py) e o feedback da
+    avaliação de Metodologia e Projeto II.
+  - Pendente nesta versão: atualizar números do EDA/Cox para
+    survival_dataset_v2.csv, reescrever §5.8 e incorporar o feedback.
+
+Histórico V25 (vs. V24):
+  - Nova §5.8 "Auditoria de Integridade do Target": documenta um bug real
+    encontrado e corrigido no pipeline (dias_sin_pagar seguia contando após
+    o crédito já ter sido pago integralmente, gerando falsos defaults).
+    Corrigido em feature_engineering.py com detecção de fechamento por
+    pagamento total. Eventos: 425 → 273 (limpos).
+  - §5.6 EDA totalmente recalculada com os números corrigidos (censura,
+    Kaplan-Meier, Log-Rank OFI_23 vs OFI_44 — agora p=0,0040, antes
+    p=0,775 — e correlações).
+  - Nova §5.9 "Riscos Competitivos": pivô metodológico de evento binário
+    para evento_tipo (0=censura, 1=default, 2=cura/pagamento total),
+    respondendo à crítica do orientador sobre a censura de 98%+. Nova
+    Figura CIF (Função de Incidência Acumulada, Aalen-Johansen).
+  - §6 Modelagem atualizada com resultados reais do baseline Cox
+    cause-specific (Default C-index=0,80; Cura C-index=0,76),
+    substituindo os placeholders "[RESULTADO PENDENTE — Sprint 3]".
+  - Novas referências: Fine e Gray (1999), Cox (1972).
+
+Output: documentotcc/Projeto_Pesquisa_TCC_V26_Completo.docx
+"""
+
+from pathlib import Path
+from docx import Document
+from docx.shared import Pt, Cm
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING, WD_TAB_ALIGNMENT, WD_TAB_LEADER
+from docx.enum.section import WD_SECTION
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+import re, subprocess, sys, io, tempfile
+
+BASE   = Path(__file__).parent.parent
+OUTPUT = BASE / "documentotcc" / "Projeto_Pesquisa_TCC_V26_Completo.docx"
+ASSETS = BASE / "documentotcc" / "assets"
+REPORTS = BASE / "reports"
+
+# Registro do que entra no sumário e nas listas. É preenchido enquanto o
+# documento é montado (títulos a partir da Introdução, figuras e tabelas), e
+# as páginas são lidas do PDF gerado. Assim sumário e listas nunca ficam
+# desatualizados em relação ao texto.
+REGISTRO = {"ativo": False, "titulos": [], "figuras": [], "tabelas": [], "texto_corpo": ""}
+
+# Siglas conhecidas. A Lista de Abreviaturas e Siglas mostra só as que
+# aparecem de fato no corpo do texto (Introdução em diante). Trechos entre
+# asteriscos saem em itálico (nomes em língua estrangeira).
+SIGLAS = {
+    "ABNT": "Associação Brasileira de Normas Técnicas",
+    "API": "Interface de Programação de Aplicações (*Application Programming Interface*)",
+    "CIF": "Função de Incidência Acumulada (*Cumulative Incidence Function*)",
+    "CMN": "Conselho Monetário Nacional",
+    "CNPJ": "Cadastro Nacional da Pessoa Jurídica",
+    "CRISP-DS": "*Cross Industry Standard Process for Data Science*",
+    "CSV": "Valores separados por vírgula (*Comma-Separated Values*)",
+    "DDD": "Discagem Direta a Distância",
+    "DOM": "*Document Object Model*",
+    "EDA": "Análise Exploratória de Dados (*Exploratory Data Analysis*)",
+    "ETL": "Extração, Transformação e Carga (*Extract, Transform, Load*)",
+    "GRU": "*Gated Recurrent Unit*",
+    "IBGE": "Instituto Brasileiro de Geografia e Estatística",
+    "ICMC": "Instituto de Ciências Matemáticas e de Computação",
+    "IFRS": "*International Financial Reporting Standards*",
+    "IPCW": "Ponderação pela probabilidade inversa de censura (*Inverse Probability of Censoring Weighting*)",
+    "JSON": "*JavaScript Object Notation*",
+    "LGPD": "Lei Geral de Proteção de Dados Pessoais",
+    "LSTM": "*Long Short-Term Memory*",
+    "MBA": "*Master of Business Administration*",
+    "MEI": "Microempreendedor Individual",
+    "MLOps": "*Machine Learning Operations*",
+    "RAM": "Memória de acesso aleatório (*Random Access Memory*)",
+    "REST": "*Representational State Transfer*",
+    "RPA": "Automação Robótica de Processos (*Robotic Process Automation*)",
+    "RSF": "*Random Survival Forest*",
+    "Sebrae": "Serviço Brasileiro de Apoio às Micro e Pequenas Empresas",
+    "SHAP": "*SHapley Additive exPlanations*",
+    "TCC": "Trabalho de Conclusão de Curso",
+    "USP": "Universidade de São Paulo",
+}
+PAGINAS = {}  # chave ("titulo", i) / ("figura", n) / ("tabela", n) -> página exibida
+
+
+# ── Helpers de formatação USP ────────────────────────────────────────────────
+
+def _set_spacing(paragraph, multiple=1.5):
+    pf = paragraph.paragraph_format
+    pf.line_spacing_rule = WD_LINE_SPACING.MULTIPLE
+    pf.line_spacing      = multiple
+    pf.space_before      = Pt(0)
+    pf.space_after       = Pt(6)
+
+
+def _set_font(run, size=12, bold=False, italic=False):
+    run.font.name   = "Arial"
+    run.font.size   = Pt(size)
+    run.font.bold   = bold
+    run.font.italic = italic
+
+
+def add_body(doc, text, align=WD_ALIGN_PARAGRAPH.JUSTIFY, indent_first=True):
+    p = doc.add_paragraph()
+    _set_spacing(p)
+    p.alignment = align
+    if indent_first:
+        p.paragraph_format.first_line_indent = Cm(1.25)
+    run = p.add_run(text)
+    _set_font(run)
+    return p
+
+
+def add_body_italico(doc, text, indent_first=True):
+    """Como add_body, mas o trecho entre asteriscos sai em itálico (termos em
+    língua estrangeira, NBR 14724). Ex.: "modelos de *credit scoring*"."""
+    p = doc.add_paragraph()
+    _set_spacing(p)
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p.paragraph_format.first_line_indent = Cm(1.25) if indent_first else Cm(0)
+    for i, trecho in enumerate(text.split("*")):
+        if trecho:
+            _set_font(p.add_run(trecho), italic=i % 2 == 1)
+    return p
+
+
+def add_heading(doc, text, level=1):
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    _set_spacing(p, multiple=1.0)
+    p.paragraph_format.space_before      = Pt(12)
+    p.paragraph_format.space_after       = Pt(6)
+    p.paragraph_format.first_line_indent = Cm(0)
+    sizes = {1: 16, 2: 14, 3: 12, 4: 12}
+    label = text.upper() if level == 1 else text
+    if REGISTRO["ativo"]:
+        REGISTRO["titulos"].append((level, label))
+    run = p.add_run(label)
+    _set_font(run, size=sizes.get(level, 12), bold=True)
+    return p
+
+
+def add_centered(doc, text, size=12, bold=False, spacing=1.5):
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_spacing(p, multiple=spacing)
+    p.paragraph_format.first_line_indent = Cm(0)
+    run = p.add_run(text)
+    _set_font(run, size=size, bold=bold)
+    return p
+
+
+def add_table_data(doc, headers, rows, caption_text, table_num):
+    REGISTRO["tabelas"].append((table_num, caption_text))
+    cap = doc.add_paragraph()
+    cap.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    _set_spacing(cap, multiple=1.0)
+    cap.paragraph_format.first_line_indent = Cm(0)
+    run = cap.add_run(f"Tabela {table_num} – {caption_text}")
+    _set_font(run, size=10, italic=True)
+
+    table = doc.add_table(rows=len(rows) + 1, cols=len(headers))
+    table.style = "Table Grid"
+    hdr_cells = table.rows[0].cells
+    for i, h in enumerate(headers):
+        hdr_cells[i].text = h
+        for r in hdr_cells[i].paragraphs[0].runs:
+            r.font.name = "Arial"; r.font.size = Pt(10); r.font.bold = True
+    for r_idx, row_data in enumerate(rows):
+        cells = table.rows[r_idx + 1].cells
+        for c_idx, val in enumerate(row_data):
+            cells[c_idx].text = str(val)
+            for r in cells[c_idx].paragraphs[0].runs:
+                r.font.name = "Arial"; r.font.size = Pt(10)
+    doc.add_paragraph()
+    return table
+
+
+def add_formula(doc, formula_text):
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_spacing(p, multiple=1.0)
+    p.paragraph_format.space_before      = Pt(6)
+    p.paragraph_format.space_after       = Pt(6)
+    p.paragraph_format.first_line_indent = Cm(0)
+    run = p.add_run(formula_text)
+    _set_font(run, size=11, italic=True)
+    return p
+
+
+def add_code(doc, code_text):
+    """Bloco de código em Courier New com indentação."""
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    _set_spacing(p, multiple=1.0)
+    p.paragraph_format.first_line_indent = Cm(0)
+    p.paragraph_format.left_indent       = Cm(1.0)
+    p.paragraph_format.space_before      = Pt(4)
+    p.paragraph_format.space_after       = Pt(4)
+    run = p.add_run(code_text)
+    run.font.name = "Courier New"
+    run.font.size = Pt(9)
+    return p
+
+
+def add_figure(doc, img_path, caption, fig_num):
+    REGISTRO["figuras"].append((fig_num, caption))
+    path = Path(img_path)
+    if not path.exists():
+        p = doc.add_paragraph()
+        _set_spacing(p, multiple=1.0)
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p.add_run(f"[FIGURA {fig_num} — arquivo não encontrado: {path.name}]")
+        _set_font(run, size=10, italic=True)
+        return
+    p_img = doc.add_paragraph()
+    p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_img.paragraph_format.first_line_indent = Cm(0)
+    run = p_img.add_run()
+    try:
+        run.add_picture(str(path), width=Cm(14))
+    except Exception:
+        run.add_picture(str(path))
+    cap = doc.add_paragraph()
+    cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_spacing(cap, multiple=1.0)
+    cap.paragraph_format.first_line_indent = Cm(0)
+    cap.paragraph_format.space_after       = Pt(12)
+    r = cap.add_run(f"Figura {fig_num} – {caption}")
+    _set_font(r, size=10, italic=True)
+
+
+def add_labeled(doc, label, text):
+    """Parágrafo com label em negrito seguido de texto normal."""
+    p = doc.add_paragraph()
+    _set_spacing(p)
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p.paragraph_format.first_line_indent = Cm(1.25)
+    r1 = p.add_run(label + " ")
+    _set_font(r1, bold=True)
+    r2 = p.add_run(text)
+    _set_font(r2)
+
+
+def page_break(doc):
+    doc.add_page_break()
+
+
+def _linha_com_pagina(doc, texto, pagina, recuo=0.0, negrito=False):
+    """Linha de sumário/lista: texto, pontilhado e número da página à direita."""
+    p = doc.add_paragraph()
+    _set_spacing(p, multiple=1.0)
+    pf = p.paragraph_format
+    pf.first_line_indent = Cm(0)
+    pf.left_indent = Cm(recuo)
+    pf.tab_stops.add_tab_stop(Cm(16), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.DOTS)
+    _set_font(p.add_run(f"{texto}\t{pagina}"), size=12, bold=negrito)
+    return p
+
+
+def _pagina(chave):
+    return PAGINAS.get(chave, "000")
+
+
+def _numerar_paginas(section):
+    """Cabeçalho com o número da página no canto superior direito (NBR 14724)."""
+    # A seção nova herda o "começar em 1" da folha de rosto; aqui a contagem
+    # deve continuar, então essa instrução é removida.
+    for pg in section._sectPr.findall(qn("w:pgNumType")):
+        section._sectPr.remove(pg)
+    section.header.is_linked_to_previous = False
+    p = section.header.paragraphs[0]
+    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = p.add_run()
+    _set_font(run, size=10)
+    for tipo, texto in (("begin", None), (None, "PAGE"), ("end", None)):
+        if tipo:
+            el = OxmlElement("w:fldChar")
+            el.set(qn("w:fldCharType"), tipo)
+        else:
+            el = OxmlElement("w:instrText")
+            el.set(qn("xml:space"), "preserve")
+            el.text = texto
+        run._r.append(el)
+
+
+def configure_doc(doc):
+    for section in doc.sections:
+        section.page_width    = Cm(21)
+        section.page_height   = Cm(29.7)
+        section.left_margin   = Cm(3)
+        section.right_margin  = Cm(2)
+        section.top_margin    = Cm(3)
+        section.bottom_margin = Cm(2)
+    style = doc.styles["Normal"]
+    style.font.name = "Arial"
+    style.font.size = Pt(12)
+
+
+# ── PRÉ-TEXTUAIS ─────────────────────────────────────────────────────────────
+
+TITULO_TRABALHO = (
+    "Modelagem de Risco de Crédito Dinâmico para Microempreendedores: "
+    "Uma Abordagem via Análise de Sobrevivência em Fluxos de Alta Frequência sob Censura"
+)
+
+
+def _fit_wrapped_text(draw, text, box, font_path, max_size, min_size=14,
+                       line_spacing=1.15, color=(22, 62, 94)):
+    """Escreve texto centralizado (h. e v.) dentro de uma caixa, quebrando linhas e
+    reduzindo o tamanho da fonte até caber. Usado para montar a imagem da capa."""
+    from PIL import ImageFont
+    x0, y0, x1, y1 = box
+    box_w, box_h = x1 - x0, y1 - y0
+    size = max_size
+    lines, line_h, font = [], 0, None
+    while size >= min_size:
+        font = ImageFont.truetype(font_path, size)
+        words = text.split()
+        lines, cur = [], ""
+        for w in words:
+            trial = (cur + " " + w).strip()
+            bbox = draw.textbbox((0, 0), trial, font=font)
+            if bbox[2] - bbox[0] <= box_w or not cur:
+                cur = trial
+            else:
+                lines.append(cur)
+                cur = w
+        if cur:
+            lines.append(cur)
+        line_h = draw.textbbox((0, 0), "Ag", font=font)[3] * line_spacing
+        if line_h * len(lines) <= box_h:
+            break
+        size -= 2
+    total_h = line_h * len(lines)
+    y = y0 + (box_h - total_h) / 2
+    for line in lines:
+        bbox = draw.textbbox((0, 0), line, font=font)
+        x = x0 + (box_w - (bbox[2] - bbox[0])) / 2
+        draw.text((x, y), line, font=font, fill=color)
+        y += line_h
+
+
+def _limpar_texto_icmc(im, scale):
+    """Substitui a região do texto 'ICMC / USP / SÃO CARLOS' (baixa resolução
+    nativa na arte oficial) por uma versão vetorizada a partir dos contornos
+    do texto original, com bordas suavizadas e anti-aliasing — nítida mesmo em
+    zoom. O logo dos anéis entrelaçados (dentro da mesma região) é excluído
+    dessa limpeza: sua topologia entrelaçada quebra ao suavizar contornos, e
+    fica melhor preservado apenas com o unsharp mask já aplicado ao fundo."""
+    import numpy as np
+    import cv2
+    from PIL import Image
+
+    CROP = (600, 1020, 840, 1190)  # região no PNG original (840x1190)
+    RINGS_BBOX = (140, 70, 240, 145)  # relativo ao CROP, exclui os anéis
+    VSCALE = 8  # escala interna para suavizar; depois reamostrado para `scale`
+
+    orig = Image.open(ASSETS / "capa_fundo_usp_icmc.png").convert("RGB")
+    crop_arr = np.array(orig)[CROP[1]:CROP[3], CROP[0]:CROP[2]]
+    gray = cv2.cvtColor(crop_arr, cv2.COLOR_RGB2GRAY)
+    _, mask = cv2.threshold(gray, 140, 255, cv2.THRESH_BINARY)
+    contours, hierarchy = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+
+    def smooth_contour(cnt, win=5):
+        pts = cnt[:, 0, :].astype(np.float32)
+        n = len(pts)
+        if n < win * 2:
+            return pts
+        kernel = np.ones(win) / win
+        padded = np.vstack([pts[-win:], pts, pts[:win]])
+        sx = np.convolve(padded[:, 0], kernel, mode='same')[win:win + n]
+        sy = np.convolve(padded[:, 1], kernel, mode='same')[win:win + n]
+        return np.stack([sx, sy], axis=1)
+
+    def overlaps(b1, b2):
+        return not (b1[2] < b2[0] or b1[0] > b2[2] or b1[3] < b2[1] or b1[1] > b2[3])
+
+    h, w = crop_arr.shape[:2]
+    canvas = np.zeros((h * VSCALE, w * VSCALE), dtype=np.uint8)
+    for i, cnt in enumerate(contours):
+        x, y, cw, ch = cv2.boundingRect(cnt)
+        if overlaps((x, y, x + cw, y + ch), RINGS_BBOX) or len(cnt) < 3:
+            continue
+        sm_scaled = (smooth_contour(cnt) * VSCALE).astype(np.int32).reshape(-1, 1, 2)
+        color = 255 if hierarchy[0][i][3] == -1 else 0
+        cv2.drawContours(canvas, [sm_scaled], -1, color, thickness=cv2.FILLED,
+                          lineType=cv2.LINE_AA)
+
+    mask_img = Image.fromarray(canvas).resize((w * scale, h * scale), Image.LANCZOS)
+    white = Image.new("RGB", mask_img.size, (255, 255, 255))
+    dest = (CROP[0] * scale, CROP[1] * scale)
+    im.paste(white, dest, mask_img)
+
+
+def _reescrever_texto_lateral(im, scale):
+    """Substitui o texto vertical da faixa cinza lateral ('UNIVERSIDADE DE SÃO
+    PAULO / Instituto de Ciências Matemáticas e de Computação'), que na arte
+    oficial é um bitmap de baixa resolução, por texto renderizado de novo com
+    fonte real (Liberation Sans, métrica de Arial) na resolução final. Apaga a
+    região com a cor lisa da faixa e escreve cada linha girada 90° (leitura de
+    baixo para cima), no mesmo lugar e comprimento do original."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    COR_FAIXA = (140, 140, 140)
+    COR_TEXTO = (22, 62, 94)
+    APAGAR = (110, 45, 215, 745)  # região do texto, no PNG original (840x1190)
+    # (texto, fonte, x_ini, x_fim, y_fim do texto, comprimento) medidos no original
+    LINHAS = [
+        ("UNIVERSIDADE DE SÃO PAULO",
+         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", 124, 160, 59, 578),
+        ("Instituto de Ciências Matemáticas e de Computação",
+         "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", 174, 201, 59, 663),
+    ]
+
+    draw = ImageDraw.Draw(im)
+    draw.rectangle([c * scale for c in APAGAR], fill=COR_FAIXA)
+
+    for texto, fonte, x0, x1, y_fim, comprimento in LINHAS:
+        # Ajusta o tamanho da fonte para o texto ocupar o mesmo comprimento.
+        alvo = comprimento * scale
+        tamanho = 10
+        while True:
+            f = ImageFont.truetype(fonte, tamanho + 1)
+            if draw.textlength(texto, font=f) > alvo:
+                break
+            tamanho += 1
+        font = ImageFont.truetype(fonte, tamanho)
+        l, t, r, b = draw.textbbox((0, 0), texto, font=font)
+        faixa = Image.new("L", (r - l + 4, b - t + 4), 0)
+        ImageDraw.Draw(faixa).text((2 - l, 2 - t), texto, font=font, fill=255)
+        faixa = faixa.rotate(90, expand=True)  # leitura de baixo para cima
+        cx = (x0 + x1) / 2 * scale
+        destino = (int(cx - faixa.width / 2), int(y_fim * scale))
+        im.paste(Image.new("RGB", faixa.size, COR_TEXTO), destino, faixa)
+
+
+def _gerar_imagem_capa():
+    """Monta a imagem completa da capa: fundo oficial USP/ICMC (extraído do
+    Modelo de documento USP) + título e autor sobrepostos nas caixas cinzas
+    já existentes na arte. Retorna um buffer PNG em memória."""
+    from PIL import Image, ImageDraw, ImageFilter
+
+    SCALE = 3
+    BOLD = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+    REG = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
+
+    im = Image.open(ASSETS / "capa_fundo_usp_icmc.png").convert("RGB")
+    im = im.resize((im.width * SCALE, im.height * SCALE), Image.LANCZOS)
+    # A arte oficial (logo/texto do fundo) é de baixa resolução nativa; o
+    # unsharp mask não recupera detalhe real, mas melhora a nitidez percebida.
+    im = im.filter(ImageFilter.UnsharpMask(radius=2, percent=150, threshold=2))
+    _limpar_texto_icmc(im, SCALE)
+    _reescrever_texto_lateral(im, SCALE)
+    draw = ImageDraw.Draw(im)
+
+    title_box = (250 * SCALE, 222 * SCALE, 838 * SCALE, 463 * SCALE)
+    _fit_wrapped_text(draw, TITULO_TRABALHO, title_box, BOLD, max_size=52)
+
+    author_box = (305 * SCALE, 480 * SCALE, 839 * SCALE, 535 * SCALE)
+    subtitle_box = (305 * SCALE, 535 * SCALE, 839 * SCALE, 585 * SCALE)
+    _fit_wrapped_text(draw, "Juan Fernando Graciano Pinzón", author_box, BOLD, max_size=36)
+    _fit_wrapped_text(draw, "Trabalho de Conclusão de Curso — MBA em Ciência de Dados (CeMEAI)",
+                       subtitle_box, REG, max_size=26)
+
+    buf = io.BytesIO()
+    im.save(buf, format="PNG")
+    buf.seek(0)
+    return buf
+
+
+def _anchor_picture_full_page(paragraph, run, page_w_cm, page_h_cm):
+    """Converte a última imagem inline inserida no run em uma imagem ancorada
+    (flutuante) posicionada em (0,0) relativo à página, com extensão exata de
+    página. Evita depender do alinhamento/indentação do parágrafo (que se
+    mostrou inconsistente em alguns renderizadores para imagens inline em
+    seções de margem zero)."""
+    from docx.oxml.ns import qn
+
+    drawing = run._element.find(qn('w:drawing'))
+    inline = drawing.find(qn('wp:inline'))
+    graphic = inline.find(qn('a:graphic'))
+    docPr = inline.find(qn('wp:docPr'))
+    cNvGraphicFramePr = inline.find(qn('wp:cNvGraphicFramePr'))
+
+    cx = str(Cm(page_w_cm).emu)
+    cy = str(Cm(page_h_cm).emu)
+
+    anchor = drawing.makeelement(qn('wp:anchor'), {
+        'behindDoc': '0', 'distT': '0', 'distB': '0', 'distL': '0', 'distR': '0',
+        'simplePos': '0', 'locked': '0', 'layoutInCell': '1', 'allowOverlap': '1',
+        'relativeHeight': '1',
+    })
+    simplePos = anchor.makeelement(qn('wp:simplePos'), {'x': '0', 'y': '0'})
+    positionH = anchor.makeelement(qn('wp:positionH'), {'relativeFrom': 'page'})
+    posOffsetH = anchor.makeelement(qn('wp:posOffset'), {})
+    posOffsetH.text = '0'
+    positionH.append(posOffsetH)
+    positionV = anchor.makeelement(qn('wp:positionV'), {'relativeFrom': 'page'})
+    posOffsetV = anchor.makeelement(qn('wp:posOffset'), {})
+    posOffsetV.text = '0'
+    positionV.append(posOffsetV)
+    extent = anchor.makeelement(qn('wp:extent'), {'cx': cx, 'cy': cy})
+    effectExtent = anchor.makeelement(qn('wp:effectExtent'),
+                                       {'l': '0', 't': '0', 'r': '0', 'b': '0'})
+    wrapNone = anchor.makeelement(qn('wp:wrapNone'), {})
+
+    anchor.append(simplePos)
+    anchor.append(positionH)
+    anchor.append(positionV)
+    anchor.append(extent)
+    anchor.append(effectExtent)
+    anchor.append(wrapNone)
+    anchor.append(docPr)
+    anchor.append(cNvGraphicFramePr)
+    anchor.append(graphic)
+
+    drawing.remove(inline)
+    drawing.append(anchor)
+
+
+def build_capa(doc):
+    """CAPA (elemento obrigatório, NBR 14724): imagem de fundo oficial USP/ICMC
+    com título e autor sobrepostos, em seção própria com margens zero (full
+    bleed). Uma nova seção é aberta em seguida com as margens normais (3/2 cm)
+    para o restante do documento."""
+    section = doc.sections[0]
+    section.left_margin = section.right_margin = Cm(0)
+    section.top_margin = section.bottom_margin = Cm(0)
+
+    p = doc.add_paragraph()
+    p.paragraph_format.space_after = Pt(0)
+    run = p.add_run()
+    run.add_picture(_gerar_imagem_capa(), width=Cm(21), height=Cm(29.7))
+    _anchor_picture_full_page(p, run, 21, 29.7)
+
+    new_section = doc.add_section(WD_SECTION.NEW_PAGE)
+    # A contagem de páginas começa na folha de rosto (a capa não conta).
+    pg = OxmlElement("w:pgNumType")
+    pg.set(qn("w:start"), "1")
+    new_section._sectPr.append(pg)
+    new_section.page_width = Cm(21)
+    new_section.page_height = Cm(29.7)
+    new_section.left_margin = Cm(3)
+    new_section.right_margin = Cm(2)
+    new_section.top_margin = Cm(3)
+    new_section.bottom_margin = Cm(2)
+
+
+def build_folha_rosto(doc):
+    """FOLHA DE ROSTO (elemento obrigatório, NBR 14724): repete autor e título e
+    acrescenta a natureza do trabalho, área de concentração e orientador."""
+    add_centered(doc, "Juan Fernando Graciano Pinzón", size=13, bold=True, spacing=1.0)
+    for _ in range(3): add_centered(doc, "", size=12, spacing=1.0)
+    add_centered(doc,
+        "Modelagem de Risco de Crédito Dinâmico para Microempreendedores: "
+        "Uma Abordagem via Análise de Sobrevivência em Fluxos de Alta Frequência sob Censura",
+        size=16, bold=True, spacing=1.5)
+    for _ in range(4): add_centered(doc, "", size=12, spacing=1.0)
+
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p.paragraph_format.left_indent = Cm(8)
+    _set_spacing(p, multiple=1.0)
+    run = p.add_run(
+        "Trabalho de Conclusão de Curso apresentado ao Centro de Ciências Matemáticas "
+        "Aplicadas à Indústria do Instituto de Ciências Matemáticas e de Computação, "
+        "Universidade de São Paulo - ICMC/USP, como parte dos requisitos para obtenção "
+        "do título de Especialista em Ciência de Dados.")
+    _set_font(run, size=12)
+
+    doc.add_paragraph()
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p.paragraph_format.left_indent = Cm(8)
+    _set_spacing(p, multiple=1.0)
+    run = p.add_run("Área de concentração: Ciência de Dados")
+    _set_font(run, size=12)
+
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p.paragraph_format.left_indent = Cm(8)
+    _set_spacing(p, multiple=1.0)
+    run = p.add_run("Orientador: Prof. Dr. Vicente Garibay Cancho")
+    _set_font(run, size=12)
+
+    for _ in range(6): add_centered(doc, "", size=12, spacing=1.0)
+    add_centered(doc, "São Paulo / São Carlos, 2026", size=11, spacing=1.0)
+    page_break(doc)
+
+
+def build_ficha_catalografica(doc):
+    """Página reservada à Ficha Catalográfica (elemento obrigatório, verso da
+    Folha de Rosto). Gerada pelo sistema oficial da Biblioteca do ICMC/USP
+    (https://www.icmc.usp.br/institucional/estrutura-administrativa/biblioteca/servicos/ficha)
+    e inserida aqui como imagem — não pode ser redigida pelo autor."""
+    img_path = ASSETS / "ficha_catalografica-1.png"
+    if not img_path.exists():
+        add_centered(doc, "", size=12, spacing=1.0)
+        for _ in range(8): add_centered(doc, "", size=12, spacing=1.0)
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        _set_spacing(p, multiple=1.5)
+        run = p.add_run(
+            "[Esta página deve conter a ficha catalográfica, gerada pelo sistema oficial da "
+            "Biblioteca do ICMC/USP e impressa no verso da folha de rosto: "
+            "https://www.icmc.usp.br/institucional/estrutura-administrativa/biblioteca/servicos/ficha]")
+        _set_font(run, size=10, italic=True)
+        page_break(doc)
+        return
+
+    p_img = doc.add_paragraph()
+    p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_img.paragraph_format.first_line_indent = Cm(0)
+    run = p_img.add_run()
+    run.add_picture(str(img_path), width=Cm(16))
+    page_break(doc)
+
+
+def build_dedicatoria(doc):
+    """DEDICATÓRIA (elemento opcional, NBR 14724): sem título, na parte inferior
+    da página, com recuo de 8 cm à esquerda."""
+    textos = [
+        "À minha mãe, pelo exemplo de força e amor que me acompanha em cada etapa da vida.",
+        "Aos meus filhos, Juan José Graciano e Matías Graciano, razão maior de cada "
+        "esforço e de cada conquista.",
+    ]
+    espaco = doc.add_paragraph()
+    espaco.paragraph_format.space_after = Cm(17)
+    for i, texto in enumerate(textos):
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        _set_spacing(p, multiple=1.5)
+        p.paragraph_format.first_line_indent = Cm(0)
+        p.paragraph_format.left_indent = Cm(8)
+        p.paragraph_format.space_before = Cm(0) if i == 0 else Cm(0.6)
+        _set_font(p.add_run(texto), size=12, italic=True)
+    page_break(doc)
+
+
+def build_resumo(doc):
+    add_heading(doc, "RESUMO", level=1)
+    add_body(doc,
+        "GRACIANO PINZÓN, J. F. Modelagem de Risco de Crédito Dinâmico para "
+        "Microempreendedores: Uma Abordagem via Análise de Sobrevivência em Fluxos de Alta "
+        "Frequência sob Censura. 2026. Trabalho de Conclusão de Curso – MBA em Ciência de Dados, "
+        "Instituto de Ciências Matemáticas e de Computação, Universidade de São Paulo, "
+        "São Paulo/São Carlos, 2026.", indent_first=False)
+    doc.add_paragraph()
+    add_body_italico(doc,
+        "A concessão de crédito para pequenos comerciantes no Brasil é dificultada pela falta "
+        "de informação sobre a sua real capacidade de pagamento, já que os modelos tradicionais "
+        "se baseiam em dados fixos e respondem apenas se o cliente vai ou não deixar de pagar. "
+        "Este trabalho propõe um modelo de risco que acompanha cada crédito ao longo do tempo, "
+        "usando o histórico diário de pagamentos de uma instituição de microcrédito voltada a "
+        "comerciantes formais e informais. Como o sistema da instituição não oferece acesso "
+        "direto aos dados, foi desenvolvido um robô de automação web que reuniu seis anos de "
+        "pagamentos, de 2020 a 2026, de três escritórios. Os arquivos foram unidos em uma única "
+        "base, processo conhecido como *Data Stitching*, e revisados com cuidado: o abandono do "
+        "crédito foi definido como 120 dias seguidos sem nenhum pagamento, contados a partir dos "
+        "pagamentos realmente registrados. A base final tem 28.294 créditos, dos quais 202, ou "
+        "0,71%, terminaram em abandono. Como um crédito pode terminar de duas formas, pelo "
+        "abandono ou pela quitação, o risco é estudado com análise de sobrevivência para riscos "
+        "competitivos. O modelo de Cox, que permite usar informações que mudam ao longo do "
+        "tempo, é comparado com modelos de aprendizado de máquina. O trabalho também analisa "
+        "como o risco varia entre regiões e níveis socioeconômicos.", indent_first=False)
+    p = doc.add_paragraph()
+    _set_spacing(p)
+    run = p.add_run(
+        "Palavras-chave: análise de sobrevivência; riscos competitivos; risco de crédito; "
+        "microcrédito; pequenos negócios; modelo de Cox.")
+    _set_font(run)
+    page_break(doc)
+
+
+def build_abstract(doc):
+    add_heading(doc, "ABSTRACT", level=1)
+    add_body(doc,
+        "GRACIANO PINZÓN, J. F. Dynamic Credit Risk Modeling for Microentrepreneurs: "
+        "A Survival Analysis Approach on High-Frequency Flows under Censoring. 2026. Final Course "
+        "Work – MBA in Data Science, Institute of Mathematics and Computer Science, University of "
+        "São Paulo, São Paulo/São Carlos, 2026.", indent_first=False)
+    doc.add_paragraph()
+    add_body(doc,
+        "Lending to small merchants in Brazil is hindered by the lack of information about their "
+        "real ability to pay, since traditional models rely on fixed data and only predict "
+        "whether a client will default or not. This work proposes a risk model that follows "
+        "each loan over time, using the daily payment history of a microcredit institution that "
+        "serves formal and informal merchants. Because the institution's system does not offer "
+        "direct access to its data, a web automation robot was developed to collect six years "
+        "of payments, from 2020 to 2026, from three offices. The files were merged into a single "
+        "database, a process known as Data Stitching, and carefully reviewed: loan abandonment "
+        "was defined as 120 consecutive days without any payment, counted from the payments "
+        "actually recorded. The final database has 28,294 loans, of which 202, or 0.71%, ended "
+        "in abandonment. Since a loan can end in two ways, abandonment or full repayment, the "
+        "risk is studied with survival analysis for competing risks. The Cox model, which "
+        "allows the use of information that changes over time, is compared with machine "
+        "learning models. The work also analyzes how risk varies across regions and "
+        "socioeconomic levels.", indent_first=False)
+    p = doc.add_paragraph()
+    _set_spacing(p)
+    run = p.add_run(
+        "Keywords: survival analysis; competing risks; credit risk; microcredit; small "
+        "businesses; Cox model.")
+    _set_font(run)
+    page_break(doc)
+
+
+def build_listas(doc):
+    # Listas de ilustrações e de tabelas: geradas a partir do REGISTRO.
+    add_heading(doc, "LISTA DE ILUSTRAÇÕES", level=1)
+    for num, desc in REGISTRO["figuras"]:
+        _linha_com_pagina(doc, f"Figura {num} – {desc}", _pagina(("figura", num)))
+    page_break(doc)
+
+    add_heading(doc, "LISTA DE TABELAS", level=1)
+    for num, desc in REGISTRO["tabelas"]:
+        _linha_com_pagina(doc, f"Tabela {num} – {desc}", _pagina(("tabela", num)))
+    page_break(doc)
+
+    # Lista de Abreviaturas e Siglas: só as siglas usadas no corpo do texto.
+    add_heading(doc, "LISTA DE ABREVIATURAS E SIGLAS", level=1)
+    for sigla in sorted(SIGLAS, key=str.upper):
+        if re.search(rf"(?<!\w){re.escape(sigla)}(?!\w)", REGISTRO["texto_corpo"]):
+            p = doc.add_paragraph()
+            _set_spacing(p, multiple=1.0)
+            p.paragraph_format.left_indent = Cm(3)
+            p.paragraph_format.first_line_indent = Cm(-3)
+            p.paragraph_format.tab_stops.add_tab_stop(Cm(3))
+            _set_font(p.add_run(f"{sigla}\t"), size=12)
+            for i, trecho in enumerate(SIGLAS[sigla].split("*")):
+                if trecho:
+                    _set_font(p.add_run(trecho), size=12, italic=i % 2 == 1)
+    page_break(doc)
+
+    # Lista de Símbolos
+    add_heading(doc, "LISTA DE SÍMBOLOS", level=1)
+    simbolos = [
+        ("S(t)",  "Função de sobrevivência: probabilidade de o evento não ter ocorrido até t"),
+        ("h(t)",  "Função de risco (hazard): taxa instantânea de ocorrência do evento no tempo t"),
+        ("H(t)",  "Função de risco acumulado (cumulative hazard function)"),
+        ("F(t)",  "Função de distribuição acumulada do tempo até o evento T"),
+        ("T",     "Variável aleatória tempo até o evento"),
+        ("t_start, t_stop", "Limites inferior e superior de um intervalo no formato Counting Process"),
+        ("δ (delta)", "Indicador de evento no intervalo (1 = evento; 0 = censura)"),
+        ("E_i",   "Indicador de default do crédito i (variável evento)"),
+        ("Ŝ(t)",  "Estimador de Kaplan-Meier da função de sobrevivência"),
+        ("p",     "Valor-p do teste de hipótese (ex.: teste de log-rank)"),
+        ("r",     "Coeficiente de correlação linear de Pearson"),
+    ]
+    for simbolo, desc in simbolos:
+        p = doc.add_paragraph()
+        _set_spacing(p, multiple=1.0)
+        p.paragraph_format.first_line_indent = Cm(0)
+        run = p.add_run(f"{simbolo}\t– {desc}")
+        _set_font(run, size=12)
+    page_break(doc)
+
+
+def build_sumario(doc):
+    add_heading(doc, "SUMÁRIO", level=1)
+    for i, (nivel, titulo) in enumerate(REGISTRO["titulos"]):
+        _linha_com_pagina(doc, titulo, _pagina(("titulo", i)),
+                          recuo=(nivel - 1) * 0.75, negrito=(nivel == 1))
+    # A numeração visível começa na Introdução (seção própria com cabeçalho).
+    secao = doc.add_section(WD_SECTION.NEW_PAGE)
+    _numerar_paginas(secao)
+    REGISTRO["titulos"].clear()
+    REGISTRO["figuras"].clear()
+    REGISTRO["tabelas"].clear()
+    REGISTRO["ativo"] = True
+    REGISTRO["inicio_corpo"] = len(doc.paragraphs)
+
+
+# ── SEÇÃO 1 ──────────────────────────────────────────────────────────────────
+
+def build_secao_1(doc):
+    add_heading(doc, "1  INTRODUÇÃO", level=1)
+    add_body(doc,
+        "No Brasil, os pequenos negócios têm um peso enorme na economia. Segundo o Mapa de "
+        "Empresas (BRASIL, 2026), o país tinha 25,4 milhões de empresas ativas em julho de "
+        "2026, das quais 13,6 milhões eram microempreendedores individuais (MEI). Além delas, "
+        "existem muitos comerciantes que trabalham sem nenhum registro. Para esse público, o "
+        "crédito continua sendo um desafio. De acordo com a pesquisa Pulso dos Pequenos "
+        "Negócios, do Sebrae (ABREU, 2026), mesmo sendo o maior percentual desde 2022, menos "
+        "da metade (46%) dos pequenos negócios que buscaram crédito nos três meses anteriores "
+        "conseguiu aprovação, e um em cada quatro tinha dívidas em atraso em julho de 2026. "
+        "Para o comerciante informal, que muitas vezes não tem comprovante de renda nem "
+        "histórico bancário, a situação tende a ser ainda mais difícil.")
+    add_body(doc,
+        "Este trabalho utiliza dados de uma instituição de microcrédito voltada a "
+        "comerciantes, formais e informais. Os créditos têm valores baixos e prazos curtos, de "
+        "poucas semanas, e cada pagamento fica registrado no dia em que acontece. Isso permite "
+        "acompanhar, para cada crédito, em quais dias houve pagamento e de quanto foi, o que é "
+        "uma informação muito mais rica do que a que costuma estar disponível para esse "
+        "público.")
+    add_body_italico(doc,
+        "Os modelos tradicionais de análise de crédito, conhecidos como *credit scoring*, "
+        "costumam olhar para uma fotografia do cliente em um único momento, como o histórico "
+        "em birôs de crédito ou a renda declarada, e respondem apenas se ele vai ou não deixar "
+        "de pagar. Para o microempreendedor informal, essa fotografia quase não existe, e ela "
+        "também não muda quando o comportamento do cliente muda. O resultado é uma decisão "
+        "pouco informada, tanto para quem empresta quanto para quem precisa do dinheiro.")
+    add_body(doc,
+        "A proposta deste trabalho é usar o próprio histórico de pagamentos para acompanhar o "
+        "risco de cada crédito ao longo do tempo. Em vez de perguntar apenas se o cliente vai "
+        "deixar de pagar, a ideia é estimar quando isso pode acontecer, usando a análise de "
+        "sobrevivência, um conjunto de métodos estatísticos criado para estudar o tempo até um "
+        "evento. A pergunta que orienta a pesquisa é: é possível antecipar, a partir do "
+        "histórico de pagamentos, quando um microempreendedor vai deixar de pagar o seu "
+        "crédito, e quais fatores do seu comportamento, da sua região e do seu nível "
+        "socioeconômico mudam esse risco?")
+    add_body(doc,
+        "Para responder a essa pergunta, o trabalho traz cinco contribuições. A primeira é um "
+        "processo automatizado para extrair os dados de um sistema que não oferece acesso "
+        "direto às informações, o que permitiu reunir seis anos de pagamentos de três "
+        "escritórios, em três estados. A segunda é a construção e a revisão de uma base de "
+        "dados em que o desfecho de cada crédito é definido a partir dos pagamentos reais. A "
+        "terceira é a modelagem do risco considerando os dois finais possíveis de um crédito, "
+        "o abandono e a quitação, que competem entre si. A quarta é a comparação entre o "
+        "modelo clássico de Cox e modelos de aprendizado de máquina. A quinta é uma análise de "
+        "como o risco varia entre regiões e níveis socioeconômicos.")
+    add_body(doc,
+        "O texto está organizado da seguinte forma. O Capítulo 2 apresenta a revisão da "
+        "literatura e o Capítulo 3, os objetivos. O Capítulo 4 descreve como os dados foram "
+        "obtidos e organizados, e o Capítulo 5 explica o tratamento dos dados e a definição do "
+        "evento estudado. Os Capítulos 6 e 7 tratam dos modelos e da forma de avaliação, e o "
+        "Capítulo 8 apresenta o cronograma.")
+
+
+# ── SEÇÃO 2 — REVISÃO BIBLIOGRÁFICA ──────────────────────────────────────────
+
+def build_secao_2_revisao_bibliografica(doc):
+    add_heading(doc, "2  REVISÃO BIBLIOGRÁFICA", level=1)
+    add_body(doc,
+        "Esta seção situa o presente trabalho no corpo de literatura que sustenta suas três "
+        "frentes: (i) a modelagem de risco de crédito para tomadores de baixa formalidade, "
+        "(ii) os fundamentos estatísticos da Análise de Sobrevivência e sua extensão a "
+        "covariáveis tempo-variantes, e (iii) as arquiteturas de Deep Learning aplicadas a dados "
+        "censurados. Adota-se o sistema de chamada autor-data (ABNT NBR 10520), consistente com "
+        "as citações utilizadas nas demais seções deste documento.")
+
+    add_heading(doc, "2.1  Risco de Crédito para Microempreendedores: da Escassez de Dados ao "
+                     "Comportamento Dinâmico", level=2)
+    add_body(doc,
+        "A literatura clássica de credit scoring para pequenas e médias empresas — como o "
+        "modelo de Altman e Sabato (2007) para o mercado americano — demonstra que indicadores "
+        "contábeis estáticos têm poder preditivo limitado quando aplicados a tomadores sem "
+        "histórico formal consolidado (o segmento thin-file). Banerjee e Duflo (2007), ao "
+        "descreverem a vida econômica dos pobres, evidenciam que a renda e o fluxo de caixa "
+        "desse público são inerentemente irregulares e de alta frequência, o que é incompatível "
+        "com fotografias mensais ou anuais de risco. Já Schreiner (2002), ao propor um arcabouço "
+        "de avaliação do alcance social do microcrédito (outreach), reforça que a profundidade e "
+        "a frequência do relacionamento entre credor e tomador — e não apenas o desfecho binário "
+        "de inadimplência — são dimensões centrais para avaliar risco e impacto nesse segmento. "
+        "Em conjunto, esses três trabalhos delimitam a lacuna que esta pesquisa busca preencher: "
+        "modelos de credit scoring tradicionais, estáticos e binários, não capturam a dinâmica "
+        "diária de pagamentos parciais que caracteriza o microcrédito informal, motivando a "
+        "adoção de uma abordagem longitudinal e orientada ao tempo até o evento.")
+
+    add_heading(doc, "2.2  Fundamentos da Análise de Sobrevivência e Extensão a Covariáveis "
+                     "Tempo-Variantes", level=2)
+    add_body(doc,
+        "A base estatística deste trabalho parte de Kaplan e Meier (1958): o estimador não "
+        "paramétrico da função de sobrevivência que dispensa qualquer suposição sobre a forma da "
+        "distribuição de T, condição necessária quando — como na carteira de microcrédito aqui "
+        "analisada — não há motivo teórico para assumir um formato específico para o tempo até o "
+        "default. Para comparar grupos dentro dessa carteira, como escritórios com taxas de "
+        "inadimplência distintas, recorre-se ao teste de log-rank de Mantel (1966), que dispensa "
+        "igualmente pressupostos paramétricos. Kalbfleisch e Prentice (2002) e Klein e "
+        "Moeschberger (2003) reúnem esse ferramental — Kaplan-Meier, log-rank e suas extensões — "
+        "nos dois tratamentos de referência utilizados ao longo deste trabalho para dados "
+        "censurados e truncados. A peça que conecta essa base clássica ao problema de alta "
+        "frequência tratado aqui é o formato de Processo de Contagem de Anderson e Gill (1982): "
+        "ao reescrever o Modelo de Riscos Proporcionais de Cox em intervalos (t_start, t_stop], "
+        "ele permite que covariáveis como o cronômetro dias_sem_pagar e o saldo devedor variem a "
+        "cada snapshot de 10 dias, em vez de permanecerem fixas como em uma especificação clássica "
+        "de Cox. Por fim, os diagnósticos de Therneau e Grambsch (2000) — em particular os "
+        "resíduos de Schoenfeld — serão o critério para checar, já na fase de modelagem (Seção 6), "
+        "se a suposição de riscos proporcionais se sustenta nesse regime tempo-variante.")
+
+    add_heading(doc, "2.3  Deep Learning em Análise de Sobrevivência", level=2)
+    add_body(doc,
+        "Katzman et al. (2018) tratam o problema de linearidade do Cox por outro caminho: em vez "
+        "de assumir que o log-hazard é uma combinação linear das covariáveis, o DeepSurv usa uma "
+        "rede neural para aprender essa função diretamente da verossimilhança parcial de Cox, "
+        "dispensando a especificação manual de interações entre variáveis — ponto relevante aqui, "
+        "dado o número elevado de covariáveis tempo-variantes derivadas do histórico de "
+        "pagamentos. Kim (2026) mapeia esse campo em expansão, incluindo variantes recorrentes "
+        "(LSTM/GRU) pensadas para sequências longas, como as séries de até centenas de snapshots "
+        "por crédito observadas neste portfólio, e aponta abordagens multimodais como direção "
+        "futura. É esse mapeamento que orienta a comparação prevista para o Sprint 5 (Seção 8) "
+        "entre o baseline de Cox e uma arquitetura de Deep Learning sob censura.")
+
+    add_heading(doc, "2.4  Gestão Ágil de Projetos de Ciência de Dados como Framework "
+                     "Metodológico", level=2)
+    add_body(doc,
+        "Do ponto de vista da condução do projeto, Louzada Neto (2026) caracteriza projetos de "
+        "Ciência de Dados e Inteligência Artificial como empreendimentos de alto risco e médio "
+        "a longo prazo, propondo a adoção conjunta do ciclo CRISP-DS (Cross Industry Standard "
+        "Process for Data Science) e de práticas ágeis de gestão (Scrum) como mitigadores desse "
+        "risco. Esse referencial é adotado neste trabalho tanto para estruturar o pipeline de "
+        "dados em seis etapas (Seção 3.6) quanto para organizar o cronograma de pesquisa em "
+        "Sprints com entregas incrementais (Seção 8).")
+
+
+# ── SEÇÃO 3 — OBJETIVOS ───────────────────────────────────────────────────────
+
+def build_secao_2(doc):
+    add_heading(doc, "3  OBJETIVOS", level=1)
+    add_heading(doc, "3.1  Objetivo Geral", level=2)
+    add_body(doc,
+        "Desenvolver um modelo preditivo de risco de crédito baseado em Análise de Sobrevivência "
+        "para estimar o tempo exato até a ruptura do fluxo de caixa e da capacidade de pagamento "
+        "(inadimplência técnica) de microempreendedores, integrando variáveis estáticas demográficas "
+        "e dados longitudinais de fluxo transacional de alta frequência.")
+    add_heading(doc, "3.2  Objetivos Específicos", level=2)
+    items = [
+        ("Engenharia de Dados (ETL/RPA):",
+         "Projetar e implementar um sistema robusto de ingestão massiva capaz de contornar "
+         "limitações de sistemas legados, extraindo e organizando o histórico transacional de "
+         "múltiplas unidades de negócio em um Data Lake."),
+        ("Data Stitching e MLOps:",
+         "Unificar os snapshots temporais em uma Matriz Mestra (Silver Layer) com rastreabilidade "
+         "total (Data Lineage) e otimização computacional de memória."),
+        ("Tratamento e EDA:",
+         "Aplicar o estimador não-paramétrico de Kaplan-Meier para análise exploratória do tempo "
+         "de sobrevivência da capacidade de pagamento da carteira, e extrair covariáveis "
+         "espaço-temporais (clusters de rotas)."),
+        ("Modelagem de Baseline Clássico:",
+         "Treinar e ajustar o Modelo de Riscos Proporcionais de Cox para quantificar o impacto "
+         "das covariáveis estáticas e dependentes do tempo na função de risco basal."),
+        ("Inovação e Aporte Acadêmico (Deep Learning):",
+         "Comparar a performance preditiva do modelo paramétrico de Cox com arquiteturas "
+         "contemporâneas de Deep Learning adaptadas para dados de sobrevivência (DeepSurv/RNNs), "
+         "incorporando tratamento para censura (Negative Partial Log-Likelihood)."),
+        ("Comparativo Classificatório:",
+         "Avaliar os ganhos marginais da abordagem de sobrevivência contra os modelos tradicionais "
+         "de Credit Scoring de classificação binária."),
+    ]
+    for label, text in items:
+        add_labeled(doc, label, text)
+
+
+# ── SEÇÃO 3 — EXPANDIDA ───────────────────────────────────────────────────────
+
+def build_secao_3(doc):
+    add_heading(doc, "4  ARQUITETURA DE DADOS E PIPELINE DE EXTRAÇÃO INDUSTRIAL (ETL)", level=1)
+    add_body(doc,
+        "A construção de modelos de análise de sobrevivência com covariáveis tempo-variantes "
+        "exige séries longitudinais de alta granularidade que registrem o comportamento de "
+        "pagamento de cada crédito ao longo do tempo. A única fonte de dados disponível para "
+        "esta pesquisa é o Sistema ATLAS, plataforma de gestão creditícia que não expõe APIs "
+        "REST e restringe o acesso a uma interface web de terceira geração. Superar essa barreira "
+        "tecnológica exigiu o desenvolvimento de um pipeline de automação web (RPA) de nível "
+        "industrial, implementado em Python 3.12 com Selenium WebDriver, cuja arquitetura "
+        "completa é detalhada nas subseções seguintes.")
+
+    # ── 3.1 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "4.1  O Sistema ATLAS: Contexto e Barreiras Técnicas da Extração", level=2)
+    add_body(doc,
+        "O Sistema ATLAS (codinome atribuído neste trabalho por confidencialidade) é a "
+        "plataforma de gestão creditícia da instituição parceira. Trata-se de "
+        "uma aplicação web desenvolvida em PHP, hospedada em infraestrutura privada, sem "
+        "exposição de endpoints REST, GraphQL ou qualquer mecanismo programático de acesso "
+        "a dados. O único canal disponível é a interface de usuário no navegador, o que torna "
+        "a automação web (web scraping via Selenium) a única alternativa viável para a extração "
+        "sistemática do histórico transacional.")
+    add_body(doc,
+        "A interface do ATLAS impõe seis barreiras técnicas específicas que demandam soluções "
+        "individuais, detalhadas na Tabela 1. Cada barreira representa um ponto de falha "
+        "potencial no pipeline: a ausência de qualquer uma das soluções resulta em crash "
+        "silencioso do robô, extração parcial ou dados corrompidos.")
+
+    add_table_data(doc,
+        ["Barreira Técnica", "Causa Raiz", "Solução Implementada"],
+        [
+            ["Sem API REST",
+             "Backend PHP sem endpoints programáticos",
+             "Selenium WebDriver + ChromeDriver (webdriver-manager)"],
+            ["Frameset aninhado (3 níveis)",
+             "página principal → frameMenu → frameFormulario",
+             "Sequência precisa de switch_to.frame() + switch_to.default_content()"],
+            ["Autenticação SELECT2 (fase 2)",
+             "Widget jQuery ignora eventos DOM nativos",
+             "DOM nativo: sel.value + dispatchEvent('change', {bubbles: true})"],
+            ["Menu com tags <op> não-padrão",
+             "Tags HTML proprietárias sem suporte is_displayed()",
+             "XPath //op[normalize-space()='...'] + JS click via execute_script()"],
+            ["Campo de data readonly (datepicker)",
+             "jQuery UI bloqueia edição manual do campo",
+             "Injeção via JS: arguments[0].value + dispatchEvent('change')"],
+            ["Modal bootbox dinâmico",
+             "bootbox.js intercepta cliques e bloqueia o formulário",
+             "find_elements() (sem exceção se ausente) + JS click no botão de confirmação"],
+            ["Download silencioso de múltiplos arquivos",
+             "Chrome exige confirmação do usuário por padrão",
+             "Chrome prefs: automatic_downloads: 1, prompt_for_download: False"],
+        ],
+        "Barreiras técnicas do Sistema ATLAS e soluções implementadas no pipeline RPA",
+        table_num=1,
+    )
+
+    # ── 3.2 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "4.2  Autenticação Bifásica e Navegação no Frameset Aninhado", level=2)
+    add_body(doc,
+        "O pipeline de autenticação foi implementado na classe orientada a objetos "
+        "AtlasDataExtractor (src/atlas_extractor.py), que encapsula toda a lógica de interação "
+        "com o Sistema ATLAS. A autenticação ocorre em duas fases distintas, separadas por uma "
+        "transição de estado do servidor que invalida os elementos DOM previamente carregados.")
+
+    add_labeled(doc, "Fase 1 — Credenciais:",
+        "O formulário de login reside dentro de um iframe (frame index 0 de página de autenticação do sistema). "
+        "O robô utiliza WebDriverWait com expected_conditions para aguardar a disponibilidade de "
+        "cada elemento antes de interagir, garantindo tolerância a variações de latência do "
+        "servidor. Os campos campoUsuario e campoSenha recebem as credenciais lidas de variáveis de "
+        "ambiente (.env), e o botão botaoEntrar é ativado via clique nativo do Selenium.")
+
+    add_labeled(doc, "Fase 2 — Seleção de rota (SELECT2):",
+        "Após validar as credenciais, o servidor renderiza um segundo formulário com um dropdown "
+        "SELECT2 (biblioteca jQuery) para seleção da rota. O SELECT2 ignora completamente eventos "
+        "DOM nativos como 'input' ou 'change' disparados por Selenium — o widget escuta apenas "
+        "eventos jQuery internos. A solução implementada é a injeção direta de JavaScript que "
+        "escreve o valor no elemento <select> subjacente e dispara um evento 'change' nativo com "
+        "propagação (bubbles: true), contornando o interceptor jQuery:")
+
+    add_code(doc,
+        "# SELECT2 ignora eventos Selenium → DOM nativo com dispatchEvent\n"
+        "driver.execute_script(\"\"\"\n"
+        "    var sel = document.getElementById('campoRota');\n"
+        "    sel.value = arguments[0];\n"
+        "    sel.dispatchEvent(new Event('change', {bubbles: true}));\n"
+        "\"\"\", valor_ruta)"
+    )
+
+    add_body(doc,
+        "Após a seleção da rota, o servidor exibe um modal de boas-vindas (bootbox.js) que bloqueia "
+        "qualquer interação com o formulário subjacente. O tratamento utiliza find_elements() (que "
+        "retorna lista vazia em vez de lançar exceção) em vez de find_element(), evitando crash "
+        "quando o modal está ausente. O clique no botão de confirmação é realizado via JS para "
+        "garantir que interceptores DOM não interfiram. Após o fechamento do modal, o robô retorna "
+        "ao contexto padrão (switch_to.default_content()) e aguarda o carregamento do frameset "
+        "principal antes de prosseguir.")
+
+    add_body(doc,
+        "A navegação ao formulário de extração segue uma sequência rígida de troca de contexto "
+        "de frame, pois a arquitetura do Sistema ATLAS utiliza frameset aninhado em três níveis. "
+        "A Tabela 2 documenta a sequência exata implementada no método _navegar_ao_relatorio_pagamentos().")
+
+    add_table_data(doc,
+        ["Passo", "Operação Selenium", "Frame / Elemento Alvo", "Finalidade"],
+        [
+            ["1", "switch_to.default_content()", "Contexto raiz do navegador", "Resetar contexto após qualquer operação anterior"],
+            ["2", "switch_to.frame(0)", "página principal do sistema (frame raiz)", "Entrar no frameset raiz do sistema"],
+            ["3", "frame_to_be_available_and_switch_to_it('frameMenu')", "frameMenu (menu lateral)", "Acessar o menu de navegação"],
+            ["4", "JS click: //op[normalize-space()='Reportes']", "Tag <op> do menu", "Expandir o submenu de relatórios"],
+            ["5", "JS click: //op[normalize-space()='Recaudador']", "Tag <op> do submenu", "Expandir o submenu de cobrança"],
+            ["6", "JS click: //a[contains(@href,'RelatorioPagamentos')]", "Link do relatório", "Carregar o formulário de extração no frameFormulario"],
+            ["7", "switch_to.default_content() → switch_to.frame(0)", "De volta ao frame raiz", "Preparar para entrar no frameFormulario"],
+            ["8", "frame_to_be_available_and_switch_to_it('frameFormulario')", "frameFormulario (formulário)", "Acessar o formulário de extração"],
+            ["9", "Select(campoOficina).select_by_value()", "Dropdown de oficina", "Configurar filtro estático de escritório"],
+            ["10", "Select(campoRota).select_by_value()", "Dropdown de rota", "Configurar filtro estático de rota (após AJAX)"],
+        ],
+        "Sequência de navegação no frameset aninhado do Sistema ATLAS",
+        table_num=2,
+    )
+
+    add_body(doc,
+        "Os filtros de escritório e rota (campoOficina e campoRota) são configurados uma única vez "
+        "antes do início do laço de extração batch, pois permanecem constantes para toda a "
+        "sequência temporal de uma rota. A seleção da oficina dispara uma chamada AJAX que "
+        "repopula o dropdown campoRota — o pipeline aguarda a presença da opção correta com "
+        "lambda WebDriverWait antes de prosseguir, garantindo sincronização com o servidor.")
+
+    # ── 3.3 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "4.3  Extração Batch: Paginação Temporal e Filtro Anti-Zero", level=2)
+    add_body(doc,
+        "O Sistema ATLAS restringe cada extração a uma janela de exatamente 10 dias calendário. "
+        "Para cobrir o horizonte histórico completo de 2020 a 2026 (~2.327 dias), o pipeline "
+        "implementa um cursor temporal que avança em blocos estritos de 10 dias, gerando "
+        "aproximadamente 233 iterações por rota e 3.961 iterações no total corporativo.")
+
+    add_labeled(doc, "Early-exit [YA EXISTE]:",
+        "Antes de qualquer interação com o DOM, o pipeline verifica se o arquivo "
+        "relatorio_pagamentos_YYYYMMDD_YYYYMMDD.xlsx já existe no diretório de destino. Se existir, "
+        "o bloco é saltado completamente sem abrir o formulário, permitindo retomada eficiente "
+        "de sessões interrompidas sem reprocessamento.")
+
+    add_labeled(doc, "Injeção de data (datepicker bypass):",
+        "O campo campoDataInicial é marcado como readonly pelo jQuery UI datepicker, impedindo "
+        "qualquer edição via Selenium send_keys(). A solução injeta o valor diretamente no "
+        "elemento DOM via JavaScript e dispara o evento 'change' para ativar os listeners "
+        "do formulário:")
+
+    add_code(doc,
+        "# Campo readonly → injetar valor via JS + disparar evento change\n"
+        "driver.execute_script(\"\"\"\n"
+        "    arguments[0].value = arguments[1];\n"
+        "    arguments[0].dispatchEvent(new Event('change', {bubbles: true}));\n"
+        "\"\"\", campo_fecha, cursor.strftime('%Y-%m-%d'))"
+    )
+
+    add_labeled(doc, "Filtro anti-zero (visualizadorRelatorio):",
+        "Após pressionar botaoConfirmar, o servidor processa a consulta e renderiza um PDF "
+        "embebido no elemento <object id='visualizadorRelatorio'>. Quando o período consultado "
+        "não contém atividade para a rota (rota inativa naquele intervalo), o objeto "
+        "permanece oculto (display: none) ou com atributo data vazio. O pipeline valida a "
+        "presença de dados antes de tentar o download:")
+
+    add_code(doc,
+        "# Validar presença de dados antes de baixar\n"
+        "obj = driver.find_element(By.ID, 'visualizadorRelatorio')\n"
+        "tem_dados = (\n"
+        "    '.pdf' in (obj.get_attribute('data') or '') and\n"
+        "    'inline-block' in (obj.get_attribute('style') or '')\n"
+        ")\n"
+        "if not tem_dados:\n"
+        "    cursor += timedelta(days=10)  # [SKIP] rota inativa"
+    )
+
+    add_body(doc,
+        "Este filtro anti-zero é crítico para a integridade estatística do dataset: sem ele, "
+        "blocos sem atividade gerariam arquivos Excel vazios que, ao serem consolidados na "
+        "Matriz Mestra, introduziriam zeros espúrios nas colunas de pagamento e distorceriam "
+        "o cronômetro dias_sem_pagar, gerando falsos positivos no evento de default.")
+
+    add_labeled(doc, "Monitoramento de download e renomeação semântica:",
+        "Após pressionar botaoExportar, o Chrome inicia o download para a pasta staging "
+        "(data/raw/). O pipeline monitora a pasta em loop de 1 segundo, detectando o "
+        "arquivo .crdownload (parcial) e aguardando seu desaparecimento antes de renomear "
+        "o xlsx completo para o padrão relatorio_pagamentos_YYYYMMDD_YYYYMMDD.xlsx. Este padrão "
+        "de nomenclatura incorpora as datas de início e fim do bloco, viabilizando a extração "
+        "automática de metadados temporais durante o Data Stitching.")
+
+    # ── 3.4 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "4.4  Escalabilidade Corporativa: Auto-Discovery, Data Lake Hierárquico e Resiliência", level=2)
+    add_body(doc,
+        "Para escalar o pipeline piloto (uma rota) para o universo corporativo completo (17 "
+        "rotas em 3 escritórios), foi desenvolvida a classe AtlasMasivoExtractor "
+        "(src/atlas_masivo.py), que herda toda a infraestrutura de AtlasDataExtractor e "
+        "adiciona quatro capacidades fundamentais: auto-discovery do mapa corporativo, "
+        "organização hierárquica do Data Lake, tratamento de erros de elemento obsoleto "
+        "(StaleElementReferenceException) e sistema de checkpoint para resiliência a falhas.")
+
+    add_labeled(doc, "Auto-Discovery do mapa corporativo:",
+        "O método _descobrir_mapa_rotas() lê dinamicamente todas as opções dos dropdowns "
+        "campoOficina e campoRota diretamente do DOM do formulário. Para cada escritório detectado, "
+        "dispara uma mudança de valor no select (via JavaScript) que aciona a chamada AJAX de "
+        "repopulação do dropdown de rotas, coletando os IDs de todas as rotas disponíveis. "
+        "Este mecanismo elimina a necessidade de manutenção manual de um catálogo de rotas e "
+        "garante que novas rotas adicionadas pela instituição sejam automaticamente incluídas "
+        "em extrações futuras.")
+
+    add_body(doc,
+        "O mapa corporativo identificado automaticamente pelo Auto-Discovery compreende três "
+        "escritórios e 17 rotas geográficas, conforme documentado na Tabela 3.")
+
+    add_table_data(doc,
+        ["Escritório", "ID", "Região", "Rotas (IDs)", "Total"],
+        [
+            ["OFI_23 — São Paulo",       "23", "São Paulo / Grande SP",
+             "82, 96, 423, 136, 367, 448, 494", "7"],
+            ["OFI_31 — Sociedades Brasil","31", "Interior e Sul do Brasil",
+             "415, 68, 338, 347, 389", "5"],
+            ["OFI_44 — Cabo Frio",        "44", "Região dos Lagos / RJ",
+             "114, 439, 396, 420, 511", "5"],
+        ],
+        "Mapa corporativo detectado pelo Auto-Discovery: escritórios e rotas do Sistema ATLAS",
+        table_num=3,
+    )
+
+    add_labeled(doc, "Organização hierárquica do Data Lake:",
+        "Os arquivos extraídos são organizados em uma hierarquia de diretórios que reflete "
+        "a topologia corporativa do sistema: data/raw/OFI_{id_oficina}/RTA_{id_ruta}/. "
+        "O Chrome baixa cada arquivo inicialmente para data/raw/ (staging area) e o pipeline "
+        "move o xlsx renomeado para o subdiretório correspondente via shutil.move(). "
+        "Esta estrutura garante rastreabilidade completa (Data Lineage): dado qualquer arquivo, "
+        "é possível identificar imediatamente a qual escritório, rota e período temporal "
+        "ele pertence, apenas pelo caminho e nome do arquivo.")
+
+    add_table_data(doc,
+        ["Métrica", "Valor"],
+        [
+            ["Arquivos Excel baixados",        "3.962 arquivos"],
+            ["Escritórios cobertos",           "3 (OFI_23, OFI_31, OFI_44)"],
+            ["Rotas cobertas",                 "17"],
+            ["Período de cobertura",           "2020-01-01 → 2026-05-15 (~6,4 anos)"],
+            ["Blocos temporais por rota",      "~233 blocos de 10 dias"],
+            ["Tamanho total do Data Lake",     "~14 GB"],
+            ["Pausa entre rotas",              "10 segundos (limpeza de cache do navegador)"],
+        ],
+        "Volumetria final do Data Lake extraído",
+        table_num=4,
+    )
+
+    add_labeled(doc, "Tratamento de StaleElementReferenceException:",
+        "O Sistema ATLAS realiza re-renderizações parciais do DOM durante transições entre "
+        "rotas (o AJAX de campoRota pode não ter terminado quando o SELECT já foi localizado). "
+        "O pipeline implementa até 3 tentativas com pausa de 3 segundos entre cada uma para "
+        "o método _seleccionar_oficina_y_ruta(), que renavega ao formulário desde o menu "
+        "lateral a cada tentativa, garantindo um estado DOM fresco.")
+
+    add_labeled(doc, "Sistema de Checkpoint JSON:",
+        "O arquivo oculto .checkpoint.json em data/raw/ persiste o estado da extração após "
+        "cada bloco temporal bem-sucedido. Na inicialização, o pipeline lê o checkpoint e "
+        "retoma exatamente do último ponto processado, saltando as rotas já completadas. "
+        "Ao concluir a maratón completa, o arquivo é deletado automaticamente.")
+
+    add_table_data(doc,
+        ["Campo JSON", "Tipo", "Exemplo", "Descrição"],
+        [
+            ["id_oficina", "String", '"44"',         "ID do escritório em extração"],
+            ["id_ruta",    "String", '"114"',        "ID da rota em extração"],
+            ["fecha",      "String", '"2023-07-15"', "Última data de início de bloco processada com sucesso"],
+        ],
+        "Estrutura do arquivo de checkpoint JSON (.checkpoint.json)",
+        table_num=5,
+    )
+
+    # ── 3.5 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "4.5  Consolidação da Matriz Mestra e Otimização de Memória (Data Stitching)", level=2)
+    add_body(doc,
+        "O script consolidar_datos.py implementa o processo de Data Stitching, que transforma "
+        "os 3.962 arquivos Excel fragmentados do Data Lake em um único painel longitudinal "
+        "contínuo: a Matriz Mestra (Silver Layer). O processo percorre recursivamente a "
+        "hierarquia data/raw/OFI_*/RTA_*/*.xlsx, extraindo dois tipos de metadados diretamente "
+        "do sistema de arquivos, sem necessidade de parsing do conteúdo dos arquivos:")
+
+    add_labeled(doc, "Metadados topológicos (do caminho do arquivo):",
+        "O identificador de escritório (ofi_id) e o identificador de rota (rta_id) são "
+        "extraídos do caminho relativo por expressão regular sobre os componentes do "
+        "Path. Estes metadados são injetados como colunas adicionais em cada linha do "
+        "arquivo correspondente, viabilizando análises estratificadas por escritório e "
+        "rota no modelo de Cox sem necessidade de joins posteriores.")
+
+    add_labeled(doc, "Metadados temporais (do nome do arquivo):",
+        "As datas de início e fim do bloco de 10 dias são extraídas do nome do arquivo "
+        "pelo padrão relatorio_pagamentos_YYYYMMDD_YYYYMMDD.xlsx via expressão regular "
+        r"(\d{8})_(\d{8})\.xlsx. Estas datas são utilizadas durante a Feature Engineering "
+        "para calcular a máscara de pagamentos do bloco e o cronômetro dias_sem_pagar.")
+
+    add_body(doc,
+        "O resultado do Data Stitching é a Matriz Mestra, cujas dimensões e características "
+        "são documentadas na Tabela 6. A estrutura matricial tem os créditos como linhas e "
+        "as datas calendário de 2020-01-01 a 2026-05-15 (~2.330 datas) como colunas, "
+        "com os valores de pagamento diário (abonos) preenchendo a interseção.")
+
+    add_table_data(doc,
+        ["Dimensão / Métrica", "Valor"],
+        [
+            ["Linhas (observações de crédito)", "344.869"],
+            ["Colunas totais",                   "2.358"],
+            ["Colunas de pagamentos diários",    "~2.330 (datas 2020-01-01 → 2026-05-15)"],
+            ["Colunas estáticas do crédito",     "28 (CÓDIGO CRÉDITO, SALDO, CUOTAS PACTADAS, etc.)"],
+            ["Tamanho em disco (CSV comprimido)","882 MB"],
+            ["Tamanho em RAM (expandido, float64)","~6 GB"],
+            ["Redução RAM por downcasting",       "~49% (float32 + categorização de strings)"],
+            ["arquivo_origen (coluna de rastreabilidade)", "OFI_{id}/RTA_{id}/planilla_abonos_*.xlsx"],
+        ],
+        "Dimensões da Matriz Mestra após consolidação (Data Stitching)",
+        table_num=6,
+    )
+
+    add_body(doc,
+        "O tamanho em RAM de ~6 GB impossibilita a carga completa da Matriz Mestra com "
+        "pd.read_csv() padrão em máquinas com menos de 16 GB de memória disponível. O "
+        "pipeline de Feature Engineering (src/feature_engineering.py) resolve este "
+        "problema mediante leitura em chunks com máscara NumPy vetorizada, descrita a seguir.")
+
+    add_labeled(doc, "Chunked loading com máscara NumPy vetorizada:",
+        "O pipeline lê a Matriz Mestra em blocos de 5.000 linhas por vez (chunksize=5000), "
+        "processando os agregados de pagamento de cada bloco em memória e descartando as "
+        "~2.330 colunas de data antes de concatenar. O cálculo dos agregados "
+        "(pago_promedio_diario, dias_con_abono) utiliza broadcasting NumPy para criar uma "
+        "máscara binária (n_linhas × n_colunas_pagamento) que seleciona apenas as colunas "
+        "de data dentro do intervalo do bloco, sem loop Python:")
+
+    add_code(doc,
+        "# Máscara vetorizada (n_linhas × n_colunas_pago) — sem loop Python\n"
+        "ini_arr   = ini.values[:, np.newaxis]    # shape: (5000, 1)\n"
+        "fin_arr   = fin.values[:, np.newaxis]    # shape: (5000, 1)\n"
+        "dates_arr = pago_dates.values[np.newaxis, :]  # shape: (1, 2330)\n"
+        "\n"
+        "# Broadcasting: compara cada linha com todas as datas simultaneamente\n"
+        "mascara = (dates_arr >= ini_arr) & (dates_arr <= fin_arr)  # (5000, 2330)\n"
+        "\n"
+        "pagos_bloque       = pagos_vals * mascara\n"
+        "pago_promedio      = pagos_bloque.sum(axis=1) / n_dias_bloque\n"
+        "dias_com_abono     = (pagos_bloque > 0).sum(axis=1)"
+    )
+
+    add_table_data(doc,
+        ["Parâmetro", "Valor", "Justificativa"],
+        [
+            ["Chunk size",              "5.000 linhas",  "Equilíbrio entre velocidade e consumo de RAM (~100 MB/chunk)"],
+            ["Colunas de pagamento",    "~2.330",         "Datas 2020-01-01 a 2026-05-15 detectadas pelo header scan"],
+            ["Shape da máscara",        "(5000 × 2330)", "Broadcasting NumPy — operação vetorizada sem loop Python"],
+            ["Throughput",              "~5.000 linhas/s","Medido em hardware com 8 GB RAM / CPU 4 núcleos"],
+            ["RAM pico por chunk",      "~100 MB",        "Máscara booleana float32 + dados de pagamento"],
+            ["Tempo total de leitura",  "~70 segundos",   "Para 344.869 linhas × 2.358 colunas"],
+        ],
+        "Estratégia de chunked loading com máscara NumPy vetorizada",
+        table_num=7,
+    )
+
+    # ── 3.6 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "4.6  Governança de Dados, Conformidade LGPD e Metodologia CRISP-DS", level=2)
+    add_body(doc,
+        "O pipeline ETL foi projetado com governança de dados desde a concepção, atendendo "
+        "aos requisitos da Lei Geral de Proteção de Dados Pessoais (LGPD, Lei nº 13.709/2018) "
+        "e às melhores práticas de segurança da informação em projetos de Ciência de Dados.")
+
+    add_table_data(doc,
+        ["Controle de Governança", "Implementação", "Artigo LGPD"],
+        [
+            ["Exclusão do versionamento (git)",
+             "data/raw/, data/processed/ e .env no .gitignore",
+             "Art. 46 — Medidas de segurança"],
+            ["Gestão de credenciais",
+             "ATLAS_USER e ATLAS_PASS apenas em .env (nunca no código-fonte)",
+             "Art. 46 — Proteção de acesso"],
+            ["Pseudonimização",
+             "CÓDIGO CRÉDITO como chave — sem nome, CPF, endereço ou dados de identificação direta",
+             "Art. 13 — Pseudonimização"],
+            ["Minimização de dados",
+             "Silver Layer contém apenas variáveis necessárias para o modelo de sobrevivência",
+             "Art. 6 — Necessidade"],
+            ["Finalidade definida",
+             "Dados utilizados exclusivamente para pesquisa acadêmica de risco de crédito",
+             "Art. 6 — Finalidade"],
+            ["Rastreabilidade",
+             "arquivo_origen em cada linha da Matriz Mestra identifica a fonte exata do dado",
+             "Art. 37 — Registro das operações"],
+        ],
+        "Conformidade LGPD e governança de dados no pipeline ETL",
+        table_num=8,
+    )
+
+    add_body(doc,
+        "A metodologia CRISP-DS (Cross Industry Standard Process for Data Science), adotada "
+        "como framework de gestão do projeto (Louzada Neto, 2026), estrutura o pipeline em seis "
+        "fases iterativas que se retroalimentam:")
+
+    fases = [
+        ("(1) Entendimento do Negócio:",
+         "Definição do evento de castigo de carteira (dias_sem_pagar ≥ 120) a partir do "
+         "processo operativo da instituição parceira. Identificação do Sistema ATLAS como "
+         "fonte primária e design do pipeline RPA como solução de ingestão."),
+        ("(2) Entendimento dos Dados:",
+         "Análise exploratória da estrutura da Matriz Mestra (344.869 × 2.358), identificação "
+         "das ~2.330 colunas de pagamento, caracterização da cohorte diária e EDA do dataset "
+         "de sobrevivência (Seção 5.6)."),
+        ("(3) Preparação dos Dados:",
+         "Feature Engineering no formato Counting Process de Anderson-Gill: cronômetro "
+         "dias_sem_pagar, correção de left truncation, continuidade via shift(), filtro de "
+         "coorte diária e construção das 7 covariáveis tempo-variantes."),
+        ("(4) Modelagem:",
+         "Ajuste do Modelo de Riscos Proporcionais de Cox com covariáveis tempo-variantes "
+         "(lifelines.CoxTimeVaryingFitter) e implementação de DeepSurv/RNN-Survival com "
+         "Negative Partial Log-Likelihood (pycox/PyTorch). [Sprints 4 e 5, pendente]"),
+        ("(5) Avaliação:",
+         "Comparação de modelos via C-index de Harrell, Brier Score temporal e Teste de "
+         "Log-Rank. Diagnóstico de resíduos de Schoenfeld para validar a suposição de "
+         "proporcionalidade do Cox. [Sprint 6, pendente]"),
+        ("(6) Implantação:",
+         "Modelo em produção para scoring dinâmico de novos créditos, integrado ao pipeline "
+         "ETL para atualização periódica das covariáveis tempo-variantes. [trabalho futuro]"),
+    ]
+    for label, text in fases:
+        add_labeled(doc, label, text)
+
+    add_body(doc,
+        "A gestão de riscos do projeto seguiu as sete categorias identificadas na literatura "
+        "de gerenciamento ágil de projetos de Ciência de Dados (Louzada Neto, 2026): "
+        "(1) qualidade dos dados — mitigada pelo filtro anti-zero e validação do visualizadorRelatorio; "
+        "(2) orçamento — controlado pela solução in-house de web scraping, eliminando licenças "
+        "externas; (3) comprometimento — gerenciado com entregas iterativas por Sprint; "
+        "(4) recursos humanos — risco baixo por ser pesquisa individual; "
+        "(5) fornecedores — mitigado pela independência do Sistema ATLAS (solução in-house); "
+        "(6) segurança da informação — LGPD + .gitignore + pseudonimização; "
+        "(7) expectativas de tempo — cronograma CRISP-DS com 7 Sprints Scrum.")
+    add_body(doc,
+        "A formatação deste documento e pequenos trechos de código contaram com apoio pontual "
+        "de uma ferramenta de inteligência artificial (ANTHROPIC, 2026).")
+
+
+# ── SEÇÃO 4 ──────────────────────────────────────────────────────────────────
+
+def build_secao_4(doc):
+    add_heading(doc, "5  ENGENHARIA DE VARIÁVEIS E DEFINIÇÃO DO EVENTO TARGET", level=1)
+
+    add_heading(doc, "5.1  Fundamentos Teóricos da Análise de Sobrevivência", level=2)
+    add_body(doc,
+        "Diferentemente da regressão logística — que estimaria a probabilidade de default do "
+        "microempreendedor em um ponto fixo do tempo, sem capturar quando isso ocorre —, este "
+        "trabalho recorre à análise de sobrevivência (Kalbfleisch e Prentice, 2002): um "
+        "ferramental que incorpora explicitamente a dimensão temporal, distinguindo os "
+        "créditos que efetivamente entraram em default daqueles observados sem esse desfecho "
+        "até o corte do estudo (censurados).")
+
+    add_heading(doc, "5.1.1  Função de Sobrevivência e Função de Risco", level=3)
+    add_body(doc,
+        "Neste trabalho, T representa o tempo até a inadimplência técnica de um crédito "
+        "(dias_sem_pagar ≥ 120), e a probabilidade de o crédito permanecer ativo além de um "
+        "instante t é dada pela função de sobrevivência:")
+    add_formula(doc, "S(t) = P(T > t) = 1 − F(t)")
+    add_body(doc,
+        "em que F(t) é a função de distribuição acumulada de T. Já a taxa instantânea de "
+        "default no momento t, condicional a o crédito ainda estar ativo até ali, é capturada "
+        "pela função de risco:")
+    add_formula(doc, "h(t) = lim[Δt→0] P(t ≤ T < t+Δt | T ≥ t) / Δt = f(t) / S(t)")
+    add_body(doc, "As duas funções não são independentes — conhecendo uma, a outra fica determinada:")
+    add_formula(doc, "S(t) = exp(−∫₀ᵗ h(u) du) = exp(−H(t))")
+    add_body(doc,
+        "com H(t) sendo o risco acumulado até t. É justamente h(t) que o Modelo de Cox modela "
+        "como função das covariáveis do crédito, tornando essa relação o alicerce matemático "
+        "de toda a Seção 6.")
+
+    add_heading(doc, "5.1.2  Tipos de Censura e Truncação à Esquerda", level=3)
+    add_body(doc,
+        "A censura à direita (right censoring) ocorre quando o evento não ocorreu antes do fim "
+        "da observação — aplicável aos créditos ativos no corte do estudo (15 de maio de 2026). "
+        "A truncação à esquerda (left truncation) ocorre quando o primeiro snapshot de um crédito "
+        "corresponde a uma data posterior ao seu desembolso. O formato Counting Process trata "
+        "corretamente ambos os fenômenos (Therneau e Grambsch, 2000).")
+
+    add_heading(doc, "5.1.3  Estimador de Kaplan-Meier", level=3)
+    add_body(doc,
+        "Para estimar S(t) diretamente a partir da carteira de crédito, sem impor uma forma "
+        "distribucional a T, recorre-se ao estimador de Kaplan e Meier (1958). Denotando por "
+        "dⱼ o número de créditos que entram em default e por nⱼ o número de créditos ainda em "
+        "risco em cada tempo de evento tⱼ, o estimador é o produto:")
+    add_formula(doc, "Ŝ(t) = ∏[j: tⱼ ≤ t] (1 − dⱼ/nⱼ)")
+    add_body(doc,
+        "Três características tornam esse estimador adequado à carteira analisada: converge "
+        "para o S(t) verdadeiro à medida que a amostra cresce, dispensa qualquer suposição "
+        "sobre a forma de T, e trata corretamente a censura — créditos ainda ativos continuam "
+        "contribuindo ao denominador nⱼ até o instante em que deixam de ser observados. A "
+        "incerteza da estimativa é quantificada pela fórmula de Greenwood: "
+        "Var[Ŝ(t)] = Ŝ(t)² × Σ[dⱼ/(nⱼ(nⱼ−dⱼ))].")
+
+    add_heading(doc, "5.1.4  Teste de Log-Rank", level=3)
+    add_body(doc,
+        "Comparar as curvas de sobrevivência entre grupos de crédito — por exemplo, entre "
+        "escritórios — sem assumir uma forma paramétrica é o papel do teste de log-rank de "
+        "Mantel (1966), utilizado na Seção 5.6.4 para contrastar OFI_23 e OFI_44. A hipótese "
+        "testada é a igualdade das curvas entre grupos ao longo de todo o período "
+        "(H₀: S₁(t) = S₂(t) para todo t), e o estatístico resultante segue uma distribuição "
+        "χ² com (k−1) graus de liberdade sob H₀, com maior poder para detectar diferenças "
+        "concentradas na cauda da distribuição — justamente onde estão os créditos de maior risco.")
+
+    add_heading(doc, "5.1.5  Processo de Contagem de Anderson-Gill", level=3)
+    add_body(doc,
+        "Quando as covariáveis mudam ao longo do seguimento — como saldo devedor, cuotas "
+        "atrasadas e dias_sem_pagar —, é necessário o marco do Processo de Contagem de "
+        "Anderson e Gill (1982). O indivíduo i é representado por uma sequência de intervalos:")
+    add_formula(doc, "(t_start₁, t_stop₁, δ₁, X_{i1}), (t_start₂, t_stop₂, δ₂, X_{i2}), ...")
+    add_body(doc,
+        "Restrições: (1) intervalos contíguos: t_start[k] = t_stop[k−1]; (2) evento δ=1 apenas "
+        "no último intervalo; (3) intervalos abertos à esquerda e fechados à direita: (t_start, t_stop]. "
+        "Implementado em lifelines.CoxTimeVaryingFitter e pycox.")
+
+    add_heading(doc, "5.2  Definição Operacional da Inadimplência na Alta Frequência", level=2)
+    add_body(doc,
+        "A definição do evento requer atenção especial no contexto de microcrédito diário. "
+        "O campo CUOTAS_ATRASADAS registra o número de cotas diárias pendentes no snapshot: "
+        "para créditos de 20 a 40 dias, seu máximo teórico é exatamente CUOTAS_PACTADAS. "
+        "O umbral original de 120 cotas atrasadas é operacionalmente impossível, produzindo "
+        "zero eventos. A definição adotada é o castigo de carteira operativo da instituição:")
+    add_formula(doc, "E_i = 𝟙[dias_sem_pagar_{it} ≥ 120 dias calendário]")
+    add_body(doc,
+        "Este umbral — equivalente a 4 meses de inatividade financeira total — distingue "
+        "mora transitória (cronômetro reiniciado por qualquer abono) de abandono real "
+        "(inatividade superior a 4 vezes o prazo máximo do crédito). "
+        "Critério de inclusão: coorte diária com CUOTAS_PACTADAS ≤ 40.")
+
+    add_heading(doc, "5.3  Estrutura Bimodal de Atributos e Estratégia de Proxy", level=2)
+    add_body(doc,
+        "As covariáveis disponíveis dividem-se em dois grupos: (1) Variáveis Estáticas — "
+        "parâmetros do crédito (valor total, valor da cota, cotas pactadas); (2) Variáveis "
+        "Dinâmicas (Heartbeat) — vetor longitudinal de pagamentos, cuotas atrasadas, "
+        "intensidade transacional dos abonos e dias com abono, capturando a 'frequência "
+        "cardíaca' financeira do empreendedor. Os identificadores ofi_id e rta_id atuam "
+        "como proxies geodemográficos para capturar o comportamento de risco local.")
+
+    add_heading(doc, "5.4  Formatação Anderson-Gill (Counting Process)", level=2)
+    add_body(doc,
+        "A Matriz Mestra é transformada em intervalos longitudinais contínuos (t_start, t_stop]. "
+        "Dois desafios matemáticos críticos foram resolvidos:")
+    add_labeled(doc, "Left Truncation:",
+        "t_start(primeira linha) = max(0, data_ini_bloco − DATA_CRÉDITO) em dias. "
+        "Previne tempos de vida negativos que colapsariam a função de verossimilhança.")
+    add_labeled(doc, "Continuidade de Markov:",
+        "t_start[n] = t_stop[n−1] via shift(), eliminando gaps temporais que fariam o modelo "
+        "assumir o desaparecimento artificial do cliente entre snapshots.")
+    add_formula(doc, "t_stop[t] = (data_fim_bloco[t] − DATA_CRÉDITO).dias + 1")
+    add_formula(doc, "t_start[t] = t_stop[t−1]  para  t > 1")
+
+    add_heading(doc, "5.5  Construção do Dataset de Sobrevivência", level=2)
+    add_body(doc,
+        "A granularidade de 10 dias adotada para os intervalos (t_start, t_stop] merece "
+        "uma justificativa explícita, já que o Sistema ATLAS restringe a extração a blocos "
+        "de 10 dias, mas o relatório subjacente traz, em cada extração, colunas de "
+        "pagamento diário — a granularidade diária, portanto, está disponível na origem. "
+        "A opção por reportar o cronômetro dias_sem_pagar a cada 10 dias, e não "
+        "diariamente, é um compromisso consciente entre fidelidade temporal e "
+        "viabilidade computacional: monitorar a cada 10 dias um evento cujo limiar é de "
+        "120 dias equivale a uma frequência de amostragem cerca de 12 vezes maior do que a "
+        "escala do próprio fenômeno, de forma análoga ao teorema da amostragem — e o "
+        "cronômetro dias_sem_pagar preserva precisão diária internamente via forward-fill, "
+        "não perdendo informação na definição do evento. Reconstruir o dataset em "
+        "granularidade diária multiplicaria o número de linhas em cerca de 10 vezes "
+        "(de ~301 mil para ~3 milhões), tornando o treinamento do Cox e do DeepSurv "
+        "substancialmente mais custoso sem benefício claro para esse objetivo específico. "
+        "Para não descartar por completo o sinal diário disponível na origem, duas novas "
+        "covariáveis foram incorporadas a cada bloco de 10 dias: variabilidade_pago_diario "
+        "(desvio-padrão do pagamento diário dentro do bloco) e "
+        "dias_desde_ultimo_abono_no_bloco (recência do último pagamento dentro do próprio "
+        "bloco, complementando dias_sem_pagar, que mede a recência ao longo de todo o "
+        "histórico do crédito). A reconstrução em granularidade diária permanece como "
+        "direção de trabalho futuro caso o Sprint 5 revele que o sinal agregado por bloco "
+        "é insuficiente.")
+    add_body(doc,
+        "O dataset final no formato Counting Process contém as seguintes variáveis:")
+
+    add_table_data(doc,
+        ["Coorte", "Critério", "Créditos"],
+        [["Diária (incluída)", "CUOTAS_PACTADAS ≤ 40", "28.386"],
+         ["Semanal/quinzenal/mensal (excluída)", "CUOTAS_PACTADAS > 40", "—"]],
+        "Filtro de coorte diária: critério e créditos retidos", table_num=9)
+
+    add_table_data(doc,
+        ["Variável", "Tipo", "Descrição"],
+        [["t_start", "Contínua", "Início do intervalo (dias desde o desembolso)"],
+         ["t_stop",  "Contínua", "Fim do intervalo (dias desde o desembolso)"],
+         ["evento",  "Binária",  "1 = default (dias_sem_pagar ≥ 120), 0 = censura"],
+         ["dias_sem_pagar", "Discreta", "Cronômetro de inatividade financeira"]],
+        "Variáveis de tempo e evento do dataset de sobrevivência", table_num=10)
+
+    add_table_data(doc,
+        ["Variável", "Fórmula", "Interpretação"],
+        [["cuotas_atrasadas",       "CUOTAS_ATRASADAS",                 "Dias em mora no snapshot"],
+         ["pago_promedio_diario",   "Σ(pagamentos_bloco) / dias_bloco", "Fluxo médio de pagamentos (BRL)"],
+         ["dias_con_abono",         "#{dias com abono > 0} no bloco",   "Frequência de pagamento no período"],
+         ["variabilidade_pago_diario", "Desvio-padrão do pagamento diário no bloco", "Regularidade do pagamento (BRL)"],
+         ["dias_desde_ultimo_abono_no_bloco", "fim_bloco − data do último pagamento no bloco", "Recência do pagamento dentro do bloco"],
+         ["intensidade_recuperacao","VALOR_ÚLTIMO_ABONO / VALOR_COTA",  "Fração da cota paga (clip [0,10])"],
+         ["ratio_atraso",           "CUOTAS_ATRASADAS / CUOTAS_PACTADAS","Fração do prazo em mora (clip [0,1])"],
+         ["saldo_relativo",         "SALDO / TOTAL_CRÉDITO",             "Fração do crédito pendente (clip [0,1])"]],
+        "Covariáveis tempo-variantes e suas fórmulas", table_num=11)
+
+    add_table_data(doc,
+        ["Variável", "Descrição"],
+        [["total_credito",  "Montante original do crédito (BRL)"],
+         ["valor_cota",     "Valor da cota diária pactuada (BRL)"],
+         ["cotas_pactadas", "Prazo do crédito em dias"],
+         ["ofi_id",         "Identificador de escritório (proxy geográfico)"],
+         ["rta_id",         "Identificador de rota (proxy de zona/cobrador)"]],
+        "Covariáveis estáticas do modelo", table_num=12)
+
+    # ── 4.6 EDA ──────────────────────────────────────────────────────────────
+    add_heading(doc, "5.6  Análise Exploratória de Dados (EDA)", level=2)
+    add_body(doc,
+        "A análise exploratória foi desenvolvida no notebook notebooks/01_eda_survival.ipynb, "
+        "gerando nove figuras de diagnóstico (Figuras 1–9).")
+
+    add_heading(doc, "5.6.1  Caracterização Geral do Dataset", level=3)
+    add_table_data(doc,
+        ["Métrica", "Valor"],
+        [["Créditos únicos",              "28.386"],
+         ["Intervalos totais (linhas)",   "300.926"],
+         ["Eventos (E=1)",                "273"],
+         ["Taxa de default (nível crédito)", "0,96%"],
+         ["Créditos censurados (E=0)",    "28.113 (99,04%)"],
+         ["Escritórios",                  "3"],
+         ["Rotas",                        "17"],
+         ["Período de observação",        "2020-01-01 → 2026-05-15 (~6,4 anos)"]],
+        "Caracterização geral do dataset de sobrevivência (após auditoria de integridade, "
+        "ver §5.8)", table_num=13)
+    add_body(doc,
+        "O baixo índice de default (0,96%) reflete a gestão de cobrança intensiva via cobrador "
+        "de rota: a maioria dos inadimplentes é transitória e se resolve antes de atingir 120 "
+        "dias de inatividade. A taxa é coerente com referências de microcrédito de pagamento "
+        "diário em economias emergentes (Schreiner, 2002). Este número já incorpora a "
+        "correção descrita em §5.8 — a versão original do dataset apresentava 425 eventos "
+        "(1,50%), dos quais 152 eram falsos positivos.")
+
+    add_heading(doc, "5.6.2  Distribuição do Evento de Default", level=3)
+    add_figure(doc, REPORTS / "fig01_distribucion_evento.png",
+               "Distribuição do evento de default: proporção (pie), taxa por escritório e taxa por rota", 1)
+    add_table_data(doc,
+        ["Escritório", "Créditos", "Eventos", "Taxa de Default"],
+        [["OFI_23 (São Paulo)",      "14.031", "126", "0,90%"],
+         ["OFI_31 (Soc. Brasil)",     "7.333",  "53",  "0,72%"],
+         ["OFI_44 (Cabo Frio)",       "7.022",  "94",  "1,34%"]],
+        "Taxa de default por escritório", table_num=14)
+    add_body(doc,
+        "A versão original do dataset (antes da correção de §5.8) indicava uma taxa quase "
+        "quatro vezes superior em OFI_44 (3,50%) — mas 152 dos seus eventos eram créditos "
+        "corretamente pagos e falsamente etiquetados como default pelo bug do cronômetro, "
+        "concentrados nesse escritório. Após a correção, OFI_44 ainda apresenta a maior taxa "
+        "(1,34% vs. 0,72–0,90%), porém a diferença é bem menor do que a inicialmente observada "
+        "e, como mostra §5.6.4, agora estatisticamente significativa.")
+
+    add_heading(doc, "5.6.3  Curva de Kaplan-Meier Global", level=3)
+    add_figure(doc, REPORTS / "fig02_kaplan_meier_global.png",
+               "Curva de Kaplan-Meier global do portfólio com tabela de n em risco", 2)
+    add_table_data(doc,
+        ["Tempo (dias)", "S(t)", "Risco Acumulado"],
+        [["120", "1,0000", "0,00%"],
+         ["180", "0,5919", "40,81%"],
+         ["270", "0,5575", "44,25%"],
+         ["365", "0,5256", "47,44%"],
+         ["540", "0,3824", "61,76%"]],
+        "Valores da curva de Kaplan-Meier global (evento binário)", table_num=15)
+    add_body(doc,
+        "S(t) = 1,0 até o dia 120 é consequência direta da definição do evento (dias_sem_pagar "
+        "≥ 120 é impossível antes de 120 dias de seguimento). A queda acentuada de S(t) após o "
+        "dia 180 (S(540)=0,38) não deve ser lida como \"risco de default de 62%\" — é um "
+        "artefato de tratar Cura (pagamento total, ~94,7% da carteira) como censura simples: "
+        "à medida que os créditos saudáveis saem do conjunto em risco por terem pago tudo, o "
+        "subconjunto remanescente concentra-se nos casos mais difíceis, distorcendo S(t) para "
+        "baixo. Essa é exatamente a limitação que motiva o tratamento de Riscos Competitivos "
+        "introduzido em §5.9 — a Função de Incidência Acumulada (Figura 10) mostra que o risco "
+        "real de default se estabiliza perto de 1,1%, não de 62%.")
+
+    add_heading(doc, "5.6.4  Análise Estratificada por Escritório (Teste de Log-Rank)", level=3)
+    add_figure(doc, REPORTS / "fig03_kaplan_meier_oficinas.png",
+               "Curvas de Kaplan-Meier por escritório com teste de log-rank (OFI_23 vs. OFI_44)", 3)
+    add_table_data(doc,
+        ["Estatístico", "Valor"],
+        [["χ² (log-rank)", "8,2672"], ["p-valor", "0,0040"]],
+        "Resultado do teste de log-rank (OFI_23 vs. OFI_44)", table_num=16)
+    add_body(doc,
+        "p = 0,0040 rejeita H₀ de igualdade de curvas ao nível de 5% — diferença real e "
+        "estatisticamente significativa entre os escritórios. Antes da correção descrita em "
+        "§5.8, esse mesmo teste resultava em p = 0,775 (não significativo): os 152 falsos "
+        "positivos concentrados em OFI_44 introduziam ruído suficiente para mascarar a "
+        "diferença real de risco entre escritórios. Este é o efeito mais direto da auditoria "
+        "de integridade sobre a validade estatística do trabalho — o teste passou de \"sem "
+        "poder estatístico\" a \"diferença detectada com confiança\", sem qualquer mudança na "
+        "definição do umbral de 120 dias.")
+
+    add_heading(doc, "5.6.5  Tempo de Seguimento e Granularidade Longitudinal", level=3)
+    add_figure(doc, REPORTS / "fig04_tiempo_seguimiento.png",
+               "Distribuição do tempo de seguimento (t_stop) e número de intervalos por crédito", 4)
+    add_table_data(doc,
+        ["Estatístico", "t_stop (dias)", "n_intervalos"],
+        [["Mediana", "29 dias", "3"],
+         ["Média",   "34,1 dias", "10,6"],
+         ["Máximo",  "815 dias", "233"]],
+        "Estatísticas do tempo de seguimento e intervalos por crédito", table_num=17)
+    add_body(doc,
+        "A mediana de 29 dias reflete créditos curtos (20–30 dias). A cauda direita pronunciada "
+        "(máx 815 dias, 233 snapshots) corresponde a clientes com múltiplas renovações — "
+        "estrutura bimodal típica do microcrédito diário que justifica a análise de sobrevivência.")
+
+    add_heading(doc, "5.6.6  Cronômetro dias_sem_pagar", level=3)
+    add_figure(doc, REPORTS / "fig05_dias_sin_pagar.png",
+               "Distribuição de dias_sem_pagar: global, zoom 0–150 dias e máximo por crédito", 5)
+    add_table_data(doc,
+        ["Estatístico", "Valor"],
+        [["Mediana", "0 dias"], ["Percentil 95", "0 dias"],
+         ["Percentil 99", "21 dias"], ["Máximo", "400 dias"]],
+        "Estatísticas do cronômetro dias_sem_pagar", table_num=18)
+    add_body(doc,
+        "Em mais de 95% dos intervalos, dias_sem_pagar = 0: o cliente realizou pelo menos um "
+        "abono no bloco de 10 dias. Valores altos (>21 dias) correspondem quase exclusivamente "
+        "a créditos que eventualmente defaultam. Correlação de Pearson com evento: r = 0,478 "
+        "— a mais alta do conjunto de covariáveis, porém mais baixa que a estimativa anterior "
+        "(r=0,680), já que a correção de §5.8 removeu créditos saudáveis que artificialmente "
+        "inflavam essa correlação com valores altos de dias_sem_pagar sem corresponder a "
+        "default real.")
+
+    add_heading(doc, "5.6.7  Análise de Covariáveis: Default vs. Censurado", level=3)
+    add_figure(doc, REPORTS / "fig06_covariables_evento.png",
+               "Distribuição das covariáveis por grupo: Default (E=1) versus Censurado (E=0)", 6)
+    add_table_data(doc,
+        ["Covariável", "r com evento", "Direção"],
+        [["dias_sem_pagar",          "+0,4779", "Cronômetro direto do evento"],
+         ["saldo_relativo",          "−0,0277", "Maior saldo → menor default"],
+         ["dias_con_abono",          "−0,0174", "Mais dias com abono → menor risco"],
+         ["ratio_atraso",            "−0,0131", "Contra-intuitivo por composição"],
+         ["pago_promedio_diario",    "−0,0122", "Mais pagamentos → menor risco"],
+         ["dias_desde_ultimo_abono_no_bloco", "+0,0190", "Sinal fraco, mesma direção de dias_sem_pagar"],
+         ["variabilidade_pago_diario", "−0,0092", "Sinal fraco, mesma direção de pago_promedio_diario"],
+         ["intensidade_recuperacao", "−0,0058", "Efeito fraco e agora protetor (ver §5.8)"]],
+        "Correlações das covariáveis com o evento (recalculadas após auditoria, §5.8)", table_num=19)
+    add_body(doc,
+        "As correlações lineares baixas das covariáveis de mora e pagamento com o evento não "
+        "implicam ausência de efeito preditivo — refletem a natureza não linear e dinâmica "
+        "das relações no contexto do Counting Process, que o modelo de Cox quantificará "
+        "corretamente via hazard ratios (ver resultados reais em §6.1).")
+
+    add_heading(doc, "5.6.8  Perfil Econômico do Portfólio", level=3)
+    add_figure(doc, REPORTS / "fig07_perfil_credito.png",
+               "Perfil econômico: distribuição do prazo, montante e boxplot por evento", 7)
+    add_table_data(doc,
+        ["Estatístico", "Valor"],
+        [["Mediana", "R$ 1.200"], ["Média", "R$ 1.491"],
+         ["Percentil 10", "R$ 540"], ["Percentil 90", "R$ 3.000"]],
+        "Montante do crédito por grupo de evento", table_num=20)
+    add_body(doc,
+        "Créditos de baixo montante (mediana R$ 1.200), com prazo concentrado em 20 dias "
+        "(62,7%), 24 dias (29,3%) e 30 dias (5,2%). A grande maioria (92,0%) tem prazo de "
+        "20 ou 24 dias — produtos pré-definidos pela instituição, não negociados individualmente.")
+
+    add_heading(doc, "5.6.9  Estrutura de Correlações", level=3)
+    add_figure(doc, REPORTS / "fig08_correlaciones.png",
+               "Mapa de calor de correlações das covariáveis (triângulo inferior)", 8)
+    add_body(doc,
+        "Correlação ratio_atraso ↔ cuotas_atrasadas: r = +0,977 — redundância severa. "
+        "A covariável variabilidade_pago_diario apresenta correlação de r = +0,854 com "
+        "pago_promedio_diario — esperado, já que blocos com pagamento médio mais alto tendem "
+        "a ter maior dispersão absoluta entre os dias. Decisão adotada na modelagem (§6.1): "
+        "remover cuotas_atrasadas (mantendo ratio_atraso, mais informativo por ser "
+        "normalizado pelo prazo) e remover variabilidade_pago_diario (mantendo "
+        "pago_promedio_diario, de interpretação mais direta). Já dias_desde_ultimo_abono_no_bloco "
+        "apresenta correlação moderada e negativa (r = −0,558) com pago_promedio_diario, sem "
+        "redundância grave que justifique removê-la. Fora esses dois pares, não há "
+        "correlações problemáticas (> 0,7) no restante do conjunto.")
+
+    add_heading(doc, "5.6.10  Análise de Trajetórias Individuais", level=3)
+    add_figure(doc, REPORTS / "fig09_trayectorias.png",
+               "Trajetórias individuais: 5 créditos em default versus 5 censurados", 9)
+    add_body(doc,
+        "Créditos em default: dias_sem_pagar cresce monotonicamente nos últimos blocos, "
+        "cruzando 120 dias exatamente no intervalo marcado como evento. Créditos censurados: "
+        "cronômetro permanece em zero com reinicializações frequentes — o forward-fill captura "
+        "corretamente a mora transitória vs. abandono real.")
+
+    add_heading(doc, "5.7  Síntese e Validação do Dataset", level=2)
+    add_table_data(doc,
+        ["Validação", "Resultado"],
+        [["t_stop > t_start em todos os intervalos",   "✓ Verificado"],
+         ["Cadeia perfeita t_start[k] = t_stop[k−1]", "✓ Verificado (via shift)"],
+         ["Evento E=1 apenas no último intervalo",      "✓ Regra de censura aplicada"],
+         ["Sem valores nulos em colunas-chave",         "✓ Verificado"],
+         ["Número de eventos > 100",                    "✓ 273 eventos"],
+         ["Covariáveis em faixa esperada",              "✓ Clip aplicado a todas as razões"]],
+        "Validação do formato Counting Process", table_num=21)
+    add_body(doc,
+        "O dataset fica preparado para a etapa seguinte: ajuste do Modelo de Cox de Riscos "
+        "Proporcionais com covariáveis tempo-variantes (lifelines.CoxTimeVaryingFitter).")
+
+    # ── 5.8 Auditoria de integridade do target ──────────────────────────────
+    add_heading(doc, "5.8  Auditoria de Integridade do Target: Viés de Contabilização "
+                      "Pós-Pagamento", level=2)
+    add_body(doc,
+        "A avaliação externa do orientador sobre a alta proporção de censura (98,50%) "
+        "motivou uma auditoria da variável evento que revelou um problema mais grave do que "
+        "a simples escassez de eventos: parte dos 425 eventos originalmente identificados "
+        "eram falsos positivos, gerados por uma falha no cronômetro dias_sem_pagar, não por "
+        "inadimplência real.")
+    add_labeled(doc, "Mecanismo do viés:",
+        "dias_sem_pagar é calculado por forward-fill a partir da data do último abono. Um "
+        "cliente que quita integralmente o crédito não registra mais abonos — não por evasão, "
+        "mas porque não deve mais nada. Como o sistema continua reportando esse crédito a "
+        "cada bloco de 10 dias, o cronômetro seguia contando indefinidamente, eventualmente "
+        "cruzando o umbral de 120 dias e marcando evento=1 em créditos já saudáveis, meses "
+        "depois de quitados.")
+    add_labeled(doc, "Evidência empírica:",
+        "reconstruindo o histórico real de abonos dos 425 créditos com evento=1, "
+        "identificaram-se 4 grupos: (a) 250 créditos sem nenhum abono real — default "
+        "genuíno; (b) 164 créditos cuja soma de abonos reais atinge ~100% do total "
+        "(\"Grupo B1\"); (c) 10 créditos com pagamento parcial seguido de silêncio — default "
+        "genuíno; (d) 1 caso de sobrepagamento. Dentro do Grupo B1, uma análise temporal "
+        "distinguiu 140 créditos com padrão de pagamento orgânico e frequente (sem "
+        "interrupção relevante) dos ~24 restantes, cujo fechamento seguia um padrão distinto: "
+        "um vazio de silêncio superior a 90 dias seguido de um único abono tardio que cobre "
+        "grande parte do saldo. Este último padrão coincide com um processo administrativo "
+        "da instituição parceira: créditos em default são periodicamente encerrados via um "
+        "lançamento contábil que credita o saldo devedor remanescente por completo, "
+        "permitindo o fechamento do crédito no sistema — um registro contábil de baixa de "
+        "carteira, não um pagamento real do cliente. Consistente com essa origem "
+        "administrativa, os 24 casos concentram-se em apenas três datas de calendário "
+        "(2025-02-17, 2025-09-28 e 2025-11-16), cada uma compartilhada por créditos "
+        "distintos e sem relação aparente entre si — assinatura típica de um processamento "
+        "em lote, e não de decisões de pagamento individuais.")
+    add_labeled(doc, "Correção aplicada:",
+        "em feature_engineering.py, quando o pagamento acumulado real de um crédito atinge "
+        "98% do TOTAL_CRÉDITO, sua trajetória é truncada como censura (crédito quitado), não "
+        "como evento de default — independentemente de quaisquer lançamentos contábeis "
+        "posteriores. Os 24 casos de fechamento administrativo permanecem corretamente "
+        "classificados como default, pois seu cronômetro já havia cruzado 120 dias de "
+        "silêncio real antes do lançamento contábil tardio ser processado — a correção não "
+        "interfere nesses casos.")
+    add_table_data(doc,
+        ["Grupo", "Créditos", "Classificação final"],
+        [["Sem nenhum abono real",                       "250", "Default genuíno"],
+         ["Pagamento parcial + silêncio",                 "10", "Default genuíno"],
+         ["Fechamento administrativo (padrão de lote)",   "~24", "Default genuíno (já correto)"],
+         ["Pagamento orgânico completo (falso positivo)", "140", "Corrigido → Cura/censura"],
+         ["Sobrepagamento",                                 "1", "Irrelevante"]],
+        "Auditoria de integridade do target: decomposição dos 425 eventos originais",
+        table_num=22)
+    add_body(doc,
+        "O efeito da correção é substancial e mensurável: o número de eventos cai de 425 "
+        "(1,50%) para 273 (0,96%), e o teste de log-rank entre OFI_23 e OFI_44 (§5.6.4) passa "
+        "de não significativo (p=0,775) para altamente significativo (p=0,0040) — evidência "
+        "direta de que a limpeza dos falsos positivos recuperou poder estatístico real, sem "
+        "qualquer alteração na definição do umbral de 120 dias.")
+
+    # ── 5.9 Riscos Competitivos ──────────────────────────────────────────────
+    add_heading(doc, "5.9  Riscos Competitivos: Separando Default de Cura", level=2)
+    add_body(doc,
+        "A auditoria de §5.8 corrigiu um erro de rotulagem, mas não resolve a limitação "
+        "estrutural apontada pelo orientador: mesmo após a correção, 98,04% dos créditos "
+        "permanecem fora do evento de default, porque a definição binária de evento trata "
+        "\"cliente pagou tudo\" (Cura) e \"ainda não se sabe o desfecho\" (censura "
+        "verdadeira) da mesma forma. Isso é estatisticamente inadequado quando existem dois "
+        "desfechos terminais que competem entre si (Kalbfleisch e Prentice, 2002): um "
+        "crédito que já foi quitado não pode, por definição, entrar em default no futuro.")
+    add_body(doc,
+        "Adota-se, portanto, um esquema de Riscos Competitivos com três desfechos "
+        "mutuamente exclusivos, formalizados na variável evento_tipo:")
+    add_formula(doc,
+        "evento_tipo = 0 (censura verdadeira) | 1 (default) | 2 (cura/pagamento total)")
+    add_body(doc,
+        "O critério de Cura reaproveita exatamente a regra de fechamento por pagamento total "
+        "introduzida em §5.8 (pagamento acumulado ≥ 98% do total do crédito), agora "
+        "formalizado como um desfecho explícito em vez de apenas uma regra de censura.")
+    add_table_data(doc,
+        ["Desfecho", "Créditos", "Proporção"],
+        [["Default (evento_tipo=1)",          "273",    "0,96%"],
+         ["Cura / pagamento total (evento_tipo=2)", "26.894", "94,74%"],
+         ["Censura verdadeira (evento_tipo=0)", "1.219",  "4,30%"]],
+        "Desfechos sob o esquema de Riscos Competitivos", table_num=23)
+    add_body(doc,
+        "A Figura 10 apresenta a Função de Incidência Acumulada (CIF, estimador de "
+        "Aalen-Johansen) para os dois desfechos, que substitui a curva de Kaplan-Meier da "
+        "Figura 2 como retrato correto do risco competitivo: a probabilidade acumulada de "
+        "Cura sobe rapidamente e se estabiliza próxima de 98,7% por volta do dia 300, "
+        "enquanto a de Default cresce lentamente e se estabiliza perto de 1,1% logo após o "
+        "umbral de 120 dias — confirmando que o risco real de default do portfólio é baixo e "
+        "estável, ao contrário do que sugeria a curva de Kaplan-Meier binária de §5.6.3.")
+    add_figure(doc, REPORTS / "fig10_cif_riscos_competitivos.png",
+               "Função de Incidência Acumulada — Default (evento_tipo=1) vs. Cura "
+               "(evento_tipo=2), estimador de Aalen-Johansen", 10)
+    add_body(doc,
+        "A modelagem correspondente — dois modelos de Cox cause-specific, um por desfecho — "
+        "é apresentada em §6.1, junto com os resultados reais já obtidos nesse baseline.")
+
+
+# ── SEÇÃO 5 ──────────────────────────────────────────────────────────────────
+
+def build_secao_5(doc):
+    add_heading(doc, "6  MODELAGEM MATEMÁTICA E COMPUTACIONAL (O DESAFIO DA CENSURA)", level=1)
+    add_heading(doc, "6.1  Baseline Clássico: Cox Cause-Specific para Riscos Competitivos", level=2)
+    add_body(doc,
+        "Em vez de um único Modelo de Cox de evento binário, ajustam-se dois modelos de Cox "
+        "de Riscos Proporcionais tempo-variantes independentes — um por desfecho de §5.9 "
+        "(cause-specific hazards, Kalbfleisch e Prentice, 2002): o Modelo Default trata Cura "
+        "como censura, e o Modelo Cura trata Default como censura. Essa é a alternativa "
+        "clássica ao modelo de subdistribution hazard de Fine e Gray (1999), mais simples de "
+        "ajustar com as ferramentas já disponíveis (lifelines.CoxTimeVaryingFitter) e "
+        "igualmente válida para descrever como cada covariável afeta o risco de cada "
+        "desfecho especificamente. As covariáveis cuotas_atrasadas e variabilidade_pago_diario "
+        "foram excluídas por multicolinearidade (§5.6.9).")
+    add_table_data(doc,
+        ["Modelo", "Eventos", "EPV", "C-index"],
+        [["Default",  "272",    "27,2",   "0,8017"],
+         ["Cura",      "26.894", "2.689,4", "0,7612"]],
+        "Resultados do baseline Cox cause-specific (dados reais, sem tuning)", table_num=24)
+    add_body(doc,
+        "Resultado obtido — Modelo Default (C-index=0,80): preditores significativos "
+        "(p<0,05) foram dias_sem_pagar (coeficiente positivo, esperado por construção do "
+        "evento), intensidade_recuperacao (coeficiente negativo — mais recuperação recente "
+        "protege contra default) e dias_desde_ultimo_abono_no_bloco (coeficiente positivo — "
+        "maior recência de silêncio dentro do bloco aumenta o risco). As demais covariáveis "
+        "não atingiram significância individual, plausível dado o número modesto de eventos "
+        "(272) e a forte relação estrutural entre dias_sem_pagar e a definição do evento.")
+    add_body(doc,
+        "Resultado obtido — Modelo Cura (C-index=0,76): dado o grande número de eventos "
+        "(26.894), todas as covariáveis atingiram significância estatística, com direções "
+        "coerentes: pago_promedio_diario e dias_con_abono aumentam o hazard de cura (mais "
+        "pagamento e mais frequência aceleram a quitação); cuotas_pactadas e total_credito o "
+        "diminuem (créditos mais longos ou de maior valor levam mais tempo para serem "
+        "quitados integralmente, como esperado).")
+
+    add_heading(doc, "6.2  O Desafio da Censura à Direita em Arquiteturas Neurais", level=2)
+    add_body(doc,
+        "Arquiteturas de Deep Learning tradicionais falham ao ignorar a informação contida "
+        "nos registros censurados à direita. Descartar essas observações introduz viés severo "
+        "e subestima o tempo real de sobrevivência.")
+    add_heading(doc, "6.3  Abordagem Estado da Arte (Deep Learning sob Riscos Competitivos)", level=2)
+    add_body(doc,
+        "A extensão natural do baseline cause-specific para Deep Learning não é o DeepSurv "
+        "de evento único, mas uma arquitetura pensada especificamente para riscos "
+        "competitivos, como o DeepHit (Lee et al., 2018), que estima diretamente a "
+        "distribuição conjunta dos tempos de primeiro evento e do desfecho (Default vs. "
+        "Cura) via uma rede neural com função de perda combinando verossimilhança e um termo "
+        "de ranking baseado em concordância. [IMPLEMENTAÇÃO PENDENTE, Sprint 5]")
+
+    add_heading(doc, "6.4  Desbalanceamento de Classes e Direções Adicionais", level=2)
+    add_body(doc,
+        "A taxa de evento de Default, após a correção de §5.8, é de 0,96% (273 eventos em "
+        "28.386 créditos) — mais baixa que a estimativa original de 1,50%, porém sobre uma "
+        "base de dados agora livre dos falsos positivos que a inflavam artificialmente. Isso "
+        "ainda exige tratamento estatístico explícito no treinamento de arquiteturas neurais: "
+        "duas alternativas serão avaliadas no Sprint 5 — amostragem estratificada por lote, "
+        "garantindo uma proporção mínima de eventos positivos em cada lote de treinamento, e "
+        "ponderação da função de perda, atribuindo peso maior aos exemplos de default. A "
+        "escolha entre as duas será decidida empiricamente, comparando o C-index de Harrell "
+        "obtido com e sem cada correção.")
+    add_body(doc,
+        "O período observado (2020–2026) inclui choques sistêmicos — pandemia, variações da "
+        "taxa Selic e da inflação — que podem afetar a liquidez do microempreendedor "
+        "independentemente do seu comportamento individual de pagamento. A inclusão de "
+        "covariáveis macroeconômicas tempo-variantes (ex.: Selic e IPCA mensais) como proxies "
+        "desses choques sistêmicos é uma extensão natural do modelo. Nesta versão, essas "
+        "covariáveis ainda não foram incorporadas, sob a hipótese de que parte do efeito "
+        "sistêmico já esteja capturada indiretamente pela heterogeneidade geográfica entre "
+        "escritórios (Tabela 14); a decisão de incluí-las será revisitada no Sprint 5, à luz "
+        "do ganho preditivo observado ao adicioná-las.")
+
+
+# ── SEÇÃO 6 ──────────────────────────────────────────────────────────────────
+
+def build_secao_6(doc):
+    add_heading(doc, "7  VALIDAÇÃO", level=1)
+    add_body(doc,
+        "Testes de performance compararão o modelo de sobrevivência clássico com as técnicas "
+        "de Deep Learning, utilizando: C-index de Harrell (concordance index), Brier Score "
+        "temporal e Teste de Log-Rank entre modelos. [RESULTADOS PENDENTES, Sprint 6]")
+
+
+# ── SEÇÃO 7 ──────────────────────────────────────────────────────────────────
+
+def build_secao_7(doc):
+    add_heading(doc, "8  CRONOGRAMA INTEGRADO DE PESQUISA", level=1)
+    add_body(doc,
+        "O projeto segue estruturado em Sprints Scrum (Louzada Neto, 2026), com entregas "
+        "iterativas que permitem ajustes de escopo sem comprometer o prazo final. A entrega "
+        "oficial do TCC está prevista para fevereiro de 2027; a meta interna é concluir a "
+        "versão final em dezembro de 2026, reservando janeiro e fevereiro de 2027 como "
+        "margem para os ajustes solicitados pelo orientador e para os trâmites de entrega. "
+        "Os três primeiros Sprints estão concluídos, e os quatro seguintes, de duas a três "
+        "semanas cada, organizam o trabalho restante:")
+    sprints = [
+        ("Sprint 1 (jan. a mar. 2026), ETL e pipeline [CONCLUÍDO]:",
+         "Desenvolvimento do extrator Selenium (AtlasDataExtractor e AtlasMasivoExtractor), "
+         "extração de 3.962 arquivos Excel (3 escritórios, 17 rotas, 2020 a 2026), Data Lake "
+         "hierárquico (~14 GB), sistema de checkpoint JSON, consolidação da Matriz Mestra "
+         "(344.869 × 2.358) e otimização de memória via chunked loading com máscara NumPy (−49% RAM)."),
+        ("Sprint 2 (mar. a mai. 2026), Feature Engineering e EDA [CONCLUÍDO]:",
+         "Primeira versão do dataset de sobrevivência no formato Counting Process, "
+         "definição do cronômetro dias_sem_pagar, análise exploratória com figuras de "
+         "diagnóstico e elaboração do relatório metodológico (Seções 4 e 5 do TCC)."),
+        ("Sprint 3 (jun. a set. 2026), auditoria do target e Riscos Competitivos [CONCLUÍDO]:",
+         "Auditoria de integridade do target (§5.8), pivô metodológico para Riscos "
+         "Competitivos (§5.9) e baseline Cox cause-specific preliminar. Reconstrução do "
+         "dataset a partir dos pagamentos diários (src/reconstruir_dataset.py), que mede o "
+         "silêncio de pagamento entre as datas reais dos abonos, fixa o fechamento do "
+         "crédito pela data do último abono registrado pelo sistema, recalcula as "
+         "covariáveis apenas com informação disponível no início de cada intervalo e exclui "
+         "os créditos sem nenhum movimento."),
+        ("Sprint 4 (29 set. a 12 out. 2026), reprocessamento e baseline [PENDENTE]:",
+         "Reexecução da análise exploratória (Kaplan-Meier, log-rank e Função de Incidência "
+         "Acumulada) sobre o dataset reconstruído; novo ajuste do Cox cause-specific com "
+         "erros-padrão robustos agrupados por cliente; diagnóstico de resíduos de Schoenfeld; "
+         "atualização das Seções 5 e 6.1."),
+        ("Sprint 5 (13 out. a 2 nov. 2026), covariáveis de contexto e Deep Learning [PENDENTE]:",
+         "Incorporação de covariáveis macroeconômicas (Selic, IPCA), regionais e sazonais, "
+         "incluindo o período da pandemia; implementação do DeepHit para riscos competitivos "
+         "com tratamento do desbalanceamento de classes (amostragem estratificada por lote "
+         "ou ponderação da função de perda)."),
+        ("Sprint 6 (3 a 23 nov. 2026), avaliação comparativa [PENDENTE]:",
+         "C-index dependente do tempo e Brier Score com ponderação pela probabilidade inversa "
+         "de censura (IPCW), sob riscos competitivos e em esquema de landmarking; comparação "
+         "entre Cox cause-specific, DeepHit e um credit scoring binário (regressão logística); "
+         "submissão de uma versão à autochecagem Turnitin do ICMC até 18 de novembro de 2026."),
+        ("Sprint 7 (24 nov. a 18 dez. 2026), redação final [PENDENTE]:",
+         "Redação de Resultados, Discussão, Conclusão, Limitações e Trabalhos Futuros "
+         "(incluindo a aplicação do modelo a uma política automatizada de concessão); "
+         "incorporação do feedback da avaliação de Metodologia e Projeto II (revisão "
+         "bibliográfica atualizada, justificativas da granularidade diária e do limiar de "
+         "120 dias, tratamento de dados ausentes, padronização de itálico e pontuação); "
+         "revisão integral pelo orientador. Marco: versão final concluída em 18 de dezembro "
+         "de 2026."),
+        ("Margem (jan. a fev. 2027), entrega [PENDENTE]:",
+         "Ajustes finais solicitados pelo orientador, atualização da ficha catalográfica, "
+         "geração do PDF final e entrega oficial."),
+    ]
+    for label, text in sprints:
+        add_labeled(doc, label, text)
+
+    add_table_data(doc,
+        ["Data", "Marco"],
+        [["12 out. 2026", "Dataset reconstruído, EDA e baseline Cox atualizados"],
+         ["2 nov. 2026",  "DeepHit treinado com covariáveis de contexto"],
+         ["18 nov. 2026", "Versão submetida à autochecagem Turnitin"],
+         ["23 nov. 2026", "Avaliação comparativa concluída"],
+         ["18 dez. 2026", "Versão final do TCC concluída"],
+         ["fev. 2027",    "Entrega oficial"]],
+        "Marcos do cronograma de conclusão", table_num=25)
+
+
+# ── REFERÊNCIAS ───────────────────────────────────────────────────────────────
+
+def build_referencias(doc):
+    """Referências conforme ABNT NBR 6023: sem negrito; título do periódico/livro
+    (o 'veículo') em itálico; demais elementos em fonte regular."""
+    add_heading(doc, "REFERÊNCIAS BIBLIOGRÁFICAS", level=1)
+    refs = [
+        [("ABREU, C. Inadimplência de pequenos negócios cai, e aprovação de crédito atinge maior "
+          "nível desde 2022. ", False),
+         ("Agência Sebrae de Notícias", True),
+         (", 15 set. 2026. Disponível em: https://agenciasebrae.com.br/dados/inadimplencia-de-"
+          "pequenos-negocios-cai-e-aprovacao-de-credito-atinge-maior-nivel-desde-2022/. "
+          "Acesso em: 16 out. 2026.", False)],
+        [("ALTMAN, E. I.; SABATO, G. Modeling Credit Risk for SMEs: Evidence from the US Market. ", False),
+         ("Abacus", True),
+         (", v. 43, n. 3, p. 332–357, 2007.", False)],
+        [("ANDERSON, P. K.; GILL, R. D. Cox's regression model for counting processes: a large "
+          "sample study. ", False),
+         ("The Annals of Statistics", True),
+         (", v. 10, n. 4, p. 1100–1120, 1982.", False)],
+        [("ANTHROPIC. ", False),
+         ("Claude", True),
+         (". Sonnet 5. Large Language Model. San Francisco: Anthropic, 2026. Disponível em: "
+          "https://claude.ai/. Acesso em: 4 jul. 2026. Nota: Apoio pontual na formatação ABNT/USP "
+          "do documento e em pequenos trechos de código.", False)],
+        [("BANERJEE, A. V.; DUFLO, E. The economic lives of the poor. ", False),
+         ("Journal of Economic Perspectives", True),
+         (", v. 21, n. 1, p. 141–167, 2007.", False)],
+        [("BRASIL. Ministério do Empreendedorismo, da Microempresa e da Empresa de Pequeno "
+          "Porte. ", False),
+         ("Painéis do Mapa de Empresas", True),
+         (". Brasília, 2026. Disponível em: https://www.gov.br/empresas-e-negocios/pt-br/"
+          "mapa-de-empresas/painel-mapa-de-empresas. Acesso em: 16 out. 2026.", False)],
+        [("COX, D. R. Regression models and life-tables. ", False),
+         ("Journal of the Royal Statistical Society: Series B (Methodological)", True),
+         (", v. 34, n. 2, p. 187–220, 1972.", False)],
+        [("FINE, J. P.; GRAY, R. J. A proportional hazards model for the subdistribution of a "
+          "competing risk. ", False),
+         ("Journal of the American Statistical Association", True),
+         (", v. 94, n. 446, p. 496–509, 1999.", False)],
+        [("KALBFLEISCH, J. D.; PRENTICE, R. L. ", False),
+         ("The Statistical Analysis of Failure Time Data", True),
+         (". 2. ed. New York: Wiley, 2002.", False)],
+        [("KAPLAN, E. L.; MEIER, P. Nonparametric estimation from incomplete observations. ", False),
+         ("Journal of the American Statistical Association", True),
+         (", v. 53, n. 282, p. 457–481, 1958.", False)],
+        [("KATZMAN, J. L. et al. DeepSurv: personalized treatment recommender system using a Cox "
+          "proportional hazards deep neural network. ", False),
+         ("BMC Medical Research Methodology", True),
+         (", v. 18, n. 24, 2018.", False)],
+        [("KIM, Jong-Min. ", False),
+         ("Deep Learning in Survival Analysis: Recent Advances and Multimodal Approaches", True),
+         (". 2026.", False)],
+        [("KLEIN, J. P.; MOESCHBERGER, M. L. ", False),
+         ("Survival Analysis: Techniques for Censored and Truncated Data", True),
+         (". 2. ed. New York: Springer, 2003.", False)],
+        [("LEE, C. et al. DeepHit: a deep learning approach to survival analysis with "
+          "competing risks. In: AAAI CONFERENCE ON ARTIFICIAL INTELLIGENCE, 32., 2018, "
+          "New Orleans. ", False),
+         ("Proceedings [...]", True),
+         (" [S.l.]: AAAI Press, 2018. p. 2314–2321.", False)],
+        [("LOUZADA NETO, F. ", False),
+         ("Gestão de Projetos de Ciência de Dados e Inteligência Artificial", True),
+         (". Material didático — MBA em Ciência de Dados. ICMC/USP, São Carlos, 2026.", False)],
+        [("MANTEL, N. Evaluation of survival data and two new rank order statistics arising in "
+          "its consideration. ", False),
+         ("Cancer Chemotherapy Reports", True),
+         (", v. 50, n. 3, p. 163–170, 1966.", False)],
+        [("SCHREINER, M. Aspects of outreach: a framework for discussion of the social benefits "
+          "of microfinance. ", False),
+         ("Journal of International Development", True),
+         (", v. 14, n. 5, p. 591–603, 2002.", False)],
+        [("THERNEAU, T. M.; GRAMBSCH, P. M. ", False),
+         ("Modeling Survival Data: Extending the Cox Model", True),
+         (". New York: Springer, 2000.", False)],
+    ]
+    for segments in refs:
+        p = doc.add_paragraph()
+        _set_spacing(p, multiple=1.0)
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p.paragraph_format.first_line_indent = Cm(0)
+        p.paragraph_format.space_after = Pt(12)
+        for text, italic in segments:
+            run = p.add_run(text)
+            _set_font(run, bold=False, italic=italic)
+
+
+# ── MAIN ──────────────────────────────────────────────────────────────────────
+
+def _montar(registro_anterior):
+    """Monta o documento. As listas e o sumário usam o registro da passada
+    anterior (o desta passada só fica completo ao final)."""
+    for k in ("titulos", "figuras", "tabelas"):
+        REGISTRO[k] = list(registro_anterior[k])
+    REGISTRO["texto_corpo"] = registro_anterior.get("texto_corpo", "")
+    REGISTRO["ativo"] = False
+    doc = Document()
+    configure_doc(doc)
+
+    build_capa(doc)
+    build_folha_rosto(doc)
+    build_ficha_catalografica(doc)
+    build_dedicatoria(doc)
+    build_resumo(doc)
+    build_abstract(doc)
+    build_listas(doc)
+    build_sumario(doc)
+
+    build_secao_1(doc)
+    build_secao_2_revisao_bibliografica(doc)
+    build_secao_2(doc)
+    build_secao_3(doc)
+    build_secao_4(doc)
+    build_secao_5(doc)
+    build_secao_6(doc)
+    build_secao_7(doc)
+    build_referencias(doc)
+
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    doc.save(OUTPUT)
+    corpo = [p.text for p in doc.paragraphs[REGISTRO["inicio_corpo"]:]]
+    corpo += [c.text for t in doc.tables for row in t.rows for c in row.cells]
+    registro = {k: list(REGISTRO[k]) for k in ("titulos", "figuras", "tabelas")}
+    registro["texto_corpo"] = "\n".join(corpo)
+    return registro
+
+
+def _pdf(docx_path, pasta):
+    subprocess.run(["libreoffice", "--headless", "--convert-to", "pdf", "--outdir",
+                    str(pasta), str(docx_path)], capture_output=True, check=True)
+    return Path(pasta) / (Path(docx_path).stem + ".pdf")
+
+
+def _ler_paginas(pdf, registro):
+    """Procura no PDF a página de cada título, figura e tabela. A página exibida
+    é a física menos 1, porque a capa não é contada."""
+    n = int(re.search(r"Pages:\s+(\d+)", subprocess.run(
+        ["pdfinfo", str(pdf)], capture_output=True, text=True).stdout).group(1))
+    textos = [re.sub(r"\s+", " ", subprocess.run(
+        ["pdftotext", "-f", str(i), "-l", str(i), str(pdf), "-"],
+        capture_output=True, text=True).stdout) for i in range(1, n + 1)]
+
+    def norm(t):
+        return re.sub(r"\s+", " ", t).strip()
+
+    # O corpo começa na página da Introdução que vem depois do sumário.
+    sumario = next(i for i, t in enumerate(textos) if "SUMÁRIO" in t)
+    paginas, atual = {}, sumario + 1
+    for i, (_, titulo) in enumerate(registro["titulos"]):
+        alvo = norm(titulo)[:40]
+        for j in range(atual, n):
+            if alvo in textos[j]:
+                paginas[("titulo", i)] = str(j)  # índice 0-based = física - 1
+                atual = j
+                break
+    for tipo, rotulo in (("figura", "Figura"), ("tabela", "Tabela")):
+        atual = sumario + 1
+        for num, _ in registro[tipo + "s"]:
+            padrao = re.compile(rf"(^| ){rotulo} {num} – ")
+            for j in range(atual, n):
+                if padrao.search(textos[j]):
+                    paginas[(tipo, num)] = str(j)
+                    atual = j
+                    break
+    return paginas
+
+
+def build_doc():
+    # 1ª passada: só descobre títulos, figuras e tabelas.
+    registro = _montar({"titulos": [], "figuras": [], "tabelas": []})
+    # 2ª passada: sumário e listas completos, ainda sem páginas; gera o PDF.
+    PAGINAS.clear()
+    registro = _montar(registro)
+    with tempfile.TemporaryDirectory() as tmp:
+        PAGINAS.update(_ler_paginas(_pdf(OUTPUT, tmp), registro))
+    # 3ª passada: versão final com os números de página.
+    _montar(registro)
+    faltando = (len(registro["titulos"]) + len(registro["figuras"])
+                + len(registro["tabelas"]) - len(PAGINAS))
+    print(f"\n[PT] V26 gerado: {OUTPUT}")
+    print(f"     Sumário: {len(registro['titulos'])} títulos | figuras: "
+          f"{len(registro['figuras'])} | tabelas: {len(registro['tabelas'])} | "
+          f"sem página encontrada: {faltando}")
+
+
+if __name__ == "__main__":
+    build_doc()
+
+    es_script = Path(__file__).parent / "gerar_tcc_v26_es.py"  # ainda não criado — sync ES pendente
+    if es_script.exists():
+        print("\n[ES] Gerando versão em Espanhol...")
+        result = subprocess.run([sys.executable, str(es_script)], capture_output=True, text=True)
+        print(result.stdout)
+        if result.returncode != 0:
+            print("ERRO:", result.stderr)

@@ -1,5 +1,5 @@
 """
-Extractor automatizado del Sistema LISTO para el pipeline ETL del TCC.
+Extractor automatizado del Sistema ATLAS para el pipeline ETL del TCC.
 Descarga reportes de cartera hacia data/raw/ para el modelo de supervivencia.
 """
 
@@ -18,16 +18,16 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
-URL_REPORTE = (
-    "https://listo11.listoonline.co/Golden/caja/frm/"
-    "frmReportes.php?action=ReportePlanillaReacudadorConAbono"
-)
+# Dirección del sistema solo en .env (ATLAS_URL_BASE), nunca en el código
+load_dotenv(Path(__file__).parent.parent / ".env")
+URL_BASE = os.getenv("ATLAS_URL_BASE", "")
+URL_REPORTE = f"{URL_BASE}/caja/frm/frmReportes.php?action=ReportePlanillaReacudadorConAbono"
 
 
-class ListoDataExtractor:
-    """Robot de extracción web para el Sistema LISTO (riesgo crediticio)."""
+class AtlasDataExtractor:
+    """Robot de extracción web para el Sistema ATLAS (riesgo crediticio)."""
 
-    URL_LISTO = "https://listo11.listoonline.co/Golden/index.php"
+    URL_ATLAS = f"{URL_BASE}/index.php"
 
     # Valores fijos de los selects del formulario de reporte
     _OFICINA_VALOR = "23"    # 01. SAO PAULO
@@ -479,19 +479,19 @@ class ListoDataExtractor:
 if __name__ == "__main__":
     load_dotenv(Path(__file__).parent.parent / ".env")
 
-    usuario = os.getenv("LISTO_USER")
-    contrasena = os.getenv("LISTO_PASS")
-    ruta = os.getenv("LISTO_RUTA", "01.01. JUAN SP - JJ")
+    usuario = os.getenv("ATLAS_USER")
+    contrasena = os.getenv("ATLAS_PASS")
+    ruta = os.getenv("ATLAS_RUTA", "01.01. JUAN SP - JJ")
 
     if not usuario or not contrasena:
         raise ValueError(
-            "Variables LISTO_USER y LISTO_PASS no encontradas. "
+            "Variables ATLAS_USER y ATLAS_PASS no encontradas. "
             "Crea un archivo .env en la raíz del proyecto con esas claves."
         )
 
-    extractor = ListoDataExtractor()
+    extractor = AtlasDataExtractor()
     try:
-        extractor.login(ListoDataExtractor.URL_LISTO, usuario, contrasena, ruta)
+        extractor.login(AtlasDataExtractor.URL_ATLAS, usuario, contrasena, ruta)
         extractor.descargar_historico("19/04/2024")
     finally:
         extractor.cerrar()

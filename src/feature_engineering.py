@@ -14,6 +14,18 @@ Definición de evento (E=1):
     (máximo de cuotas del crédito) y no distingue mora transitoria
     de abandono real.
 
+Cierre por pago total (censura correcta):
+    Cuando el pago acumulado real de un crédito alcanza su TOTAL CRÉDITO,
+    el crédito se considera saldado y su trayectoria se trunca ahí (censura
+    en lugar de evento). Sin esta regla, un cliente que ya pagó todo y no
+    vuelve a tener abonos (porque no debe nada) queda indistinguible de un
+    cliente que dejó de pagar estando en mora: el contador dias_sin_pagar
+    sigue corriendo por forward-fill y termina cruzando el umbral de 120
+    días meses después de que el crédito ya estaba saldado, generando un
+    evento=1 falso. Verificado empíricamente: ~140 créditos con patrón de
+    pago orgánico completo (abonos frecuentes sumando ~100% del total)
+    aparecían con evento=1 y dias_sin_pagar de 300+ días.
+
 Lectura en chunks para evitar cargar ~6 GB de columnas de pago en RAM.
 Los agregados de pago (pago_promedio_diario, dias_con_abono) se calculan
 al vuelo por chunk y las columnas de fecha se descartan antes de concatenar.
@@ -38,6 +50,10 @@ DIAS_SIN_PAGAR_UMBRAL = 120
 
 # Créditos con CUOTAS_PACTADAS > 40 son semanales/quincenales → excluir
 CUOTAS_MAX_DIARIO = 40
+
+# Fracción del TOTAL CRÉDITO a partir de la cual se considera "pago total"
+# (tolerancia para redondeos/intereses menores)
+PAGO_TOTAL_TOLERANCIA = 0.98
 
 CHUNK_SIZE = 5_000  # filas por chunk (~100 MB RAM)
 
@@ -78,6 +94,11 @@ def _cargar_matriz(path: Path) -> pd.DataFrame:
     header    = pd.read_csv(path, nrows=0)
     cols_pago = [c for c in header.columns if _es_fecha(c)]
     pago_dates = pd.to_datetime(cols_pago)
+    # Ordenar por fecha ascendente: necesario para identificar o último dia
+    # com abono dentro do bloco (o CSV não garante ordem cronológica das colunas).
+    _orden     = np.argsort(pago_dates.values)
+    cols_pago  = [cols_pago[i] for i in _orden]
+    pago_dates = pago_dates[_orden]
     logging.info("  %d columnas de pago detectadas.", len(cols_pago))
 
     fragmentos  = []
@@ -111,14 +132,33 @@ def _cargar_matriz(path: Path) -> pd.DataFrame:
         pagos_bloque  = pagos_vals * mascara
         n_dias_bloque = mascara.sum(axis=1)
         n_dias_bloque = np.where(n_dias_bloque == 0, 1, n_dias_bloque)
+        media_masc    = pagos_bloque.sum(axis=1) / n_dias_bloque
+
+        # Variabilidade do pagamento diário dentro do bloco (desvio padrão
+        # mascarado — só considera os dias efetivamente dentro do bloco).
+        diff          = mascara * (pagos_vals - media_masc[:, np.newaxis])
+        variabilidade = np.sqrt((diff ** 2).sum(axis=1) / n_dias_bloque)
+
+        # Recência do último abono dentro do bloco (complementa dias_sem_pagar,
+        # que é a recência ao longo de todo o histórico do crédito).
+        pago_dia   = (pagos_vals > 0) & mascara
+        idx_arr    = np.arange(pagos_vals.shape[1])
+        idx_matrix = np.where(pago_dia, idx_arr[np.newaxis, :], -1)
+        last_idx   = idx_matrix.max(axis=1)
+        tem_pago   = last_idx != -1
+        fecha_ultimo_pago_bloco = pago_dates.values[np.clip(last_idx, 0, None)]
+        dias_desde_ultimo = (
+            (fin.values - fecha_ultimo_pago_bloco) / np.timedelta64(1, "D")
+        )
+        dias_desde_ultimo = np.where(tem_pago, dias_desde_ultimo, n_dias_bloque)
 
         lean = chunk[COLS_ESTATICAS].copy()
         lean["fecha_ini_bloque"]     = ini.values
         lean["fecha_fin_bloque"]     = fin.values
-        lean["pago_promedio_diario"] = (
-            pagos_bloque.sum(axis=1) / n_dias_bloque
-        ).astype("float32")
+        lean["pago_promedio_diario"] = media_masc.astype("float32")
         lean["dias_con_abono"] = (pagos_bloque > 0).sum(axis=1).astype("int16")
+        lean["variabilidade_pago_diario"] = variabilidade.astype("float32")
+        lean["dias_desde_ultimo_abono_no_bloco"] = dias_desde_ultimo.astype("float32")
 
         fragmentos.append(lean)
 
@@ -237,6 +277,13 @@ def _construir_survival_df(df: pd.DataFrame) -> pd.DataFrame:
     total_cred  = pd.to_numeric(df["TOTAL CRÉDITO"], errors="coerce").replace(0, np.nan)
     saldo       = pd.to_numeric(df["SALDO"], errors="coerce").fillna(0)
 
+    # ── Cierre por pago total: detiene el cronómetro cuando el crédito ya
+    #    fue saldado, para no confundir "no debe nada" con "abandonó el pago" ──
+    n_dias_bloque   = (df["fecha_fin_bloque"] - df["fecha_ini_bloque"]).dt.days + 1
+    pago_bloque     = df["pago_promedio_diario"] * n_dias_bloque
+    pago_acumulado  = pago_bloque.groupby(df["CÓDIGO CRÉDITO"]).cumsum()
+    df["_saldado"]  = (pago_acumulado >= PAGO_TOTAL_TOLERANCIA * total_cred).astype(int)
+
     df["cuotas_atrasadas"]        = cuotas_atr.astype("float32")
     df["intensidad_recuperacion"] = (ultimo_abono / valor_cuota).clip(0, 10).fillna(0).astype("float32")
     df["ratio_atraso"]            = (cuotas_atr / cuotas_pact).clip(0, 1).fillna(0).astype("float32")
@@ -245,18 +292,40 @@ def _construir_survival_df(df: pd.DataFrame) -> pd.DataFrame:
     df["valor_cuota"]             = valor_cuota.astype("float32")
     df["cuotas_pactadas"]         = cuotas_pact.astype("float32")
 
-    # ── Regla de censura: truncar trayectoria tras primer evento ─────────
-    filas_antes = len(df)
-    df["_ecum"] = df.groupby("CÓDIGO CRÉDITO")["evento"].cumsum()
-    df = df[df["_ecum"] <= 1].drop(columns=["_ecum"])
+    # ── Regla de censura: truncar trayectoria tras el primer cierre, sea
+    #    por default (dias_sin_pagar >= 120) o por cura (pago total) — lo
+    #    que ocurra primero cronológicamente. Cuando el cierre es por pago
+    #    total, el bloque necesariamente tuvo abono reciente (dias_con_abono
+    #    > 0), así que "evento" (default) ya es 0 ahí de forma natural.
+    filas_antes  = len(df)
+    n_saldados   = df.loc[df["_saldado"] == 1, "CÓDIGO CRÉDITO"].nunique()
+    df["_cierre"] = np.maximum(df["evento"], df["_saldado"])
+    df["_ecum"]   = df.groupby("CÓDIGO CRÉDITO")["_cierre"].cumsum()
+    df = df[df["_ecum"] <= 1].copy()
+
+    # ── Riscos Competitivos: evento_tipo = 0 (censurado) | 1 (default) |
+    #    2 (cura/pagamento total). "evento" (binário) se mantém por
+    #    compatibilidade com uso de Cox de evento único.
+    df["evento_tipo"] = 0
+    df.loc[df["evento"] == 1, "evento_tipo"] = 1
+    df.loc[(df["_saldado"] == 1) & (df["evento"] == 0), "evento_tipo"] = 2
+    df["evento_cura"] = (df["evento_tipo"] == 2).astype(int)
+
+    df = df.drop(columns=["_ecum", "_cierre", "_saldado"])
     logging.info(
-        "Censura aplicada: %d filas eliminadas post-evento.", filas_antes - len(df)
+        "Censura aplicada: %d filas eliminadas post-cierre (default o cura).",
+        filas_antes - len(df),
+    )
+    logging.info(
+        "Créditos por desfecho — Default: %d | Cura: %d | (candidatos a cura antes de truncar: %d)",
+        int((df["evento_tipo"] == 1).sum()), int((df["evento_tipo"] == 2).sum()), n_saldados,
     )
 
     cols_salida = [
-        "CÓDIGO CRÉDITO", "t_start", "t_stop", "evento",
+        "CÓDIGO CRÉDITO", "t_start", "t_stop", "evento", "evento_tipo", "evento_cura",
         "dias_sin_pagar",
         "cuotas_atrasadas", "pago_promedio_diario", "dias_con_abono",
+        "variabilidade_pago_diario", "dias_desde_ultimo_abono_no_bloco",
         "intensidad_recuperacion", "ratio_atraso", "saldo_relativo",
         "total_credito", "valor_cuota", "cuotas_pactadas",
         "ofi_id", "rta_id",
@@ -276,13 +345,23 @@ def _validar_dataset(df: pd.DataFrame) -> None:
     con_evento   = df[df["evento"] == 1]["CÓDIGO CRÉDITO"].nunique()
     t_fin        = df.groupby("CÓDIGO CRÉDITO")["t_stop"].max()
 
+    n_default  = int((df["evento_tipo"] == 1).sum())
+    n_cura     = int((df["evento_tipo"] == 2).sum())
+    n_censura  = n_creditos - n_default - n_cura
+
     logging.info("══ VALIDACIÓN DEL DATASET DE SUPERVIVENCIA ══")
-    logging.info("  Definición evento:         dias_sin_pagar >= %d", DIAS_SIN_PAGAR_UMBRAL)
+    logging.info("  Definição evento:         dias_sin_pagar >= %d", DIAS_SIN_PAGAR_UMBRAL)
     logging.info("  Créditos únicos:           %d", n_creditos)
     logging.info("  Intervalos (filas):        %d", n_intervalos)
     logging.info("  Eventos (E=1):             %d  (tasa: %.1f%%)", n_eventos, tasa_evento)
     logging.info("  Créditos con evento:       %d", con_evento)
     logging.info("  Créditos censurados:       %d", n_creditos - con_evento)
+    logging.info(
+        "  Riscos Competitivos —      Default: %d (%.1f%%) | Cura: %d (%.1f%%) | Censura verdadera: %d (%.1f%%)",
+        n_default, 100 * n_default / n_creditos,
+        n_cura, 100 * n_cura / n_creditos,
+        n_censura, 100 * n_censura / n_creditos,
+    )
     logging.info("  T mediana (días):          %.0f", t_fin.median())
     logging.info("  T min / T max:             %.0f / %.0f", t_fin.min(), t_fin.max())
     logging.info(

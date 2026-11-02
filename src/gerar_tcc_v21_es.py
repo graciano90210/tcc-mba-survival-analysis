@@ -178,7 +178,7 @@ def build_resumen(doc):
         "predictivo de riesgo de crédito dinámico utilizando Análisis de Supervivencia con "
         "covariables dependientes del tiempo, fundamentado en datos de alta frecuencia de una "
         "institución de microcrédito de pago diario. Un pipeline de extracción automatizado "
-        "(RPA con Selenium) recopiló 3.962 planillas Excel del Sistema LISTO, cubriendo tres "
+        "(RPA con Selenium) recopiló 3.962 planillas Excel del Sistema ATLAS, cubriendo tres "
         "oficinas y 17 rutas en el período 2020–2026, resultando en una Matriz Maestra de "
         "344.869 filas y 2.358 columnas. Tras la ingeniería de características en formato "
         "Counting Process (Anderson y Gill, 1982), el dataset de supervivencia final contiene "
@@ -217,7 +217,7 @@ def build_abstract(doc):
         "research develops a dynamic credit risk prediction model using Survival Analysis with "
         "time-varying covariates, grounded in high-frequency data from a daily-payment microcredit "
         "institution. An automated extraction pipeline (RPA with Selenium) collected 3,962 Excel "
-        "spreadsheets from the LISTO System, covering three offices and 17 routes over the period "
+        "spreadsheets from the ATLAS System, covering three offices and 17 routes over the period "
         "2020–2026, resulting in a Master Matrix of 344,869 rows and 2,358 columns. After feature "
         "engineering in the Counting Process format (Anderson and Gill, 1982), the final survival "
         "dataset contains 28,386 unique credits, 301,434 time intervals, and 425 write-off events "
@@ -403,10 +403,10 @@ def build_secao_3(doc):
     add_heading(doc, "3.1  Contexto y Resolución de Barreras vía Automatización (RPA)", level=2)
     add_body(doc,
         "La construcción de modelos de análisis de supervivencia exige series longitudinales "
-        "precisas. La fuente primaria es el Sistema corporativo LISTO que no expone APIs REST "
+        "precisas. La fuente primaria es el Sistema corporativo ATLAS que no expone APIs REST "
         "y restringe extracciones a ventanas de 10 días en una interfaz web basada en frames "
         "anidados y autenticación compleja. Para superar esto, se desarrolló la clase orientada "
-        "a objetos ListoDataExtractor en Python 3.12 (Selenium WebDriver), con mecanismo de "
+        "a objetos AtlasDataExtractor en Python 3.12 (Selenium WebDriver), con mecanismo de "
         "retry de tres intentos para manejar errores de elemento obsoleto (StaleElementReferenceException)."
     )
 
@@ -594,7 +594,7 @@ def build_secao_4(doc):
 
     # 4.5
     add_heading(doc, "4.5  Construcción del Dataset de Supervivencia", level=2)
-    add_heading(doc, "4.5.1  Fuente de Datos: Sistema LISTO y Data Lake", level=3)
+    add_heading(doc, "4.5.1  Fuente de Datos: Sistema ATLAS y Data Lake", level=3)
     add_table_data(doc,
         ["Componente", "Volumen"],
         [["Archivos Excel descargados", "3.962"],

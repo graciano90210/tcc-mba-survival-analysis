@@ -84,9 +84,9 @@ Este formato — implementado en `lifelines.CoxTimeVaryingFitter` y en los model
 
 ### 4.2 Construcción del Dataset de Supervivencia
 
-#### 4.2.1 Fuente de Datos: Sistema LISTO
+#### 4.2.1 Fuente de Datos: Sistema ATLAS
 
-El Sistema LISTO (Libro de Informes y Supervisión de Transacciones Operativas) es la plataforma de gestión crediticia de la entidad. Los datos brutos fueron extraídos mediante un pipeline ETL automatizado con Selenium WebDriver, descargando informes Excel (*Planilla de Abonos*) para cada combinación de oficina y ruta en bloques de 10 días calendarios.
+El Sistema ATLAS es la plataforma de gestión crediticia de la entidad. Los datos brutos fueron extraídos mediante un pipeline ETL automatizado con Selenium WebDriver, descargando informes Excel (*Planilla de Abonos*) para cada combinación de oficina y ruta en bloques de 10 días calendarios.
 
 El **Data Lake** resultante comprende:
 

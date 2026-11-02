@@ -216,7 +216,7 @@ def build_resumo(doc):
         "de crédito dinâmico utilizando Análise de Sobrevivência com covariáveis dependentes do tempo, "
         "fundamentado em dados de alta frequência de uma instituição de microcrédito de pagamento "
         "diário. Um pipeline de extração automatizado (RPA com Selenium WebDriver) superou as barreiras "
-        "técnicas do Sistema LISTO — sem API REST, frameset aninhado, SELECT2, datepicker readonly e "
+        "técnicas do Sistema ATLAS — sem API REST, frameset aninhado, SELECT2, datepicker readonly e "
         "modais dinâmicos — coletando 3.962 planilhas Excel de três escritórios e 17 rotas no período "
         "2020–2026, totalizando ~14 GB de dados brutos. O Data Stitching consolidou os snapshots em "
         "uma Matriz Mestra de 344.869 linhas × 2.358 colunas (882 MB em disco, ~6 GB em RAM), "
@@ -251,7 +251,7 @@ def build_abstract(doc):
         "research develops a dynamic credit risk prediction model using Survival Analysis with "
         "time-varying covariates, grounded in high-frequency data from a daily-payment microcredit "
         "institution. An automated extraction pipeline (RPA with Selenium WebDriver) overcame the "
-        "technical barriers of the LISTO System — no REST API, nested frameset, SELECT2, readonly "
+        "technical barriers of the ATLAS System — no REST API, nested frameset, SELECT2, readonly "
         "datepicker, and dynamic modals — collecting 3,962 Excel spreadsheets from three offices "
         "and 17 routes over the period 2020–2026, totaling ~14 GB of raw data. Data Stitching "
         "consolidated the snapshots into a Master Matrix of 344,869 rows × 2,358 columns (882 MB "
@@ -296,9 +296,9 @@ def build_listas(doc):
     # Lista de Tabelas — V22 tem 21 tabelas
     add_heading(doc, "LISTA DE TABELAS", level=1)
     tabs = [
-        ("1",  "Barreiras técnicas do Sistema LISTO (v3.288.45) e soluções implementadas"),
-        ("2",  "Sequência de navegação no frameset aninhado do Sistema LISTO"),
-        ("3",  "Mapa corporativo detectado: escritórios e rotas do Sistema LISTO"),
+        ("1",  "Barreiras técnicas do Sistema ATLAS e soluções implementadas"),
+        ("2",  "Sequência de navegação no frameset aninhado do Sistema ATLAS"),
+        ("3",  "Mapa corporativo detectado: escritórios e rotas do Sistema ATLAS"),
         ("4",  "Volumetria final do Data Lake extraído"),
         ("5",  "Estrutura do arquivo de checkpoint JSON de resiliência"),
         ("6",  "Dimensões da Matriz Mestra após consolidação (Data Stitching)"),
@@ -362,7 +362,7 @@ def build_sumario(doc):
         (2, "2.1",  "Objetivo Geral"),
         (2, "2.2",  "Objetivos Específicos"),
         (1, "3",    "ARQUITETURA DE DADOS E PIPELINE DE EXTRAÇÃO INDUSTRIAL (ETL)"),
-        (2, "3.1",  "O Sistema LISTO: Contexto e Barreiras Técnicas da Extração"),
+        (2, "3.1",  "O Sistema ATLAS: Contexto e Barreiras Técnicas da Extração"),
         (2, "3.2",  "Autenticação Bifásica e Navegação no Frameset Aninhado"),
         (2, "3.3",  "Extração Batch: Paginação Temporal e Filtro Anti-Zero"),
         (2, "3.4",  "Escalabilidade Corporativa: Auto-Discovery, Data Lake Hierárquico e Resiliência"),
@@ -469,24 +469,24 @@ def build_secao_3(doc):
         "A construção de modelos de análise de sobrevivência com covariáveis tempo-variantes "
         "exige séries longitudinais de alta granularidade que registrem o comportamento de "
         "pagamento de cada crédito ao longo do tempo. A única fonte de dados disponível para "
-        "esta pesquisa é o Sistema LISTO, plataforma de gestão creditícia que não expõe APIs "
+        "esta pesquisa é o Sistema ATLAS, plataforma de gestão creditícia que não expõe APIs "
         "REST e restringe o acesso a uma interface web de terceira geração. Superar essa barreira "
         "tecnológica exigiu o desenvolvimento de um pipeline de automação web (RPA) de nível "
         "industrial, implementado em Python 3.12 com Selenium WebDriver, cuja arquitetura "
         "completa é detalhada nas subseções seguintes.")
 
     # ── 3.1 ──────────────────────────────────────────────────────────────────
-    add_heading(doc, "3.1  O Sistema LISTO: Contexto e Barreiras Técnicas da Extração", level=2)
+    add_heading(doc, "3.1  O Sistema ATLAS: Contexto e Barreiras Técnicas da Extração", level=2)
     add_body(doc,
-        "O Sistema LISTO (Livro de Informes e Supervisão de Transações Operativas), versão "
-        "3.288.45, é a plataforma de gestão creditícia da instituição parceira. Trata-se de "
+        "O Sistema ATLAS é a "
+        "plataforma de gestão creditícia da instituição parceira. Trata-se de "
         "uma aplicação web desenvolvida em PHP, hospedada em infraestrutura privada, sem "
         "exposição de endpoints REST, GraphQL ou qualquer mecanismo programático de acesso "
         "a dados. O único canal disponível é a interface de usuário no navegador, o que torna "
         "a automação web (web scraping via Selenium) a única alternativa viável para a extração "
         "sistemática do histórico transacional.")
     add_body(doc,
-        "A interface do LISTO impõe seis barreiras técnicas específicas que demandam soluções "
+        "A interface do ATLAS impõe seis barreiras técnicas específicas que demandam soluções "
         "individuais, detalhadas na Tabela 1. Cada barreira representa um ponto de falha "
         "potencial no pipeline: a ausência de qualquer uma das soluções resulta em crash "
         "silencioso do robô, extração parcial ou dados corrompidos.")
@@ -516,7 +516,7 @@ def build_secao_3(doc):
              "Chrome exige confirmação do usuário por padrão",
              "Chrome prefs: automatic_downloads: 1, prompt_for_download: False"],
         ],
-        "Barreiras técnicas do Sistema LISTO (v3.288.45) e soluções implementadas no pipeline RPA",
+        "Barreiras técnicas do Sistema ATLAS e soluções implementadas no pipeline RPA",
         table_num=1,
     )
 
@@ -524,8 +524,8 @@ def build_secao_3(doc):
     add_heading(doc, "3.2  Autenticação Bifásica e Navegação no Frameset Aninhado", level=2)
     add_body(doc,
         "O pipeline de autenticação foi implementado na classe orientada a objetos "
-        "ListoDataExtractor (src/listo_extractor.py), que encapsula toda a lógica de interação "
-        "com o Sistema LISTO. A autenticação ocorre em duas fases distintas, separadas por uma "
+        "AtlasDataExtractor (src/atlas_extractor.py), que encapsula toda a lógica de interação "
+        "com o Sistema ATLAS. A autenticação ocorre em duas fases distintas, separadas por uma "
         "transição de estado do servidor que invalida os elementos DOM previamente carregados.")
 
     add_labeled(doc, "Fase 1 — Credenciais:",
@@ -563,7 +563,7 @@ def build_secao_3(doc):
 
     add_body(doc,
         "A navegação ao formulário de extração segue uma sequência rígida de troca de contexto "
-        "de frame, pois a arquitetura do Sistema LISTO utiliza frameset aninhado em três níveis. "
+        "de frame, pois a arquitetura do Sistema ATLAS utiliza frameset aninhado em três níveis. "
         "A Tabela 2 documenta a sequência exata implementada no método _navegar_a_planilla_abonos().")
 
     add_table_data(doc,
@@ -580,7 +580,7 @@ def build_secao_3(doc):
             ["9", "Select(sltOficina).select_by_value()", "Dropdown de oficina", "Configurar filtro estático de escritório"],
             ["10", "Select(cmbRutas).select_by_value()", "Dropdown de rota", "Configurar filtro estático de rota (após AJAX)"],
         ],
-        "Sequência de navegação no frameset aninhado do Sistema LISTO",
+        "Sequência de navegação no frameset aninhado do Sistema ATLAS",
         table_num=2,
     )
 
@@ -594,7 +594,7 @@ def build_secao_3(doc):
     # ── 3.3 ──────────────────────────────────────────────────────────────────
     add_heading(doc, "3.3  Extração Batch: Paginação Temporal e Filtro Anti-Zero", level=2)
     add_body(doc,
-        "O Sistema LISTO restringe cada extração a uma janela de exatamente 10 dias calendário. "
+        "O Sistema ATLAS restringe cada extração a uma janela de exatamente 10 dias calendário. "
         "Para cobrir o horizonte histórico completo de 2020 a 2026 (~2.327 dias), o pipeline "
         "implementa um cursor temporal que avança em blocos estritos de 10 dias, gerando "
         "aproximadamente 233 iterações por rota e 3.961 iterações no total corporativo.")
@@ -655,8 +655,8 @@ def build_secao_3(doc):
     add_heading(doc, "3.4  Escalabilidade Corporativa: Auto-Discovery, Data Lake Hierárquico e Resiliência", level=2)
     add_body(doc,
         "Para escalar o pipeline piloto (uma rota) para o universo corporativo completo (17 "
-        "rotas em 3 escritórios), foi desenvolvida a classe ListoMasivoExtractor "
-        "(src/listo_masivo.py), que herda toda a infraestrutura de ListoDataExtractor e "
+        "rotas em 3 escritórios), foi desenvolvida a classe AtlasMasivoExtractor "
+        "(src/atlas_masivo.py), que herda toda a infraestrutura de AtlasDataExtractor e "
         "adiciona quatro capacidades fundamentais: auto-discovery do mapa corporativo, "
         "organização hierárquica do Data Lake, tratamento de erros de elemento obsoleto "
         "(StaleElementReferenceException) e sistema de checkpoint para resiliência a falhas.")
@@ -684,7 +684,7 @@ def build_secao_3(doc):
             ["OFI_44 — Cabo Frio",        "44", "Região dos Lagos / RJ",
              "114, 439, 396, 420, 511", "5"],
         ],
-        "Mapa corporativo detectado pelo Auto-Discovery: escritórios e rotas do Sistema LISTO",
+        "Mapa corporativo detectado pelo Auto-Discovery: escritórios e rotas do Sistema ATLAS",
         table_num=3,
     )
 
@@ -713,7 +713,7 @@ def build_secao_3(doc):
     )
 
     add_labeled(doc, "Tratamento de StaleElementReferenceException:",
-        "O Sistema LISTO realiza re-renderizações parciais do DOM durante transições entre "
+        "O Sistema ATLAS realiza re-renderizações parciais do DOM durante transições entre "
         "rotas (o AJAX de cmbRutas pode não ter terminado quando o SELECT já foi localizado). "
         "O pipeline implementa até 3 tentativas com pausa de 3 segundos entre cada uma para "
         "o método _seleccionar_oficina_y_ruta(), que renavega ao formulário desde o menu "
@@ -836,7 +836,7 @@ def build_secao_3(doc):
              "data/raw/, data/processed/ e .env no .gitignore",
              "Art. 46 — Medidas de segurança"],
             ["Gestão de credenciais",
-             "LISTO_USER e LISTO_PASS apenas em .env (nunca no código-fonte)",
+             "ATLAS_USER e ATLAS_PASS apenas em .env (nunca no código-fonte)",
              "Art. 46 — Proteção de acesso"],
             ["Pseudonimização",
              "CÓDIGO CRÉDITO como chave — sem nome, CPF, endereço ou dados de identificação direta",
@@ -863,7 +863,7 @@ def build_secao_3(doc):
     fases = [
         ("(1) Entendimento do Negócio:",
          "Definição do evento de castigo de carteira (dias_sem_pagar ≥ 120) a partir do "
-         "processo operativo da instituição parceira. Identificação do Sistema LISTO como "
+         "processo operativo da instituição parceira. Identificação do Sistema ATLAS como "
          "fonte primária e design do pipeline RPA como solução de ingestão."),
         ("(2) Entendimento dos Dados:",
          "Análise exploratória da estrutura da Matriz Mestra (344.869 × 2.358), identificação "
@@ -895,7 +895,7 @@ def build_secao_3(doc):
         "(2) orçamento — controlado pela solução in-house de web scraping, eliminando licenças "
         "externas; (3) comprometimento — gerenciado com entregas iterativas por Sprint; "
         "(4) recursos humanos — risco baixo por ser pesquisa individual; "
-        "(5) fornecedores — mitigado pela independência do Sistema LISTO (solução in-house); "
+        "(5) fornecedores — mitigado pela independência do Sistema ATLAS (solução in-house); "
         "(6) segurança da informação — LGPD + .gitignore + pseudonimização; "
         "(7) expectativas de tempo — cronograma CRISP-DS com 4 Sprints Scrum.")
 
@@ -1241,7 +1241,7 @@ def build_secao_7(doc):
         "iterativas que permitem ajustes de escopo sem comprometer o prazo final:")
     sprints = [
         ("Sprint 1 (Jan–Mar 2026) — ETL/Pipeline [CONCLUÍDO]:",
-         "Desenvolvimento do extrator Selenium (ListoDataExtractor e ListoMasivoExtractor), "
+         "Desenvolvimento do extrator Selenium (AtlasDataExtractor e AtlasMasivoExtractor), "
          "extração de 3.962 arquivos Excel (3 escritórios, 17 rotas, 2020–2026), Data Lake "
          "hierárquico (~14 GB), sistema de checkpoint JSON, consolidação da Matriz Mestra "
          "(344.869 × 2.358) e otimização de memória via chunked loading com máscara NumPy (−49% RAM)."),

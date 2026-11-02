@@ -1,6 +1,6 @@
 """
-Extractor corporativo multi-ruta para el Sistema LISTO.
-Hereda la infraestructura de ListoDataExtractor y agrega:
+Extractor corporativo multi-ruta para el Sistema ATLAS.
+Hereda la infraestructura de AtlasDataExtractor y agrega:
   - Auto-descubrimiento de todas las oficinas y rutas del sistema
   - Organización jerárquica Data Lake: data/raw/OFI_{id}/RTA_{id}/
   - Filtro anti-ceros: _validar_presencia_de_abonos()
@@ -23,7 +23,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 sys.path.insert(0, str(Path(__file__).parent))
-from listo_extractor import ListoDataExtractor
+from atlas_extractor import AtlasDataExtractor
 
 # ------------------------------------------------------------------ #
 # Configuración global                                                #
@@ -40,7 +40,7 @@ ARCHIVO_CHECKPOINT = _DIR_RAW / ".checkpoint.json"
 # Poblado manualmente actúa como filtro (solo extrae lo especificado).
 # Ejemplo de uso manual: {"23": ["83", "84"], "24": ["90", "91"]}
 MAPA_CORPORATIVO: dict[str, list[str]] = {
-    # OFI_23 = 01. SAO PAULO   (RTA_82 = JUAN SP ya descargada por listo_extractor.py)
+    # OFI_23 = 01. SAO PAULO   (RTA_82 = JUAN SP ya descargada por atlas_extractor.py)
     "23": ["82", "96", "423", "136", "367", "448", "494"],
     # OFI_31 = 04. SOCIEDADES BRASIL
     "31": ["415", "68", "338", "347", "389"],
@@ -53,10 +53,10 @@ MAPA_CORPORATIVO: dict[str, list[str]] = {
 # Clase principal                                                     #
 # ------------------------------------------------------------------ #
 
-class ListoMasivoExtractor(ListoDataExtractor):
+class AtlasMasivoExtractor(AtlasDataExtractor):
     """
     Extractor corporativo que recorre todas las oficinas y rutas del Sistema
-    LISTO, organiza los archivos en un Data Lake jerárquico y soporta
+    ATLAS, organiza los archivos en un Data Lake jerárquico y soporta
     reanudación desde checkpoints ante cortes de sesión.
     """
 
@@ -503,19 +503,19 @@ if __name__ == "__main__":
 
     load_dotenv(Path(__file__).parent.parent / ".env")
 
-    usuario    = os.getenv("LISTO_USER")
-    contrasena = os.getenv("LISTO_PASS")
-    ruta       = os.getenv("LISTO_RUTA", "01.01. JUAN SP - JJ")
+    usuario    = os.getenv("ATLAS_USER")
+    contrasena = os.getenv("ATLAS_PASS")
+    ruta       = os.getenv("ATLAS_RUTA", "01.01. JUAN SP - JJ")
 
     if not usuario or not contrasena:
         raise ValueError(
-            "Variables LISTO_USER y LISTO_PASS no encontradas. "
+            "Variables ATLAS_USER y ATLAS_PASS no encontradas. "
             "Crea un archivo .env en la raíz del proyecto."
         )
 
-    extractor = ListoMasivoExtractor()
+    extractor = AtlasMasivoExtractor()
     try:
-        extractor.login(ListoDataExtractor.URL_LISTO, usuario, contrasena, ruta)
+        extractor.login(AtlasDataExtractor.URL_ATLAS, usuario, contrasena, ruta)
         time.sleep(8)  # margen extra para que el frameset cargue con sesiones simultáneas
         extractor.ejecutar_maraton_extractora(
             # OFI_23 completa (1.630 arch.) | OFI_31 completa (1.163 arch.)

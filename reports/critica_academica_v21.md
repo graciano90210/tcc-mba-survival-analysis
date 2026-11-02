@@ -17,7 +17,7 @@ O trabalho apresenta uma contribuição metodológica genuína: adaptar o modelo
 
 ### 1. Viés de Sobrevivência na Extração (Crítico)
 
-**O problema:** O scraping via Selenium captura créditos *ativos no momento da extração* (2020–2026). Créditos castigados antes de 2020 e removidos do sistema LISTO são invisíveis para o pipeline. Isso significa que a amostra observada é condicionada à sobrevivência até o início do estudo — o exemplo textbook de viés de sobrevivência.
+**O problema:** O scraping via Selenium captura créditos *ativos no momento da extração* (2020–2026). Créditos castigados antes de 2020 e removidos do sistema ATLAS são invisíveis para o pipeline. Isso significa que a amostra observada é condicionada à sobrevivência até o início do estudo — o exemplo textbook de viés de sobrevivência.
 
 **Consequência quantitativa:** A taxa de default observada (1,50%, 425/28.386) subestima a taxa real da carteira histórica completa da entidade. Se os créditos castigados pré-2020 tivessem taxa de default sistematicamente maior (o que é esperado, pois saíram do sistema), os modelos Cox e DeepSurv treinados na amostra disponível superestimarão S(t) para novos créditos.
 
@@ -30,7 +30,7 @@ O trabalho apresenta uma contribuição metodológica genuína: adaptar o modelo
 **O problema:** A análise de sobrevivência padrão (KM, Cox) assume que a censura é *não-informativa* (ou seja, um crédito censurado tem a mesma função de risco futura que um crédito que continua sendo observado). No contexto de microcrédito, essa suposição é violada de duas formas:
 
 1. **Pagamento antecipado voluntário:** Clientes que liquidam o crédito antes do vencimento saem da observação como "censurados", mas seu perfil de risco é *inferior* ao da população geral.
-2. **Abandono silencioso:** Clientes que simplesmente desaparecem do sistema LISTO sem acumular 120 dias de inatividade também aparecem como censurados, mas seu risco real é elevado.
+2. **Abandono silencioso:** Clientes que simplesmente desaparecem do sistema ATLAS sem acumular 120 dias de inatividade também aparecem como censurados, mas seu risco real é elevado.
 
 **Consequência:** Cox e KM produzem estimativas de S(t) viesadas; o C-index pode estar inflado.
 
@@ -136,7 +136,7 @@ O trabalho apresenta uma contribuição metodológica genuína: adaptar o modelo
 
 4. **Correção de left truncation** — `t_start = max(0, fecha_ini_bloque - FECHA_CRÉDITO)` para o primeiro intervalo, com `t_start[k] = t_stop[k-1]` para continuidade via `shift()` — implementação textbook do Counting Process.
 
-5. **Dataset de alta granularidade** — Snapshots de 10 dias permitem detectar recuperações e recaídas intracrédito que dados mensais não capturariam, explorando adequadamente a estrutura temporal rica do sistema LISTO.
+5. **Dataset de alta granularidade** — Snapshots de 10 dias permitem detectar recuperações e recaídas intracrédito que dados mensais não capturariam, explorando adequadamente a estrutura temporal rica do sistema ATLAS.
 
 6. **Rastreabilidade completa** — Cada arquivo `matriz_maestra.csv` preserva `archivo_origen` com datas início/fim do bloque, permitindo auditoria e reprocessamento independente de qualquer janela temporal.
 

@@ -14,3 +14,4 @@ __pycache__/
 !reports/Projeto_Pesquisa_*.pdf
 !documentotcc/TCC_V*_Espa?ol_Completo.docx
 documentotcc/.~lock.*
+reports/modelagem/*.pkl
