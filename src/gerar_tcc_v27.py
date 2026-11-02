@@ -1950,8 +1950,8 @@ def build_secao_7(doc):
         "oficial do TCC está prevista para fevereiro de 2027; a meta interna é concluir a "
         "versão final em dezembro de 2026, reservando janeiro e fevereiro de 2027 como "
         "margem para os ajustes solicitados pelo orientador e para os trâmites de entrega. "
-        "Os três primeiros Sprints estão concluídos, e os quatro seguintes, de duas a três "
-        "semanas cada, organizam o trabalho restante:")
+        "Os quatro primeiros Sprints estão concluídos, e os três seguintes, de duas semanas "
+        "cada, organizam o trabalho restante:")
     sprints = [
         ("Sprint 1 (jan. a mar. 2026), ETL e pipeline [CONCLUÍDO]:",
          "Desenvolvimento do extrator Selenium (AtlasDataExtractor e AtlasMasivoExtractor), "
@@ -1970,29 +1970,36 @@ def build_secao_7(doc):
          "crédito pela data do último abono registrado pelo sistema, recalcula as "
          "covariáveis apenas com informação disponível no início de cada intervalo e exclui "
          "os créditos sem nenhum movimento."),
-        ("Sprint 4 (29 set. a 12 out. 2026), reprocessamento e baseline [PENDENTE]:",
-         "Reexecução da análise exploratória (Kaplan-Meier, log-rank e Função de Incidência "
-         "Acumulada) sobre o dataset reconstruído; novo ajuste do Cox cause-specific com "
-         "erros-padrão robustos agrupados por cliente; diagnóstico de resíduos de Schoenfeld; "
-         "atualização das Seções 5 e 6.1."),
-        ("Sprint 5 (13 out. a 2 nov. 2026), covariáveis de contexto e Deep Learning [PENDENTE]:",
-         "Incorporação de covariáveis macroeconômicas (Selic, IPCA), regionais e sazonais, "
-         "incluindo o período da pandemia; implementação do DeepHit para riscos competitivos "
-         "com tratamento do desbalanceamento de classes (amostragem estratificada por lote "
-         "ou ponderação da função de perda)."),
-        ("Sprint 6 (3 a 23 nov. 2026), avaliação comparativa [PENDENTE]:",
-         "C-index dependente do tempo e Brier Score com ponderação pela probabilidade inversa "
-         "de censura (IPCW), sob riscos competitivos e em esquema de landmarking; comparação "
-         "entre Cox cause-specific, DeepHit e um credit scoring binário (regressão logística); "
-         "submissão de uma versão à autochecagem Turnitin do ICMC até 18 de novembro de 2026."),
-        ("Sprint 7 (24 nov. a 18 dez. 2026), redação final [PENDENTE]:",
-         "Redação de Resultados, Discussão, Conclusão, Limitações e Trabalhos Futuros "
-         "(incluindo a aplicação do modelo a uma política automatizada de concessão); "
-         "incorporação do feedback da avaliação de Metodologia e Projeto II (revisão "
-         "bibliográfica atualizada, justificativas da granularidade diária e do limiar de "
-         "120 dias, tratamento de dados ausentes, padronização de itálico e pontuação); "
-         "revisão integral pelo orientador. Marco: versão final concluída em 18 de dezembro "
-         "de 2026."),
+        ("Sprint 4 (29 set. a 2 nov. 2026), reprocessamento e modelos de base [CONCLUÍDO]:",
+         "Blocos de 7 dias (10 dias como análise de sensibilidade), calendário de dias de "
+         "cobrança sem domingos nem feriados, histórico do cliente nos créditos anteriores, "
+         "exclusão dos vales de funcionários e correção do leakage da parcela de 1 real. "
+         "Cox cause-specific tempo-variante e modelo de Fine-Gray em landmark (dias 14 e 21), "
+         "com regressão logística como comparação e validação cruzada agrupada por cliente. "
+         "Adiantamento enviado à tutora em 8 de novembro de 2026."),
+        ("Sprint 5 (9 a 22 nov. 2026), covariáveis de contexto e modelos de comparação [PENDENTE]:",
+         "Covariáveis macroeconômicas e sociais (Selic, IPCA, desemprego, programas de "
+         "transferência de renda e o período da pandemia), com os dias de jogos do Brasil na "
+         "Copa de 2022 em análise descritiva; modelo de Fine-Gray com ponderação pela "
+         "probabilidade inversa de censura; modelo de fração de cura (mixture cure model), "
+         "visto na disciplina de Aprendizado Dinâmico, como comparação; Random Survival "
+         "Forest, a partir do conteúdo de florestas aleatórias da disciplina de Aprendizado "
+         "de Máquina; submissão de uma versão à autochecagem Turnitin do ICMC até 18 de "
+         "novembro de 2026."),
+        ("Sprint 6 (23 nov. a 6 dez. 2026), Deep Learning e avaliação comparativa [PENDENTE]:",
+         "DeepHit para riscos competitivos, com embeddings de rota e escritório e uma "
+         "variante com rede recorrente (LSTM) sobre a sequência diária de pagamentos, "
+         "conforme a disciplina de Aprendizado Profundo; comparação de todos os modelos com "
+         "C-index dependente do tempo, Brier Score com ponderação pela probabilidade inversa "
+         "de censura e porcentagem de defaults capturados entre os 10% de maior risco; "
+         "validação temporal e interpretabilidade (SHAP)."),
+        ("Sprint 7 (7 a 18 dez. 2026), redação final [PENDENTE]:",
+         "Redação de Resultados, Discussão, Conclusão, Limitações e Trabalhos Futuros; "
+         "metodologia organizada pelas fases do CRISP-DM e seção curta sobre ética e LGPD; "
+         "revisão bibliográfica pelo método de revisão sistemática da literatura; "
+         "incorporação completa do feedback da avaliação de Metodologia e Projeto II "
+         "(padronização de itálico e pontuação); revisão integral pelo orientador. Marco: "
+         "versão final concluída em 18 de dezembro de 2026."),
         ("Margem (jan. a fev. 2027), entrega [PENDENTE]:",
          "Ajustes finais solicitados pelo orientador, atualização da ficha catalográfica, "
          "geração do PDF final e entrega oficial."),
@@ -2002,10 +2009,11 @@ def build_secao_7(doc):
 
     add_table_data(doc,
         ["Data", "Marco"],
-        [["12 out. 2026", "Dataset reconstruído, EDA e baseline Cox atualizados"],
-         ["2 nov. 2026",  "DeepHit treinado com covariáveis de contexto"],
+        [["2 nov. 2026",  "Dataset reconstruído e modelos de base (Cox e Fine-Gray)"],
+         ["8 nov. 2026",  "Adiantamento enviado à tutora"],
          ["18 nov. 2026", "Versão submetida à autochecagem Turnitin"],
-         ["23 nov. 2026", "Avaliação comparativa concluída"],
+         ["22 nov. 2026", "Covariáveis de contexto, fração de cura e Random Survival Forest"],
+         ["6 dez. 2026",  "DeepHit e avaliação comparativa concluídos"],
          ["18 dez. 2026", "Versão final do TCC concluída"],
          ["fev. 2027",    "Entrega oficial"]],
         "Marcos do cronograma de conclusão", table_num=25)

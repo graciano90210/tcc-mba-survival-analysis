@@ -50,6 +50,31 @@ Recomendaciones de Isadora y dónde se atienden:
 - [ ] Exportar la V27 a PDF y enviarla por Moodle y por email (dom 8).
 - [ ] Referencias: Claude las busca (título, autor, año, enlace) y Juan confirma (vie 6).
 
+## Materias del MBA aplicadas al TCC (revisión 02/11/2026)
+Para el adelanto (enriquecen las secciones de esta semana):
+- [ ] §3: citar los módulos de Técnicas Avançadas de Captura e Tratamento (missing values, outliers,
+      class imbalance, normalization, web scraping); responde la recomendación 7 de Isadora.
+- [ ] §3: diagrama conceptual del ETL, como en Processamento Massivo (Modelagem Conceitual de ETL/ELT);
+      responde la recomendación 1 de Isadora.
+- [ ] §4: organizar la metodología por las fases de CRISP-DM (Gestão Ágil) y presentar la logística como
+      GLM (Estatística para CD, Modelos Lineares Generalizados).
+- [ ] §4: mencionar el cure fraction model (mixture cure model) como trabajo en curso.
+- [ ] §2 (vie 6): buscar referencias con el método de revisión sistemática (Metodologia II) e incluir
+      Granzotto (2008), "Seleção de modelos de tempos com longa-duração para dados de finanças", UFSCar
+      (lectura recomendada en Aprendizado Dinâmico, módulo Análise de Sobrevivência).
+- [ ] Juan: confirmar en el Currículo Lattes del Prof. Vicente si trabaja con cure rate models y llevar
+      la pregunta a la próxima reunión.
+Para los sprints siguientes (ya en el cronograma §8 de la V27):
+- [ ] Sprint 5: cure fraction model como benchmark (Aprendizado Dinâmico, notebook AD-08, última sección).
+- [ ] Sprint 5: Random Survival Forest (Aprendizado de Máquina, florestas aleatórias).
+- [ ] Sprint 5: covariables macro con lo de series de tiempo (Aprendizado Dinâmico), estacionalidad.
+- [ ] Sprint 6: DeepHit con embeddings de ruta y oficina (APIAG, MLP e Feature Embeddings) y variante con
+      LSTM sobre la secuencia diaria de pagos (APIAG, Redes Neurais para dados sequenciais).
+- [ ] Sprint 7: sección corta de ética y LGPD (Introdução à CD, Questões Éticas) y storytelling en las
+      figuras de resultados (Reporte dos Resultados).
+- [ ] Actualizar las menciones a sprints dentro del texto (§4 y §5 todavía dicen DeepSurv/pycox en el
+      Sprint 4-5); se corrige al reescribir esas secciones.
+
 ## Sprint 4 en el texto (V27)
 - [ ] §3: dataset reconstruido (vales excluidos, calendario de cobro, cuota de 1 real = renegociación,
       abonos después del cierre). Quitar números de la V25 (273 eventos, 0,96%).
