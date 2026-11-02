@@ -8,7 +8,7 @@ Se marca con [x] cuando queda resuelto. Última actualización: 02/11/2026.
 ## Pre-textuales
 - [x] Portada: texto vertical USP/ICMC nítido (fuente real).
 - [ ] Portada (opcional): redibujar el fondo (líneas del cubo) en vectorial.
-- [ ] Portada: subtítulo "Trabalho de Conclusão de Curso — MBA…" cambiar el guion largo por coma.
+- [x] Portada: subtítulo con coma en vez de guion largo.
 - [ ] Ficha catalográfica: pedir una nueva a la Biblioteca ICMC al final (cambian páginas y palabras clave).
 - [ ] Resumo/Abstract: lugar "São Paulo/São Carlos" → dejar igual a la ficha catalográfica nueva.
 - [x] Dedicatória sin título, abajo a la derecha.
@@ -29,7 +29,7 @@ Se marca con [x] cuando queda resuelto. Última actualización: 02/11/2026.
 - [ ] Títulos de figuras y tablas: quitar "vs.", "—", nombres de código (se corrige al reescribir cada sección).
 - [ ] Agregar "Fonte:" debajo de cada figura y tabla (ABNT; hoy no hay ninguna).
 - [ ] Revisar si cada capítulo (sección primaria) debe empezar en página nueva.
-- [ ] Quitar guiones largos, flechas, "×", "≥", "✓" del resto del texto (hoy ~105 guiones largos).
+- [x] Quitar guiones largos, flechas, "×", "≥", "✓" del texto (02/11: 87 guiones y ~60 símbolos; solo quedan dentro de las fórmulas). El texto nuevo se escribe sin ellos.
 - [ ] Usar "comerciante" para describir al cliente; producto descrito de forma neutral (sin cobrador ni tasa).
 - [ ] Recomendaciones de la clase de Metodologia (ver `notas_analise_socioeconomica.md`, §6).
 
@@ -40,7 +40,7 @@ Recomendaciones de Isadora y dónde se atienden:
       en el día 14); lo mensual no ve pago incompleto ni domingos/feriados.
 - [ ] 3. Referencias recientes, contexto socioeconómico, comparación entre clases sociales (§2, vie 6; regiones
       por DDD ya disponibles, clases con CNEFE/renta como trabajo en curso).
-- [ ] 4. Reducir travessões (todo el texto, sáb 7).
+- [x] 4. Reducir travessões (hecho el 02/11 en toda la V27).
 - [ ] 5. Artículos contemporáneos de supervivencia y métricas de crédito después de 2002 (§2, vie 6).
 - [ ] 6. Sentido práctico de covariables que cambian por bloque: riesgo actualizado cada semana (§4, mié 4).
 - [ ] 7. Tratamiento de datos ausentes o inconsistentes en el pipeline (§3, mar 3): auditoría.

@@ -225,7 +225,7 @@ def add_figure(doc, img_path, caption, fig_num):
         p = doc.add_paragraph()
         _set_spacing(p, multiple=1.0)
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(f"[FIGURA {fig_num} — arquivo não encontrado: {path.name}]")
+        run = p.add_run(f"[FIGURA {fig_num}, arquivo não encontrado: {path.name}]")
         _set_font(run, size=10, italic=True)
         return
     p_img = doc.add_paragraph()
@@ -475,7 +475,7 @@ def _gerar_imagem_capa():
     author_box = (305 * SCALE, 480 * SCALE, 839 * SCALE, 535 * SCALE)
     subtitle_box = (305 * SCALE, 535 * SCALE, 839 * SCALE, 585 * SCALE)
     _fit_wrapped_text(draw, "Juan Fernando Graciano Pinzón", author_box, BOLD, max_size=36)
-    _fit_wrapped_text(draw, "Trabalho de Conclusão de Curso — MBA em Ciência de Dados (CeMEAI)",
+    _fit_wrapped_text(draw, "Trabalho de Conclusão de Curso, MBA em Ciência de Dados (CeMEAI)",
                        subtitle_box, REG, max_size=26)
 
     buf = io.BytesIO()
@@ -658,7 +658,7 @@ def build_resumo(doc):
     add_body(doc,
         "GRACIANO PINZÓN, J. F. Modelagem de Risco de Crédito Dinâmico para "
         "Microempreendedores: Uma Abordagem via Análise de Sobrevivência em Fluxos de Alta "
-        "Frequência sob Censura. 2026. Trabalho de Conclusão de Curso – MBA em Ciência de Dados, "
+        "Frequência sob Censura. 2026. Trabalho de Conclusão de Curso (MBA em Ciência de Dados), "
         "Instituto de Ciências Matemáticas e de Computação, Universidade de São Paulo, "
         "São Paulo/São Carlos, 2026.", indent_first=False)
     doc.add_paragraph()
@@ -693,7 +693,7 @@ def build_abstract(doc):
     add_body(doc,
         "GRACIANO PINZÓN, J. F. Dynamic Credit Risk Modeling for Microentrepreneurs: "
         "A Survival Analysis Approach on High-Frequency Flows under Censoring. 2026. Final Course "
-        "Work – MBA in Data Science, Institute of Mathematics and Computer Science, University of "
+        "Work (MBA in Data Science), Institute of Mathematics and Computer Science, University of "
         "São Paulo, São Paulo/São Carlos, 2026.", indent_first=False)
     doc.add_paragraph()
     add_body(doc,
@@ -858,16 +858,16 @@ def build_secao_2_revisao_bibliografica(doc):
     add_heading(doc, "2.1  Risco de Crédito para Microempreendedores: da Escassez de Dados ao "
                      "Comportamento Dinâmico", level=2)
     add_body(doc,
-        "A literatura clássica de credit scoring para pequenas e médias empresas — como o "
-        "modelo de Altman e Sabato (2007) para o mercado americano — demonstra que indicadores "
+        "A literatura clássica de credit scoring para pequenas e médias empresas, como o "
+        "modelo de Altman e Sabato (2007) para o mercado americano, demonstra que indicadores "
         "contábeis estáticos têm poder preditivo limitado quando aplicados a tomadores sem "
         "histórico formal consolidado (o segmento thin-file). Banerjee e Duflo (2007), ao "
         "descreverem a vida econômica dos pobres, evidenciam que a renda e o fluxo de caixa "
         "desse público são inerentemente irregulares e de alta frequência, o que é incompatível "
         "com fotografias mensais ou anuais de risco. Já Schreiner (2002), ao propor um arcabouço "
         "de avaliação do alcance social do microcrédito (outreach), reforça que a profundidade e "
-        "a frequência do relacionamento entre credor e tomador — e não apenas o desfecho binário "
-        "de inadimplência — são dimensões centrais para avaliar risco e impacto nesse segmento. "
+        "a frequência do relacionamento entre credor e tomador, e não apenas o desfecho binário "
+        "de inadimplência, são dimensões centrais para avaliar risco e impacto nesse segmento. "
         "Em conjunto, esses três trabalhos delimitam a lacuna que esta pesquisa busca preencher: "
         "modelos de credit scoring tradicionais, estáticos e binários, não capturam a dinâmica "
         "diária de pagamentos parciais que caracteriza o microcrédito informal, motivando a "
@@ -878,20 +878,18 @@ def build_secao_2_revisao_bibliografica(doc):
     add_body(doc,
         "A base estatística deste trabalho parte de Kaplan e Meier (1958): o estimador não "
         "paramétrico da função de sobrevivência que dispensa qualquer suposição sobre a forma da "
-        "distribuição de T, condição necessária quando — como na carteira de microcrédito aqui "
-        "analisada — não há motivo teórico para assumir um formato específico para o tempo até o "
+        "distribuição de T, condição necessária quando (como na carteira de microcrédito aqui "
+        "analisada) não há motivo teórico para assumir um formato específico para o tempo até o "
         "default. Para comparar grupos dentro dessa carteira, como escritórios com taxas de "
         "inadimplência distintas, recorre-se ao teste de log-rank de Mantel (1966), que dispensa "
         "igualmente pressupostos paramétricos. Kalbfleisch e Prentice (2002) e Klein e "
-        "Moeschberger (2003) reúnem esse ferramental — Kaplan-Meier, log-rank e suas extensões — "
-        "nos dois tratamentos de referência utilizados ao longo deste trabalho para dados "
+        "Moeschberger (2003) reúnem esse ferramental (Kaplan-Meier, log-rank e suas extensões) nos dois tratamentos de referência utilizados ao longo deste trabalho para dados "
         "censurados e truncados. A peça que conecta essa base clássica ao problema de alta "
         "frequência tratado aqui é o formato de Processo de Contagem de Anderson e Gill (1982): "
         "ao reescrever o Modelo de Riscos Proporcionais de Cox em intervalos (t_start, t_stop], "
         "ele permite que covariáveis como o cronômetro dias_sem_pagar e o saldo devedor variem a "
         "cada snapshot de 10 dias, em vez de permanecerem fixas como em uma especificação clássica "
-        "de Cox. Por fim, os diagnósticos de Therneau e Grambsch (2000) — em particular os "
-        "resíduos de Schoenfeld — serão o critério para checar, já na fase de modelagem (Seção 6), "
+        "de Cox. Por fim, os diagnósticos de Therneau e Grambsch (2000), em particular os resíduos de Schoenfeld, serão o critério para checar, já na fase de modelagem (Seção 6), "
         "se a suposição de riscos proporcionais se sustenta nesse regime tempo-variante.")
 
     add_heading(doc, "2.3  Deep Learning em Análise de Sobrevivência", level=2)
@@ -899,7 +897,7 @@ def build_secao_2_revisao_bibliografica(doc):
         "Katzman et al. (2018) tratam o problema de linearidade do Cox por outro caminho: em vez "
         "de assumir que o log-hazard é uma combinação linear das covariáveis, o DeepSurv usa uma "
         "rede neural para aprender essa função diretamente da verossimilhança parcial de Cox, "
-        "dispensando a especificação manual de interações entre variáveis — ponto relevante aqui, "
+        "dispensando a especificação manual de interações entre variáveis, ponto relevante aqui, "
         "dado o número elevado de covariáveis tempo-variantes derivadas do histórico de "
         "pagamentos. Kim (2026) mapeia esse campo em expansão, incluindo variantes recorrentes "
         "(LSTM/GRU) pensadas para sequências longas, como as séries de até centenas de snapshots "
@@ -994,7 +992,7 @@ def build_secao_3(doc):
              "Backend PHP sem endpoints programáticos",
              "Selenium WebDriver + ChromeDriver (webdriver-manager)"],
             ["Frameset aninhado (3 níveis)",
-             "página principal → frameMenu → frameFormulario",
+             "página principal, depois frameMenu e por fim frameFormulario",
              "Sequência precisa de switch_to.frame() + switch_to.default_content()"],
             ["Autenticação SELECT2 (fase 2)",
              "Widget jQuery ignora eventos DOM nativos",
@@ -1024,23 +1022,23 @@ def build_secao_3(doc):
         "com o Sistema ATLAS. A autenticação ocorre em duas fases distintas, separadas por uma "
         "transição de estado do servidor que invalida os elementos DOM previamente carregados.")
 
-    add_labeled(doc, "Fase 1 — Credenciais:",
+    add_labeled(doc, "Fase 1, credenciais:",
         "O formulário de login reside dentro de um iframe (frame index 0 de página de autenticação do sistema). "
         "O robô utiliza WebDriverWait com expected_conditions para aguardar a disponibilidade de "
         "cada elemento antes de interagir, garantindo tolerância a variações de latência do "
         "servidor. Os campos campoUsuario e campoSenha recebem as credenciais lidas de variáveis de "
         "ambiente (.env), e o botão botaoEntrar é ativado via clique nativo do Selenium.")
 
-    add_labeled(doc, "Fase 2 — Seleção de rota (SELECT2):",
+    add_labeled(doc, "Fase 2, seleção de rota (SELECT2):",
         "Após validar as credenciais, o servidor renderiza um segundo formulário com um dropdown "
         "SELECT2 (biblioteca jQuery) para seleção da rota. O SELECT2 ignora completamente eventos "
-        "DOM nativos como 'input' ou 'change' disparados por Selenium — o widget escuta apenas "
+        "DOM nativos como 'input' ou 'change' disparados por Selenium; o widget escuta apenas "
         "eventos jQuery internos. A solução implementada é a injeção direta de JavaScript que "
         "escreve o valor no elemento <select> subjacente e dispara um evento 'change' nativo com "
         "propagação (bubbles: true), contornando o interceptor jQuery:")
 
     add_code(doc,
-        "# SELECT2 ignora eventos Selenium → DOM nativo com dispatchEvent\n"
+        "# SELECT2 ignora eventos Selenium; usa-se DOM nativo com dispatchEvent\n"
         "driver.execute_script(\"\"\"\n"
         "    var sel = document.getElementById('campoRota');\n"
         "    sel.value = arguments[0];\n"
@@ -1071,7 +1069,7 @@ def build_secao_3(doc):
             ["4", "JS click: //op[normalize-space()='Reportes']", "Tag <op> do menu", "Expandir o submenu de relatórios"],
             ["5", "JS click: //op[normalize-space()='Recaudador']", "Tag <op> do submenu", "Expandir o submenu de cobrança"],
             ["6", "JS click: //a[contains(@href,'RelatorioPagamentos')]", "Link do relatório", "Carregar o formulário de extração no frameFormulario"],
-            ["7", "switch_to.default_content() → switch_to.frame(0)", "De volta ao frame raiz", "Preparar para entrar no frameFormulario"],
+            ["7", "switch_to.default_content() e depois switch_to.frame(0)", "De volta ao frame raiz", "Preparar para entrar no frameFormulario"],
             ["8", "frame_to_be_available_and_switch_to_it('frameFormulario')", "frameFormulario (formulário)", "Acessar o formulário de extração"],
             ["9", "Select(campoOficina).select_by_value()", "Dropdown de oficina", "Configurar filtro estático de escritório"],
             ["10", "Select(campoRota).select_by_value()", "Dropdown de rota", "Configurar filtro estático de rota (após AJAX)"],
@@ -1084,7 +1082,7 @@ def build_secao_3(doc):
         "Os filtros de escritório e rota (campoOficina e campoRota) são configurados uma única vez "
         "antes do início do laço de extração batch, pois permanecem constantes para toda a "
         "sequência temporal de uma rota. A seleção da oficina dispara uma chamada AJAX que "
-        "repopula o dropdown campoRota — o pipeline aguarda a presença da opção correta com "
+        "repopula o dropdown campoRota; o pipeline aguarda a presença da opção correta com "
         "lambda WebDriverWait antes de prosseguir, garantindo sincronização com o servidor.")
 
     # ── 3.3 ──────────────────────────────────────────────────────────────────
@@ -1108,7 +1106,7 @@ def build_secao_3(doc):
         "do formulário:")
 
     add_code(doc,
-        "# Campo readonly → injetar valor via JS + disparar evento change\n"
+        "# Campo readonly: injetar valor via JS e disparar evento change\n"
         "driver.execute_script(\"\"\"\n"
         "    arguments[0].value = arguments[1];\n"
         "    arguments[0].dispatchEvent(new Event('change', {bubbles: true}));\n"
@@ -1173,11 +1171,11 @@ def build_secao_3(doc):
     add_table_data(doc,
         ["Escritório", "ID", "Região", "Rotas (IDs)", "Total"],
         [
-            ["OFI_23 — São Paulo",       "23", "São Paulo / Grande SP",
+            ["OFI_23 (São Paulo)",       "23", "São Paulo / Grande SP",
              "82, 96, 423, 136, 367, 448, 494", "7"],
-            ["OFI_31 — Sociedades Brasil","31", "Interior e Sul do Brasil",
+            ["OFI_31 (Sociedades Brasil)","31", "Interior e Sul do Brasil",
              "415, 68, 338, 347, 389", "5"],
-            ["OFI_44 — Cabo Frio",        "44", "Região dos Lagos / RJ",
+            ["OFI_44 (Cabo Frio)",        "44", "Região dos Lagos / RJ",
              "114, 439, 396, 420, 511", "5"],
         ],
         "Mapa corporativo detectado pelo Auto-Discovery: escritórios e rotas do Sistema ATLAS",
@@ -1199,7 +1197,7 @@ def build_secao_3(doc):
             ["Arquivos Excel baixados",        "3.962 arquivos"],
             ["Escritórios cobertos",           "3 (OFI_23, OFI_31, OFI_44)"],
             ["Rotas cobertas",                 "17"],
-            ["Período de cobertura",           "2020-01-01 → 2026-05-15 (~6,4 anos)"],
+            ["Período de cobertura",           "2020-01-01 a 2026-05-15 (~6,4 anos)"],
             ["Blocos temporais por rota",      "~233 blocos de 10 dias"],
             ["Tamanho total do Data Lake",     "~14 GB"],
             ["Pausa entre rotas",              "10 segundos (limpeza de cache do navegador)"],
@@ -1265,7 +1263,7 @@ def build_secao_3(doc):
         [
             ["Linhas (observações de crédito)", "344.869"],
             ["Colunas totais",                   "2.358"],
-            ["Colunas de pagamentos diários",    "~2.330 (datas 2020-01-01 → 2026-05-15)"],
+            ["Colunas de pagamentos diários",    "~2.330 (datas 2020-01-01 a 2026-05-15)"],
             ["Colunas estáticas do crédito",     "28 (CÓDIGO CRÉDITO, SALDO, CUOTAS PACTADAS, etc.)"],
             ["Tamanho em disco (CSV comprimido)","882 MB"],
             ["Tamanho em RAM (expandido, float64)","~6 GB"],
@@ -1287,11 +1285,11 @@ def build_secao_3(doc):
         "processando os agregados de pagamento de cada bloco em memória e descartando as "
         "~2.330 colunas de data antes de concatenar. O cálculo dos agregados "
         "(pago_promedio_diario, dias_con_abono) utiliza broadcasting NumPy para criar uma "
-        "máscara binária (n_linhas × n_colunas_pagamento) que seleciona apenas as colunas "
+        "máscara binária (n_linhas por n_colunas_pagamento) que seleciona apenas as colunas "
         "de data dentro do intervalo do bloco, sem loop Python:")
 
     add_code(doc,
-        "# Máscara vetorizada (n_linhas × n_colunas_pago) — sem loop Python\n"
+        "# Máscara vetorizada (n_linhas por n_colunas_pago), sem loop Python\n"
         "ini_arr   = ini.values[:, np.newaxis]    # shape: (5000, 1)\n"
         "fin_arr   = fin.values[:, np.newaxis]    # shape: (5000, 1)\n"
         "dates_arr = pago_dates.values[np.newaxis, :]  # shape: (1, 2330)\n"
@@ -1309,10 +1307,10 @@ def build_secao_3(doc):
         [
             ["Chunk size",              "5.000 linhas",  "Equilíbrio entre velocidade e consumo de RAM (~100 MB/chunk)"],
             ["Colunas de pagamento",    "~2.330",         "Datas 2020-01-01 a 2026-05-15 detectadas pelo header scan"],
-            ["Shape da máscara",        "(5000 × 2330)", "Broadcasting NumPy — operação vetorizada sem loop Python"],
+            ["Shape da máscara",        "(5000 por 2330)", "Broadcasting NumPy, operação vetorizada sem loop Python"],
             ["Throughput",              "~5.000 linhas/s","Medido em hardware com 8 GB RAM / CPU 4 núcleos"],
             ["RAM pico por chunk",      "~100 MB",        "Máscara booleana float32 + dados de pagamento"],
-            ["Tempo total de leitura",  "~70 segundos",   "Para 344.869 linhas × 2.358 colunas"],
+            ["Tempo total de leitura",  "~70 segundos",   "Para 344.869 linhas e 2.358 colunas"],
         ],
         "Estratégia de chunked loading com máscara NumPy vetorizada",
         table_num=7,
@@ -1330,22 +1328,22 @@ def build_secao_3(doc):
         [
             ["Exclusão do versionamento (git)",
              "data/raw/, data/processed/ e .env no .gitignore",
-             "Art. 46 — Medidas de segurança"],
+             "Art. 46 (medidas de segurança)"],
             ["Gestão de credenciais",
              "ATLAS_USER e ATLAS_PASS apenas em .env (nunca no código-fonte)",
-             "Art. 46 — Proteção de acesso"],
+             "Art. 46 (proteção de acesso)"],
             ["Pseudonimização",
-             "CÓDIGO CRÉDITO como chave — sem nome, CPF, endereço ou dados de identificação direta",
-             "Art. 13 — Pseudonimização"],
+             "CÓDIGO CRÉDITO como chave, sem nome, CPF, endereço ou dados de identificação direta",
+             "Art. 13 (pseudonimização)"],
             ["Minimização de dados",
              "Silver Layer contém apenas variáveis necessárias para o modelo de sobrevivência",
-             "Art. 6 — Necessidade"],
+             "Art. 6 (necessidade)"],
             ["Finalidade definida",
              "Dados utilizados exclusivamente para pesquisa acadêmica de risco de crédito",
-             "Art. 6 — Finalidade"],
+             "Art. 6 (finalidade)"],
             ["Rastreabilidade",
              "arquivo_origen em cada linha da Matriz Mestra identifica a fonte exata do dado",
-             "Art. 37 — Registro das operações"],
+             "Art. 37 (registro das operações)"],
         ],
         "Conformidade LGPD e governança de dados no pipeline ETL",
         table_num=8,
@@ -1358,11 +1356,11 @@ def build_secao_3(doc):
 
     fases = [
         ("(1) Entendimento do Negócio:",
-         "Definição do evento de castigo de carteira (dias_sem_pagar ≥ 120) a partir do "
+         "Definição do evento de castigo de carteira (dias_sem_pagar maior ou igual a 120) a partir do "
          "processo operativo da instituição parceira. Identificação do Sistema ATLAS como "
          "fonte primária e design do pipeline RPA como solução de ingestão."),
         ("(2) Entendimento dos Dados:",
-         "Análise exploratória da estrutura da Matriz Mestra (344.869 × 2.358), identificação "
+         "Análise exploratória da estrutura da Matriz Mestra (344.869 linhas e 2.358 colunas), identificação "
          "das ~2.330 colunas de pagamento, caracterização da cohorte diária e EDA do dataset "
          "de sobrevivência (Seção 5.6)."),
         ("(3) Preparação dos Dados:",
@@ -1387,13 +1385,13 @@ def build_secao_3(doc):
     add_body(doc,
         "A gestão de riscos do projeto seguiu as sete categorias identificadas na literatura "
         "de gerenciamento ágil de projetos de Ciência de Dados (Louzada Neto, 2026): "
-        "(1) qualidade dos dados — mitigada pelo filtro anti-zero e validação do visualizadorRelatorio; "
-        "(2) orçamento — controlado pela solução in-house de web scraping, eliminando licenças "
-        "externas; (3) comprometimento — gerenciado com entregas iterativas por Sprint; "
-        "(4) recursos humanos — risco baixo por ser pesquisa individual; "
-        "(5) fornecedores — mitigado pela independência do Sistema ATLAS (solução in-house); "
-        "(6) segurança da informação — LGPD + .gitignore + pseudonimização; "
-        "(7) expectativas de tempo — cronograma CRISP-DS com 7 Sprints Scrum.")
+        "(1) qualidade dos dados: mitigada pelo filtro anti-zero e validação do visualizadorRelatorio; "
+        "(2) orçamento: controlado pela solução in-house de web scraping, eliminando licenças "
+        "externas; (3) comprometimento: gerenciado com entregas iterativas por Sprint; "
+        "(4) recursos humanos: risco baixo por ser pesquisa individual; "
+        "(5) fornecedores: mitigado pela independência do Sistema ATLAS (solução in-house); "
+        "(6) segurança da informação: LGPD + .gitignore + pseudonimização; "
+        "(7) expectativas de tempo: cronograma CRISP-DS com 7 Sprints Scrum.")
     add_body(doc,
         "A formatação deste documento e pequenos trechos de código contaram com apoio pontual "
         "de uma ferramenta de inteligência artificial (ANTHROPIC, 2026).")
@@ -1406,8 +1404,8 @@ def build_secao_4(doc):
 
     add_heading(doc, "5.1  Fundamentos Teóricos da Análise de Sobrevivência", level=2)
     add_body(doc,
-        "Diferentemente da regressão logística — que estimaria a probabilidade de default do "
-        "microempreendedor em um ponto fixo do tempo, sem capturar quando isso ocorre —, este "
+        "Diferentemente da regressão logística, que estimaria a probabilidade de default do "
+        "microempreendedor em um ponto fixo do tempo, sem capturar quando isso ocorre, este "
         "trabalho recorre à análise de sobrevivência (Kalbfleisch e Prentice, 2002): um "
         "ferramental que incorpora explicitamente a dimensão temporal, distinguindo os "
         "créditos que efetivamente entraram em default daqueles observados sem esse desfecho "
@@ -1416,7 +1414,7 @@ def build_secao_4(doc):
     add_heading(doc, "5.1.1  Função de Sobrevivência e Função de Risco", level=3)
     add_body(doc,
         "Neste trabalho, T representa o tempo até a inadimplência técnica de um crédito "
-        "(dias_sem_pagar ≥ 120), e a probabilidade de o crédito permanecer ativo além de um "
+        "(dias_sem_pagar maior ou igual a 120), e a probabilidade de o crédito permanecer ativo além de um "
         "instante t é dada pela função de sobrevivência:")
     add_formula(doc, "S(t) = P(T > t) = 1 − F(t)")
     add_body(doc,
@@ -1424,7 +1422,7 @@ def build_secao_4(doc):
         "default no momento t, condicional a o crédito ainda estar ativo até ali, é capturada "
         "pela função de risco:")
     add_formula(doc, "h(t) = lim[Δt→0] P(t ≤ T < t+Δt | T ≥ t) / Δt = f(t) / S(t)")
-    add_body(doc, "As duas funções não são independentes — conhecendo uma, a outra fica determinada:")
+    add_body(doc, "As duas funções não são independentes: conhecendo uma, a outra fica determinada:")
     add_formula(doc, "S(t) = exp(−∫₀ᵗ h(u) du) = exp(−H(t))")
     add_body(doc,
         "com H(t) sendo o risco acumulado até t. É justamente h(t) que o Modelo de Cox modela "
@@ -1434,7 +1432,7 @@ def build_secao_4(doc):
     add_heading(doc, "5.1.2  Tipos de Censura e Truncação à Esquerda", level=3)
     add_body(doc,
         "A censura à direita (right censoring) ocorre quando o evento não ocorreu antes do fim "
-        "da observação — aplicável aos créditos ativos no corte do estudo (15 de maio de 2026). "
+        "da observação, aplicável aos créditos ativos no corte do estudo (15 de maio de 2026). "
         "A truncação à esquerda (left truncation) ocorre quando o primeiro snapshot de um crédito "
         "corresponde a uma data posterior ao seu desembolso. O formato Counting Process trata "
         "corretamente ambos os fenômenos (Therneau e Grambsch, 2000).")
@@ -1449,25 +1447,25 @@ def build_secao_4(doc):
     add_body(doc,
         "Três características tornam esse estimador adequado à carteira analisada: converge "
         "para o S(t) verdadeiro à medida que a amostra cresce, dispensa qualquer suposição "
-        "sobre a forma de T, e trata corretamente a censura — créditos ainda ativos continuam "
+        "sobre a forma de T, e trata corretamente a censura, créditos ainda ativos continuam "
         "contribuindo ao denominador nⱼ até o instante em que deixam de ser observados. A "
         "incerteza da estimativa é quantificada pela fórmula de Greenwood: "
         "Var[Ŝ(t)] = Ŝ(t)² × Σ[dⱼ/(nⱼ(nⱼ−dⱼ))].")
 
     add_heading(doc, "5.1.4  Teste de Log-Rank", level=3)
     add_body(doc,
-        "Comparar as curvas de sobrevivência entre grupos de crédito — por exemplo, entre "
-        "escritórios — sem assumir uma forma paramétrica é o papel do teste de log-rank de "
+        "Comparar as curvas de sobrevivência entre grupos de crédito (por exemplo, entre "
+        "escritórios) sem assumir uma forma paramétrica é o papel do teste de log-rank de "
         "Mantel (1966), utilizado na Seção 5.6.4 para contrastar OFI_23 e OFI_44. A hipótese "
         "testada é a igualdade das curvas entre grupos ao longo de todo o período "
         "(H₀: S₁(t) = S₂(t) para todo t), e o estatístico resultante segue uma distribuição "
         "χ² com (k−1) graus de liberdade sob H₀, com maior poder para detectar diferenças "
-        "concentradas na cauda da distribuição — justamente onde estão os créditos de maior risco.")
+        "concentradas na cauda da distribuição, justamente onde estão os créditos de maior risco.")
 
     add_heading(doc, "5.1.5  Processo de Contagem de Anderson-Gill", level=3)
     add_body(doc,
-        "Quando as covariáveis mudam ao longo do seguimento — como saldo devedor, cuotas "
-        "atrasadas e dias_sem_pagar —, é necessário o marco do Processo de Contagem de "
+        "Quando as covariáveis mudam ao longo do seguimento (como saldo devedor, cuotas "
+        "atrasadas e dias_sem_pagar), é necessário o marco do Processo de Contagem de "
         "Anderson e Gill (1982). O indivíduo i é representado por uma sequência de intervalos:")
     add_formula(doc, "(t_start₁, t_stop₁, δ₁, X_{i1}), (t_start₂, t_stop₂, δ₂, X_{i2}), ...")
     add_body(doc,
@@ -1484,16 +1482,16 @@ def build_secao_4(doc):
         "zero eventos. A definição adotada é o castigo de carteira operativo da instituição:")
     add_formula(doc, "E_i = 𝟙[dias_sem_pagar_{it} ≥ 120 dias calendário]")
     add_body(doc,
-        "Este umbral — equivalente a 4 meses de inatividade financeira total — distingue "
+        "Este umbral, equivalente a 4 meses de inatividade financeira total, distingue "
         "mora transitória (cronômetro reiniciado por qualquer abono) de abandono real "
         "(inatividade superior a 4 vezes o prazo máximo do crédito). "
-        "Critério de inclusão: coorte diária com CUOTAS_PACTADAS ≤ 40.")
+        "Critério de inclusão: coorte diária com CUOTAS_PACTADAS até 40.")
 
     add_heading(doc, "5.3  Estrutura Bimodal de Atributos e Estratégia de Proxy", level=2)
     add_body(doc,
-        "As covariáveis disponíveis dividem-se em dois grupos: (1) Variáveis Estáticas — "
+        "As covariáveis disponíveis dividem-se em dois grupos: (1) Variáveis Estáticas: "
         "parâmetros do crédito (valor total, valor da cota, cotas pactadas); (2) Variáveis "
-        "Dinâmicas (Heartbeat) — vetor longitudinal de pagamentos, cuotas atrasadas, "
+        "Dinâmicas (Heartbeat), vetor longitudinal de pagamentos, cuotas atrasadas, "
         "intensidade transacional dos abonos e dias com abono, capturando a 'frequência "
         "cardíaca' financeira do empreendedor. Os identificadores ofi_id e rta_id atuam "
         "como proxies geodemográficos para capturar o comportamento de risco local.")
@@ -1516,12 +1514,12 @@ def build_secao_4(doc):
         "A granularidade de 10 dias adotada para os intervalos (t_start, t_stop] merece "
         "uma justificativa explícita, já que o Sistema ATLAS restringe a extração a blocos "
         "de 10 dias, mas o relatório subjacente traz, em cada extração, colunas de "
-        "pagamento diário — a granularidade diária, portanto, está disponível na origem. "
+        "pagamento diário, a granularidade diária, portanto, está disponível na origem. "
         "A opção por reportar o cronômetro dias_sem_pagar a cada 10 dias, e não "
         "diariamente, é um compromisso consciente entre fidelidade temporal e "
         "viabilidade computacional: monitorar a cada 10 dias um evento cujo limiar é de "
         "120 dias equivale a uma frequência de amostragem cerca de 12 vezes maior do que a "
-        "escala do próprio fenômeno, de forma análoga ao teorema da amostragem — e o "
+        "escala do próprio fenômeno, de forma análoga ao teorema da amostragem, e o "
         "cronômetro dias_sem_pagar preserva precisão diária internamente via forward-fill, "
         "não perdendo informação na definição do evento. Reconstruir o dataset em "
         "granularidade diária multiplicaria o número de linhas em cerca de 10 vezes "
@@ -1540,15 +1538,15 @@ def build_secao_4(doc):
 
     add_table_data(doc,
         ["Coorte", "Critério", "Créditos"],
-        [["Diária (incluída)", "CUOTAS_PACTADAS ≤ 40", "28.386"],
-         ["Semanal/quinzenal/mensal (excluída)", "CUOTAS_PACTADAS > 40", "—"]],
+        [["Diária (incluída)", "CUOTAS_PACTADAS até 40", "28.386"],
+         ["Semanal/quinzenal/mensal (excluída)", "CUOTAS_PACTADAS acima de 40", "Não incluída"]],
         "Filtro de coorte diária: critério e créditos retidos", table_num=9)
 
     add_table_data(doc,
         ["Variável", "Tipo", "Descrição"],
         [["t_start", "Contínua", "Início do intervalo (dias desde o desembolso)"],
          ["t_stop",  "Contínua", "Fim do intervalo (dias desde o desembolso)"],
-         ["evento",  "Binária",  "1 = default (dias_sem_pagar ≥ 120), 0 = censura"],
+         ["evento",  "Binária",  "1 = default (dias_sem_pagar maior ou igual a 120), 0 = censura"],
          ["dias_sem_pagar", "Discreta", "Cronômetro de inatividade financeira"]],
         "Variáveis de tempo e evento do dataset de sobrevivência", table_num=10)
 
@@ -1577,7 +1575,7 @@ def build_secao_4(doc):
     add_heading(doc, "5.6  Análise Exploratória de Dados (EDA)", level=2)
     add_body(doc,
         "A análise exploratória foi desenvolvida no notebook notebooks/01_eda_survival.ipynb, "
-        "gerando nove figuras de diagnóstico (Figuras 1–9).")
+        "gerando nove figuras de diagnóstico (Figuras 1 a 9).")
 
     add_heading(doc, "5.6.1  Caracterização Geral do Dataset", level=3)
     add_table_data(doc,
@@ -1589,7 +1587,7 @@ def build_secao_4(doc):
          ["Créditos censurados (E=0)",    "28.113 (99,04%)"],
          ["Escritórios",                  "3"],
          ["Rotas",                        "17"],
-         ["Período de observação",        "2020-01-01 → 2026-05-15 (~6,4 anos)"]],
+         ["Período de observação",        "2020-01-01 a 2026-05-15 (~6,4 anos)"]],
         "Caracterização geral do dataset de sobrevivência (após auditoria de integridade, "
         "ver §5.8)", table_num=13)
     add_body(doc,
@@ -1597,7 +1595,7 @@ def build_secao_4(doc):
         "de rota: a maioria dos inadimplentes é transitória e se resolve antes de atingir 120 "
         "dias de inatividade. A taxa é coerente com referências de microcrédito de pagamento "
         "diário em economias emergentes (Schreiner, 2002). Este número já incorpora a "
-        "correção descrita em §5.8 — a versão original do dataset apresentava 425 eventos "
+        "correção descrita em §5.8; a versão original do dataset apresentava 425 eventos "
         "(1,50%), dos quais 152 eram falsos positivos.")
 
     add_heading(doc, "5.6.2  Distribuição do Evento de Default", level=3)
@@ -1611,10 +1609,10 @@ def build_secao_4(doc):
         "Taxa de default por escritório", table_num=14)
     add_body(doc,
         "A versão original do dataset (antes da correção de §5.8) indicava uma taxa quase "
-        "quatro vezes superior em OFI_44 (3,50%) — mas 152 dos seus eventos eram créditos "
+        "quatro vezes superior em OFI_44 (3,50%), mas 152 dos seus eventos eram créditos "
         "corretamente pagos e falsamente etiquetados como default pelo bug do cronômetro, "
         "concentrados nesse escritório. Após a correção, OFI_44 ainda apresenta a maior taxa "
-        "(1,34% vs. 0,72–0,90%), porém a diferença é bem menor do que a inicialmente observada "
+        "(1,34% contra 0,72% a 0,90%), porém a diferença é bem menor do que a inicialmente observada "
         "e, como mostra §5.6.4, agora estatisticamente significativa.")
 
     add_heading(doc, "5.6.3  Curva de Kaplan-Meier Global", level=3)
@@ -1630,13 +1628,13 @@ def build_secao_4(doc):
         "Valores da curva de Kaplan-Meier global (evento binário)", table_num=15)
     add_body(doc,
         "S(t) = 1,0 até o dia 120 é consequência direta da definição do evento (dias_sem_pagar "
-        "≥ 120 é impossível antes de 120 dias de seguimento). A queda acentuada de S(t) após o "
-        "dia 180 (S(540)=0,38) não deve ser lida como \"risco de default de 62%\" — é um "
+        "maior ou igual a 120 é impossível antes de 120 dias de seguimento). A queda acentuada de S(t) após o "
+        "dia 180 (S(540)=0,38) não deve ser lida como \"risco de default de 62%\": é um "
         "artefato de tratar Cura (pagamento total, ~94,7% da carteira) como censura simples: "
         "à medida que os créditos saudáveis saem do conjunto em risco por terem pago tudo, o "
         "subconjunto remanescente concentra-se nos casos mais difíceis, distorcendo S(t) para "
         "baixo. Essa é exatamente a limitação que motiva o tratamento de Riscos Competitivos "
-        "introduzido em §5.9 — a Função de Incidência Acumulada (Figura 10) mostra que o risco "
+        "introduzido em §5.9: a Função de Incidência Acumulada (Figura 10) mostra que o risco "
         "real de default se estabiliza perto de 1,1%, não de 62%.")
 
     add_heading(doc, "5.6.4  Análise Estratificada por Escritório (Teste de Log-Rank)", level=3)
@@ -1647,12 +1645,12 @@ def build_secao_4(doc):
         [["χ² (log-rank)", "8,2672"], ["p-valor", "0,0040"]],
         "Resultado do teste de log-rank (OFI_23 vs. OFI_44)", table_num=16)
     add_body(doc,
-        "p = 0,0040 rejeita H₀ de igualdade de curvas ao nível de 5% — diferença real e "
+        "p = 0,0040 rejeita H₀ de igualdade de curvas ao nível de 5%, indicando diferença real e "
         "estatisticamente significativa entre os escritórios. Antes da correção descrita em "
         "§5.8, esse mesmo teste resultava em p = 0,775 (não significativo): os 152 falsos "
         "positivos concentrados em OFI_44 introduziam ruído suficiente para mascarar a "
         "diferença real de risco entre escritórios. Este é o efeito mais direto da auditoria "
-        "de integridade sobre a validade estatística do trabalho — o teste passou de \"sem "
+        "de integridade sobre a validade estatística do trabalho: o teste passou de \"sem "
         "poder estatístico\" a \"diferença detectada com confiança\", sem qualquer mudança na "
         "definição do umbral de 120 dias.")
 
@@ -1666,13 +1664,12 @@ def build_secao_4(doc):
          ["Máximo",  "815 dias", "233"]],
         "Estatísticas do tempo de seguimento e intervalos por crédito", table_num=17)
     add_body(doc,
-        "A mediana de 29 dias reflete créditos curtos (20–30 dias). A cauda direita pronunciada "
-        "(máx 815 dias, 233 snapshots) corresponde a clientes com múltiplas renovações — "
-        "estrutura bimodal típica do microcrédito diário que justifica a análise de sobrevivência.")
+        "A mediana de 29 dias reflete créditos curtos (20 a 30 dias). A cauda direita pronunciada "
+        "(máx 815 dias, 233 snapshots) corresponde a clientes com múltiplas renovações, uma estrutura bimodal típica do microcrédito diário que justifica a análise de sobrevivência.")
 
     add_heading(doc, "5.6.6  Cronômetro dias_sem_pagar", level=3)
     add_figure(doc, REPORTS / "fig05_dias_sin_pagar.png",
-               "Distribuição de dias_sem_pagar: global, zoom 0–150 dias e máximo por crédito", 5)
+               "Distribuição de dias_sem_pagar: global, zoom de 0 a 150 dias e máximo por crédito", 5)
     add_table_data(doc,
         ["Estatístico", "Valor"],
         [["Mediana", "0 dias"], ["Percentil 95", "0 dias"],
@@ -1681,8 +1678,8 @@ def build_secao_4(doc):
     add_body(doc,
         "Em mais de 95% dos intervalos, dias_sem_pagar = 0: o cliente realizou pelo menos um "
         "abono no bloco de 10 dias. Valores altos (>21 dias) correspondem quase exclusivamente "
-        "a créditos que eventualmente defaultam. Correlação de Pearson com evento: r = 0,478 "
-        "— a mais alta do conjunto de covariáveis, porém mais baixa que a estimativa anterior "
+        "a créditos que eventualmente defaultam. Correlação de Pearson com evento: r = 0,478, "
+        "a mais alta do conjunto de covariáveis, porém mais baixa que a estimativa anterior "
         "(r=0,680), já que a correção de §5.8 removeu créditos saudáveis que artificialmente "
         "inflavam essa correlação com valores altos de dias_sem_pagar sem corresponder a "
         "default real.")
@@ -1693,17 +1690,17 @@ def build_secao_4(doc):
     add_table_data(doc,
         ["Covariável", "r com evento", "Direção"],
         [["dias_sem_pagar",          "+0,4779", "Cronômetro direto do evento"],
-         ["saldo_relativo",          "−0,0277", "Maior saldo → menor default"],
-         ["dias_con_abono",          "−0,0174", "Mais dias com abono → menor risco"],
+         ["saldo_relativo",          "−0,0277", "Maior saldo, menor default"],
+         ["dias_con_abono",          "−0,0174", "Mais dias com abono, menor risco"],
          ["ratio_atraso",            "−0,0131", "Contra-intuitivo por composição"],
-         ["pago_promedio_diario",    "−0,0122", "Mais pagamentos → menor risco"],
+         ["pago_promedio_diario",    "−0,0122", "Mais pagamentos, menor risco"],
          ["dias_desde_ultimo_abono_no_bloco", "+0,0190", "Sinal fraco, mesma direção de dias_sem_pagar"],
          ["variabilidade_pago_diario", "−0,0092", "Sinal fraco, mesma direção de pago_promedio_diario"],
          ["intensidade_recuperacao", "−0,0058", "Efeito fraco e agora protetor (ver §5.8)"]],
         "Correlações das covariáveis com o evento (recalculadas após auditoria, §5.8)", table_num=19)
     add_body(doc,
         "As correlações lineares baixas das covariáveis de mora e pagamento com o evento não "
-        "implicam ausência de efeito preditivo — refletem a natureza não linear e dinâmica "
+        "implicam ausência de efeito preditivo, refletem a natureza não linear e dinâmica "
         "das relações no contexto do Counting Process, que o modelo de Cox quantificará "
         "corretamente via hazard ratios (ver resultados reais em §6.1).")
 
@@ -1718,15 +1715,15 @@ def build_secao_4(doc):
     add_body(doc,
         "Créditos de baixo montante (mediana R$ 1.200), com prazo concentrado em 20 dias "
         "(62,7%), 24 dias (29,3%) e 30 dias (5,2%). A grande maioria (92,0%) tem prazo de "
-        "20 ou 24 dias — produtos pré-definidos pela instituição, não negociados individualmente.")
+        "20 ou 24 dias, que são produtos pré-definidos pela instituição, não negociados individualmente.")
 
     add_heading(doc, "5.6.9  Estrutura de Correlações", level=3)
     add_figure(doc, REPORTS / "fig08_correlaciones.png",
                "Mapa de calor de correlações das covariáveis (triângulo inferior)", 8)
     add_body(doc,
-        "Correlação ratio_atraso ↔ cuotas_atrasadas: r = +0,977 — redundância severa. "
+        "Correlação entre ratio_atraso e cuotas_atrasadas: r = +0,977, uma redundância severa. "
         "A covariável variabilidade_pago_diario apresenta correlação de r = +0,854 com "
-        "pago_promedio_diario — esperado, já que blocos com pagamento médio mais alto tendem "
+        "pago_promedio_diario, o que é esperado, já que blocos com pagamento médio mais alto tendem "
         "a ter maior dispersão absoluta entre os dias. Decisão adotada na modelagem (§6.1): "
         "remover cuotas_atrasadas (mantendo ratio_atraso, mais informativo por ser "
         "normalizado pelo prazo) e remover variabilidade_pago_diario (mantendo "
@@ -1741,18 +1738,18 @@ def build_secao_4(doc):
     add_body(doc,
         "Créditos em default: dias_sem_pagar cresce monotonicamente nos últimos blocos, "
         "cruzando 120 dias exatamente no intervalo marcado como evento. Créditos censurados: "
-        "cronômetro permanece em zero com reinicializações frequentes — o forward-fill captura "
+        "cronômetro permanece em zero com reinicializações frequentes; o forward-fill captura "
         "corretamente a mora transitória vs. abandono real.")
 
     add_heading(doc, "5.7  Síntese e Validação do Dataset", level=2)
     add_table_data(doc,
         ["Validação", "Resultado"],
-        [["t_stop > t_start em todos os intervalos",   "✓ Verificado"],
-         ["Cadeia perfeita t_start[k] = t_stop[k−1]", "✓ Verificado (via shift)"],
-         ["Evento E=1 apenas no último intervalo",      "✓ Regra de censura aplicada"],
-         ["Sem valores nulos em colunas-chave",         "✓ Verificado"],
-         ["Número de eventos > 100",                    "✓ 273 eventos"],
-         ["Covariáveis em faixa esperada",              "✓ Clip aplicado a todas as razões"]],
+        [["t_stop > t_start em todos os intervalos",   "Verificado"],
+         ["Cadeia perfeita t_start[k] = t_stop[k−1]", "Verificado (via shift)"],
+         ["Evento E=1 apenas no último intervalo",      "Regra de censura aplicada"],
+         ["Sem valores nulos em colunas-chave",         "Verificado"],
+         ["Número de eventos > 100",                    "Sim, 273 eventos"],
+         ["Covariáveis em faixa esperada",              "Clip aplicado a todas as razões"]],
         "Validação do formato Counting Process", table_num=21)
     add_body(doc,
         "O dataset fica preparado para a etapa seguinte: ajuste do Modelo de Cox de Riscos "
@@ -1769,16 +1766,16 @@ def build_secao_4(doc):
         "inadimplência real.")
     add_labeled(doc, "Mecanismo do viés:",
         "dias_sem_pagar é calculado por forward-fill a partir da data do último abono. Um "
-        "cliente que quita integralmente o crédito não registra mais abonos — não por evasão, "
+        "cliente que quita integralmente o crédito não registra mais abonos, não por evasão, "
         "mas porque não deve mais nada. Como o sistema continua reportando esse crédito a "
         "cada bloco de 10 dias, o cronômetro seguia contando indefinidamente, eventualmente "
         "cruzando o umbral de 120 dias e marcando evento=1 em créditos já saudáveis, meses "
         "depois de quitados.")
     add_labeled(doc, "Evidência empírica:",
         "reconstruindo o histórico real de abonos dos 425 créditos com evento=1, "
-        "identificaram-se 4 grupos: (a) 250 créditos sem nenhum abono real — default "
+        "identificaram-se 4 grupos: (a) 250 créditos sem nenhum abono real, default "
         "genuíno; (b) 164 créditos cuja soma de abonos reais atinge ~100% do total "
-        "(\"Grupo B1\"); (c) 10 créditos com pagamento parcial seguido de silêncio — default "
+        "(\"Grupo B1\"); (c) 10 créditos com pagamento parcial seguido de silêncio, default "
         "genuíno; (d) 1 caso de sobrepagamento. Dentro do Grupo B1, uma análise temporal "
         "distinguiu 140 créditos com padrão de pagamento orgânico e frequente (sem "
         "interrupção relevante) dos ~24 restantes, cujo fechamento seguia um padrão distinto: "
@@ -1786,33 +1783,32 @@ def build_secao_4(doc):
         "grande parte do saldo. Este último padrão coincide com um processo administrativo "
         "da instituição parceira: créditos em default são periodicamente encerrados via um "
         "lançamento contábil que credita o saldo devedor remanescente por completo, "
-        "permitindo o fechamento do crédito no sistema — um registro contábil de baixa de "
+        "permitindo o fechamento do crédito no sistema, um registro contábil de baixa de "
         "carteira, não um pagamento real do cliente. Consistente com essa origem "
         "administrativa, os 24 casos concentram-se em apenas três datas de calendário "
         "(2025-02-17, 2025-09-28 e 2025-11-16), cada uma compartilhada por créditos "
-        "distintos e sem relação aparente entre si — assinatura típica de um processamento "
+        "distintos e sem relação aparente entre si, o que é assinatura típica de um processamento "
         "em lote, e não de decisões de pagamento individuais.")
     add_labeled(doc, "Correção aplicada:",
         "em feature_engineering.py, quando o pagamento acumulado real de um crédito atinge "
         "98% do TOTAL_CRÉDITO, sua trajetória é truncada como censura (crédito quitado), não "
-        "como evento de default — independentemente de quaisquer lançamentos contábeis "
+        "como evento de default, independentemente de quaisquer lançamentos contábeis "
         "posteriores. Os 24 casos de fechamento administrativo permanecem corretamente "
         "classificados como default, pois seu cronômetro já havia cruzado 120 dias de "
-        "silêncio real antes do lançamento contábil tardio ser processado — a correção não "
-        "interfere nesses casos.")
+        "silêncio real antes do lançamento contábil tardio ser processado; a correção não interfere nesses casos.")
     add_table_data(doc,
         ["Grupo", "Créditos", "Classificação final"],
         [["Sem nenhum abono real",                       "250", "Default genuíno"],
          ["Pagamento parcial + silêncio",                 "10", "Default genuíno"],
          ["Fechamento administrativo (padrão de lote)",   "~24", "Default genuíno (já correto)"],
-         ["Pagamento orgânico completo (falso positivo)", "140", "Corrigido → Cura/censura"],
+         ["Pagamento orgânico completo (falso positivo)", "140", "Corrigido para cura ou censura"],
          ["Sobrepagamento",                                 "1", "Irrelevante"]],
         "Auditoria de integridade do target: decomposição dos 425 eventos originais",
         table_num=22)
     add_body(doc,
         "O efeito da correção é substancial e mensurável: o número de eventos cai de 425 "
         "(1,50%) para 273 (0,96%), e o teste de log-rank entre OFI_23 e OFI_44 (§5.6.4) passa "
-        "de não significativo (p=0,775) para altamente significativo (p=0,0040) — evidência "
+        "de não significativo (p=0,775) para altamente significativo (p=0,0040), evidência "
         "direta de que a limpeza dos falsos positivos recuperou poder estatístico real, sem "
         "qualquer alteração na definição do umbral de 120 dias.")
 
@@ -1833,7 +1829,7 @@ def build_secao_4(doc):
         "evento_tipo = 0 (censura verdadeira) | 1 (default) | 2 (cura/pagamento total)")
     add_body(doc,
         "O critério de Cura reaproveita exatamente a regra de fechamento por pagamento total "
-        "introduzida em §5.8 (pagamento acumulado ≥ 98% do total do crédito), agora "
+        "introduzida em §5.8 (pagamento acumulado de pelo menos 98% do total do crédito), agora "
         "formalizado como um desfecho explícito em vez de apenas uma regra de censura.")
     add_table_data(doc,
         ["Desfecho", "Créditos", "Proporção"],
@@ -1847,13 +1843,13 @@ def build_secao_4(doc):
         "Figura 2 como retrato correto do risco competitivo: a probabilidade acumulada de "
         "Cura sobe rapidamente e se estabiliza próxima de 98,7% por volta do dia 300, "
         "enquanto a de Default cresce lentamente e se estabiliza perto de 1,1% logo após o "
-        "umbral de 120 dias — confirmando que o risco real de default do portfólio é baixo e "
+        "umbral de 120 dias, confirmando que o risco real de default do portfólio é baixo e "
         "estável, ao contrário do que sugeria a curva de Kaplan-Meier binária de §5.6.3.")
     add_figure(doc, REPORTS / "fig10_cif_riscos_competitivos.png",
-               "Função de Incidência Acumulada — Default (evento_tipo=1) vs. Cura "
+               "Função de Incidência Acumulada de Default (evento_tipo=1) e de Cura "
                "(evento_tipo=2), estimador de Aalen-Johansen", 10)
     add_body(doc,
-        "A modelagem correspondente — dois modelos de Cox cause-specific, um por desfecho — "
+        "A modelagem correspondente, dois modelos de Cox cause-specific, um por desfecho, "
         "é apresentada em §6.1, junto com os resultados reais já obtidos nesse baseline.")
 
 
@@ -1864,7 +1860,7 @@ def build_secao_5(doc):
     add_heading(doc, "6.1  Baseline Clássico: Cox Cause-Specific para Riscos Competitivos", level=2)
     add_body(doc,
         "Em vez de um único Modelo de Cox de evento binário, ajustam-se dois modelos de Cox "
-        "de Riscos Proporcionais tempo-variantes independentes — um por desfecho de §5.9 "
+        "de Riscos Proporcionais tempo-variantes independentes, um por desfecho de §5.9 "
         "(cause-specific hazards, Kalbfleisch e Prentice, 2002): o Modelo Default trata Cura "
         "como censura, e o Modelo Cura trata Default como censura. Essa é a alternativa "
         "clássica ao modelo de subdistribution hazard de Fine e Gray (1999), mais simples de "
@@ -1878,15 +1874,15 @@ def build_secao_5(doc):
          ["Cura",      "26.894", "2.689,4", "0,7612"]],
         "Resultados do baseline Cox cause-specific (dados reais, sem tuning)", table_num=24)
     add_body(doc,
-        "Resultado obtido — Modelo Default (C-index=0,80): preditores significativos "
+        "Resultado obtido no Modelo Default (C-index=0,80): preditores significativos "
         "(p<0,05) foram dias_sem_pagar (coeficiente positivo, esperado por construção do "
-        "evento), intensidade_recuperacao (coeficiente negativo — mais recuperação recente "
-        "protege contra default) e dias_desde_ultimo_abono_no_bloco (coeficiente positivo — "
+        "evento), intensidade_recuperacao (coeficiente negativo, mais recuperação recente "
+        "protege contra default) e dias_desde_ultimo_abono_no_bloco (coeficiente positivo, "
         "maior recência de silêncio dentro do bloco aumenta o risco). As demais covariáveis "
         "não atingiram significância individual, plausível dado o número modesto de eventos "
         "(272) e a forte relação estrutural entre dias_sem_pagar e a definição do evento.")
     add_body(doc,
-        "Resultado obtido — Modelo Cura (C-index=0,76): dado o grande número de eventos "
+        "Resultado obtido no Modelo Cura (C-index=0,76): dado o grande número de eventos "
         "(26.894), todas as covariáveis atingiram significância estatística, com direções "
         "coerentes: pago_promedio_diario e dias_con_abono aumentam o hazard de cura (mais "
         "pagamento e mais frequência aceleram a quitação); cuotas_pactadas e total_credito o "
@@ -1910,17 +1906,16 @@ def build_secao_5(doc):
     add_heading(doc, "6.4  Desbalanceamento de Classes e Direções Adicionais", level=2)
     add_body(doc,
         "A taxa de evento de Default, após a correção de §5.8, é de 0,96% (273 eventos em "
-        "28.386 créditos) — mais baixa que a estimativa original de 1,50%, porém sobre uma "
+        "28.386 créditos), mais baixa que a estimativa original de 1,50%, porém sobre uma "
         "base de dados agora livre dos falsos positivos que a inflavam artificialmente. Isso "
         "ainda exige tratamento estatístico explícito no treinamento de arquiteturas neurais: "
-        "duas alternativas serão avaliadas no Sprint 5 — amostragem estratificada por lote, "
+        "duas alternativas serão avaliadas no Sprint 5: amostragem estratificada por lote, "
         "garantindo uma proporção mínima de eventos positivos em cada lote de treinamento, e "
         "ponderação da função de perda, atribuindo peso maior aos exemplos de default. A "
         "escolha entre as duas será decidida empiricamente, comparando o C-index de Harrell "
         "obtido com e sem cada correção.")
     add_body(doc,
-        "O período observado (2020–2026) inclui choques sistêmicos — pandemia, variações da "
-        "taxa Selic e da inflação — que podem afetar a liquidez do microempreendedor "
+        "O período observado (2020 a 2026) inclui choques sistêmicos (pandemia, variações da taxa Selic e da inflação) que podem afetar a liquidez do microempreendedor "
         "independentemente do seu comportamento individual de pagamento. A inclusão de "
         "covariáveis macroeconômicas tempo-variantes (ex.: Selic e IPCA mensais) como proxies "
         "desses choques sistêmicos é uma extensão natural do modelo. Nesta versão, essas "
@@ -1957,7 +1952,7 @@ def build_secao_7(doc):
          "Desenvolvimento do extrator Selenium (AtlasDataExtractor e AtlasMasivoExtractor), "
          "extração de 3.962 arquivos Excel (3 escritórios, 17 rotas, 2020 a 2026), Data Lake "
          "hierárquico (~14 GB), sistema de checkpoint JSON, consolidação da Matriz Mestra "
-         "(344.869 × 2.358) e otimização de memória via chunked loading com máscara NumPy (−49% RAM)."),
+         "(344.869 linhas e 2.358 colunas) e otimização de memória via chunked loading com máscara NumPy (redução de 49% no uso de RAM)."),
         ("Sprint 2 (mar. a mai. 2026), Feature Engineering e EDA [CONCLUÍDO]:",
          "Primeira versão do dataset de sobrevivência no formato Counting Process, "
          "definição do cronômetro dias_sem_pagar, análise exploratória com figuras de "
@@ -2034,11 +2029,11 @@ def build_referencias(doc):
           "Acesso em: 16 out. 2026.", False)],
         [("ALTMAN, E. I.; SABATO, G. Modeling Credit Risk for SMEs: Evidence from the US Market. ", False),
          ("Abacus", True),
-         (", v. 43, n. 3, p. 332–357, 2007.", False)],
+         (", v. 43, n. 3, p. 332-357, 2007.", False)],
         [("ANDERSON, P. K.; GILL, R. D. Cox's regression model for counting processes: a large "
           "sample study. ", False),
          ("The Annals of Statistics", True),
-         (", v. 10, n. 4, p. 1100–1120, 1982.", False)],
+         (", v. 10, n. 4, p. 1100-1120, 1982.", False)],
         [("ANTHROPIC. ", False),
          ("Claude", True),
          (". Sonnet 5. Large Language Model. San Francisco: Anthropic, 2026. Disponível em: "
@@ -2046,7 +2041,7 @@ def build_referencias(doc):
           "do documento e em pequenos trechos de código.", False)],
         [("BANERJEE, A. V.; DUFLO, E. The economic lives of the poor. ", False),
          ("Journal of Economic Perspectives", True),
-         (", v. 21, n. 1, p. 141–167, 2007.", False)],
+         (", v. 21, n. 1, p. 141-167, 2007.", False)],
         [("BRASIL. Ministério do Empreendedorismo, da Microempresa e da Empresa de Pequeno "
           "Porte. ", False),
          ("Painéis do Mapa de Empresas", True),
@@ -2054,17 +2049,17 @@ def build_referencias(doc):
           "mapa-de-empresas/painel-mapa-de-empresas. Acesso em: 16 out. 2026.", False)],
         [("COX, D. R. Regression models and life-tables. ", False),
          ("Journal of the Royal Statistical Society: Series B (Methodological)", True),
-         (", v. 34, n. 2, p. 187–220, 1972.", False)],
+         (", v. 34, n. 2, p. 187-220, 1972.", False)],
         [("FINE, J. P.; GRAY, R. J. A proportional hazards model for the subdistribution of a "
           "competing risk. ", False),
          ("Journal of the American Statistical Association", True),
-         (", v. 94, n. 446, p. 496–509, 1999.", False)],
+         (", v. 94, n. 446, p. 496-509, 1999.", False)],
         [("KALBFLEISCH, J. D.; PRENTICE, R. L. ", False),
          ("The Statistical Analysis of Failure Time Data", True),
          (". 2. ed. New York: Wiley, 2002.", False)],
         [("KAPLAN, E. L.; MEIER, P. Nonparametric estimation from incomplete observations. ", False),
          ("Journal of the American Statistical Association", True),
-         (", v. 53, n. 282, p. 457–481, 1958.", False)],
+         (", v. 53, n. 282, p. 457-481, 1958.", False)],
         [("KATZMAN, J. L. et al. DeepSurv: personalized treatment recommender system using a Cox "
           "proportional hazards deep neural network. ", False),
          ("BMC Medical Research Methodology", True),
@@ -2079,18 +2074,18 @@ def build_referencias(doc):
           "competing risks. In: AAAI CONFERENCE ON ARTIFICIAL INTELLIGENCE, 32., 2018, "
           "New Orleans. ", False),
          ("Proceedings [...]", True),
-         (" [S.l.]: AAAI Press, 2018. p. 2314–2321.", False)],
+         (" [S.l.]: AAAI Press, 2018. p. 2314-2321.", False)],
         [("LOUZADA NETO, F. ", False),
          ("Gestão de Projetos de Ciência de Dados e Inteligência Artificial", True),
-         (". Material didático — MBA em Ciência de Dados. ICMC/USP, São Carlos, 2026.", False)],
+         (". Material didático, MBA em Ciência de Dados. ICMC/USP, São Carlos, 2026.", False)],
         [("MANTEL, N. Evaluation of survival data and two new rank order statistics arising in "
           "its consideration. ", False),
          ("Cancer Chemotherapy Reports", True),
-         (", v. 50, n. 3, p. 163–170, 1966.", False)],
+         (", v. 50, n. 3, p. 163-170, 1966.", False)],
         [("SCHREINER, M. Aspects of outreach: a framework for discussion of the social benefits "
           "of microfinance. ", False),
          ("Journal of International Development", True),
-         (", v. 14, n. 5, p. 591–603, 2002.", False)],
+         (", v. 14, n. 5, p. 591-603, 2002.", False)],
         [("THERNEAU, T. M.; GRAMBSCH, P. M. ", False),
          ("Modeling Survival Data: Extending the Cox Model", True),
          (". New York: Springer, 2000.", False)],
@@ -2155,10 +2150,8 @@ def _pdf(docx_path, pasta):
 def _ler_paginas(pdf, registro):
     """Procura no PDF a página de cada título, figura e tabela. A página exibida
     é a física menos 1, porque a capa não é contada."""
-    n = int(re.search(r"Pages:\s+(\d+)", subprocess.run(
-        ["pdfinfo", str(pdf)], capture_output=True, text=True).stdout).group(1))
-    textos = [re.sub(r"\s+", " ", subprocess.run(
-        ["pdftotext", "-f", str(i), "-l", str(i), str(pdf), "-"],
+    n = int(re.search(r"Pages:\s+(\d+)", subprocess.run(["pdfinfo", str(pdf)], capture_output=True, text=True).stdout).group(1))
+    textos = [re.sub(r"\s+", " ", subprocess.run(["pdftotext", "-f", str(i), "-l", str(i), str(pdf), "-"],
         capture_output=True, text=True).stdout) for i in range(1, n + 1)]
 
     def norm(t):
