@@ -97,6 +97,33 @@ SIGLAS = {
 }
 PAGINAS = {}  # chave ("titulo", i) / ("figura", n) / ("tabela", n) -> página exibida
 
+# Numeração automática: cada tabela e figura recebe o número pela ordem em que
+# aparece; o argumento table_num/fig_num passa a ser só uma chave. No texto,
+# "{tab:chave}" e "{fig:chave}" viram o número (o da passada anterior).
+CONTADOR = {"tab": 0, "fig": 0}
+NUMEROS = {}
+FONTE_PADRAO = "Elaborada pelo autor (2026)."
+
+
+def _refs(texto):
+    return re.sub(r"\{(tab|fig):([\w-]+)\}",
+                  lambda m: str(NUMEROS.get((m.group(1), m.group(2)), "?")), texto)
+
+
+def _numero(tipo, chave):
+    CONTADOR[tipo] += 1
+    NUMEROS[(tipo, str(chave))] = CONTADOR[tipo]
+    return CONTADOR[tipo]
+
+
+def _add_fonte(doc, fonte, centro=False):
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER if centro else WD_ALIGN_PARAGRAPH.LEFT
+    _set_spacing(p, multiple=1.0)
+    p.paragraph_format.first_line_indent = Cm(0)
+    p.paragraph_format.space_before = Pt(2)
+    _set_font(p.add_run(f"Fonte: {fonte}"), size=10)
+
 
 # ── Helpers de formatação USP ────────────────────────────────────────────────
 
@@ -121,7 +148,7 @@ def add_body(doc, text, align=WD_ALIGN_PARAGRAPH.JUSTIFY, indent_first=True):
     p.alignment = align
     if indent_first:
         p.paragraph_format.first_line_indent = Cm(1.25)
-    run = p.add_run(text)
+    run = p.add_run(_refs(text))
     _set_font(run)
     return p
 
@@ -133,7 +160,7 @@ def add_body_italico(doc, text, indent_first=True):
     _set_spacing(p)
     p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p.paragraph_format.first_line_indent = Cm(1.25) if indent_first else Cm(0)
-    for i, trecho in enumerate(text.split("*")):
+    for i, trecho in enumerate(_refs(text).split("*")):
         if trecho:
             _set_font(p.add_run(trecho), italic=i % 2 == 1)
     return p
@@ -146,6 +173,7 @@ def add_heading(doc, text, level=1):
     p.paragraph_format.space_before      = Pt(12)
     p.paragraph_format.space_after       = Pt(6)
     p.paragraph_format.first_line_indent = Cm(0)
+    p.paragraph_format.keep_with_next    = True
     sizes = {1: 16, 2: 14, 3: 12, 4: 12}
     label = text.upper() if level == 1 else text
     if REGISTRO["ativo"]:
@@ -165,12 +193,14 @@ def add_centered(doc, text, size=12, bold=False, spacing=1.5):
     return p
 
 
-def add_table_data(doc, headers, rows, caption_text, table_num):
+def add_table_data(doc, headers, rows, caption_text, table_num, fonte=FONTE_PADRAO):
+    table_num = _numero("tab", table_num)
     REGISTRO["tabelas"].append((table_num, caption_text))
     cap = doc.add_paragraph()
     cap.alignment = WD_ALIGN_PARAGRAPH.LEFT
     _set_spacing(cap, multiple=1.0)
     cap.paragraph_format.first_line_indent = Cm(0)
+    cap.paragraph_format.keep_with_next    = True
     run = cap.add_run(f"Tabela {table_num} – {caption_text}")
     _set_font(run, size=10, italic=True)
 
@@ -184,9 +214,10 @@ def add_table_data(doc, headers, rows, caption_text, table_num):
     for r_idx, row_data in enumerate(rows):
         cells = table.rows[r_idx + 1].cells
         for c_idx, val in enumerate(row_data):
-            cells[c_idx].text = str(val)
+            cells[c_idx].text = _refs(str(val))
             for r in cells[c_idx].paragraphs[0].runs:
                 r.font.name = "Arial"; r.font.size = Pt(10)
+    _add_fonte(doc, fonte)
     doc.add_paragraph()
     return table
 
@@ -218,7 +249,9 @@ def add_code(doc, code_text):
     return p
 
 
-def add_figure(doc, img_path, caption, fig_num):
+def add_figure(doc, img_path, caption, fig_num, fonte=FONTE_PADRAO, largura=14):
+    """NBR 14724: identificação acima da figura e fonte abaixo."""
+    fig_num = _numero("fig", fig_num)
     REGISTRO["figuras"].append((fig_num, caption))
     path = Path(img_path)
     if not path.exists():
@@ -228,21 +261,25 @@ def add_figure(doc, img_path, caption, fig_num):
         run = p.add_run(f"[FIGURA {fig_num}, arquivo não encontrado: {path.name}]")
         _set_font(run, size=10, italic=True)
         return
-    p_img = doc.add_paragraph()
-    p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_img.paragraph_format.first_line_indent = Cm(0)
-    run = p_img.add_run()
-    try:
-        run.add_picture(str(path), width=Cm(14))
-    except Exception:
-        run.add_picture(str(path))
     cap = doc.add_paragraph()
     cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
     _set_spacing(cap, multiple=1.0)
     cap.paragraph_format.first_line_indent = Cm(0)
-    cap.paragraph_format.space_after       = Pt(12)
+    cap.paragraph_format.space_before      = Pt(6)
+    cap.paragraph_format.space_after       = Pt(2)
+    cap.paragraph_format.keep_with_next    = True
     r = cap.add_run(f"Figura {fig_num} – {caption}")
     _set_font(r, size=10, italic=True)
+    p_img = doc.add_paragraph()
+    p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_img.paragraph_format.first_line_indent = Cm(0)
+    p_img.paragraph_format.keep_with_next    = True
+    run = p_img.add_run()
+    try:
+        run.add_picture(str(path), width=Cm(largura))
+    except Exception:
+        run.add_picture(str(path))
+    _add_fonte(doc, fonte, centro=True)
 
 
 def add_labeled(doc, label, text):
@@ -253,7 +290,7 @@ def add_labeled(doc, label, text):
     p.paragraph_format.first_line_indent = Cm(1.25)
     r1 = p.add_run(label + " ")
     _set_font(r1, bold=True)
-    r2 = p.add_run(text)
+    r2 = p.add_run(_refs(text))
     _set_font(r2)
 
 
@@ -955,369 +992,118 @@ def build_secao_2(doc):
         add_labeled(doc, label, text)
 
 
-# ── SEÇÃO 3 — EXPANDIDA ───────────────────────────────────────────────────────
+# ── SEÇÃO 4: ARQUITETURA DE DADOS (ETL) ────────────────────────────────────
 
 def build_secao_3(doc):
-    add_heading(doc, "4  ARQUITETURA DE DADOS E PIPELINE DE EXTRAÇÃO INDUSTRIAL (ETL)", level=1)
-    add_body(doc,
-        "A construção de modelos de análise de sobrevivência com covariáveis tempo-variantes "
-        "exige séries longitudinais de alta granularidade que registrem o comportamento de "
-        "pagamento de cada crédito ao longo do tempo. A única fonte de dados disponível para "
-        "esta pesquisa é o Sistema ATLAS, plataforma de gestão creditícia que não expõe APIs "
-        "REST e restringe o acesso a uma interface web de terceira geração. Superar essa barreira "
-        "tecnológica exigiu o desenvolvimento de um pipeline de automação web (RPA) de nível "
-        "industrial, implementado em Python 3.12 com Selenium WebDriver, cuja arquitetura "
-        "completa é detalhada nas subseções seguintes.")
+    add_heading(doc, "4  ARQUITETURA DE DADOS E PIPELINE DE EXTRAÇÃO (ETL)", level=1)
+    add_body_italico(doc,
+        "Para estudar o comportamento de pagamento dos clientes ao longo do tempo, foi "
+        "preciso primeiro reunir o histórico diário de pagamentos de cada crédito. Esse "
+        "trabalho seguiu as três etapas clássicas de um *pipeline* ETL: extração (baixar os "
+        "dados do sistema da instituição), transformação (organizar, limpar e corrigir) e "
+        "carga (gravar uma base única pronta para a análise). A Figura {fig:fluxo} resume o "
+        "caminho completo, da extração até a avaliação dos modelos.")
+    add_figure(doc, REPORTS / "fig00_fluxo_metodologico.png",
+               "Fluxo metodológico do trabalho, da extração dos dados à avaliação dos modelos",
+               "fluxo", largura=16)
 
-    # ── 3.1 ──────────────────────────────────────────────────────────────────
-    add_heading(doc, "4.1  O Sistema ATLAS: Contexto e Barreiras Técnicas da Extração", level=2)
-    add_body(doc,
-        "O Sistema ATLAS (codinome atribuído neste trabalho por confidencialidade) é a "
-        "plataforma de gestão creditícia da instituição parceira. Trata-se de "
-        "uma aplicação web desenvolvida em PHP, hospedada em infraestrutura privada, sem "
-        "exposição de endpoints REST, GraphQL ou qualquer mecanismo programático de acesso "
-        "a dados. O único canal disponível é a interface de usuário no navegador, o que torna "
-        "a automação web (web scraping via Selenium) a única alternativa viável para a extração "
-        "sistemática do histórico transacional.")
-    add_body(doc,
-        "A interface do ATLAS impõe seis barreiras técnicas específicas que demandam soluções "
-        "individuais, detalhadas na Tabela 1. Cada barreira representa um ponto de falha "
-        "potencial no pipeline: a ausência de qualquer uma das soluções resulta em crash "
-        "silencioso do robô, extração parcial ou dados corrompidos.")
-
+    add_heading(doc, "4.1  Fonte dos Dados e Extração Automatizada", level=2)
+    add_body_italico(doc,
+        "Os dados vêm do sistema de gestão da instituição parceira, chamado aqui de ATLAS "
+        "por confidencialidade. É nele que ficam registrados os créditos e cada pagamento "
+        "diário. O sistema não oferece uma opção para exportar a base completa: só permite "
+        "baixar, pela tela do navegador, relatórios de pagamentos de no máximo 10 dias e "
+        "de uma rota por vez. Para cobrir 17 rotas entre janeiro de 2020 e maio de 2026 "
+        "seriam necessários cerca de 4 mil downloads, o que é inviável de forma manual.")
+    add_body_italico(doc,
+        "A solução foi construir um robô em Python, com a biblioteca Selenium, que repete "
+        "no navegador os mesmos passos que uma pessoa faria: entrar com usuário e senha, "
+        "escolher o escritório e a rota, preencher as datas e baixar o relatório. Essa "
+        "técnica é conhecida como automação web (*web scraping*). A Tabela {tab:barreiras} "
+        "resume as principais dificuldades encontradas e como cada uma foi resolvida; o "
+        "detalhe técnico está no Apêndice A.")
     add_table_data(doc,
-        ["Barreira Técnica", "Causa Raiz", "Solução Implementada"],
-        [
-            ["Sem API REST",
-             "Backend PHP sem endpoints programáticos",
-             "Selenium WebDriver + ChromeDriver (webdriver-manager)"],
-            ["Frameset aninhado (3 níveis)",
-             "página principal, depois frameMenu e por fim frameFormulario",
-             "Sequência precisa de switch_to.frame() + switch_to.default_content()"],
-            ["Autenticação SELECT2 (fase 2)",
-             "Widget jQuery ignora eventos DOM nativos",
-             "DOM nativo: sel.value + dispatchEvent('change', {bubbles: true})"],
-            ["Menu com tags <op> não-padrão",
-             "Tags HTML proprietárias sem suporte is_displayed()",
-             "XPath //op[normalize-space()='...'] + JS click via execute_script()"],
-            ["Campo de data readonly (datepicker)",
-             "jQuery UI bloqueia edição manual do campo",
-             "Injeção via JS: arguments[0].value + dispatchEvent('change')"],
-            ["Modal bootbox dinâmico",
-             "bootbox.js intercepta cliques e bloqueia o formulário",
-             "find_elements() (sem exceção se ausente) + JS click no botão de confirmação"],
-            ["Download silencioso de múltiplos arquivos",
-             "Chrome exige confirmação do usuário por padrão",
-             "Chrome prefs: automatic_downloads: 1, prompt_for_download: False"],
-        ],
-        "Barreiras técnicas do Sistema ATLAS e soluções implementadas no pipeline RPA",
-        table_num=1,
-    )
-
-    # ── 3.2 ──────────────────────────────────────────────────────────────────
-    add_heading(doc, "4.2  Autenticação Bifásica e Navegação no Frameset Aninhado", level=2)
+        ["Dificuldade", "O que acontecia", "Como foi resolvida"],
+        [["Sistema sem opção de exportar a base",
+          "Só era possível baixar relatórios de 10 dias pela tela",
+          "Robô que baixa os relatórios um a um, avançando 10 dias por vez"],
+         ["Campos que não respondem a cliques automáticos",
+          "O robô selecionava a rota ou a data, mas o sistema não registrava",
+          "O robô escreve o valor diretamente na página, como se o usuário o tivesse escolhido"],
+         ["Períodos sem movimento",
+          "Relatórios vazios criariam zeros falsos na base",
+          "Antes de baixar, o robô verifica se o relatório tem dados"],
+         ["Extração longa sujeita a quedas",
+          "Uma falha obrigaria a recomeçar do zero",
+          "O robô guarda o último relatório baixado, retoma desse ponto e pula os já existentes"]],
+        "Principais dificuldades da extração e soluções adotadas", "barreiras")
     add_body(doc,
-        "O pipeline de autenticação foi implementado na classe orientada a objetos "
-        "AtlasDataExtractor (src/atlas_extractor.py), que encapsula toda a lógica de interação "
-        "com o Sistema ATLAS. A autenticação ocorre em duas fases distintas, separadas por uma "
-        "transição de estado do servidor que invalida os elementos DOM previamente carregados.")
+        "Ao final, foram baixados 3.962 relatórios de 3 escritórios e 17 rotas, cobrindo o "
+        "período de 1º de janeiro de 2020 a 15 de maio de 2026.")
 
-    add_labeled(doc, "Fase 1, credenciais:",
-        "O formulário de login reside dentro de um iframe (frame index 0 de página de autenticação do sistema). "
-        "O robô utiliza WebDriverWait com expected_conditions para aguardar a disponibilidade de "
-        "cada elemento antes de interagir, garantindo tolerância a variações de latência do "
-        "servidor. Os campos campoUsuario e campoSenha recebem as credenciais lidas de variáveis de "
-        "ambiente (.env), e o botão botaoEntrar é ativado via clique nativo do Selenium.")
+    add_heading(doc, "4.2  Consolidação dos Relatórios (Data Stitching)", level=2)
+    add_body_italico(doc,
+        "*Data Stitching* (em tradução livre, costura de dados) é o processo de juntar "
+        "arquivos parciais em uma única base contínua. Cada relatório baixado cobre apenas "
+        "10 dias e uma rota; a consolidação reúne todos eles em uma tabela chamada Matriz "
+        "Mestra, na qual cada linha é um crédito em um relatório e cada coluna de data guarda "
+        "o valor pago naquele dia. O escritório, a rota e as datas de cada relatório são "
+        "lidos do nome da pasta e do arquivo, e a origem de cada linha fica registrada, o "
+        "que permite voltar ao relatório original sempre que for preciso conferir um dado.")
+    add_body_italico(doc,
+        "A Matriz Mestra tem 344.869 linhas e 2.358 colunas e ocupa cerca de 6 GB na memória, "
+        "mais do que o computador usado dispõe. Por isso ela é lida em partes de 5.000 "
+        "linhas (*chunks*), e de cada parte se guardam apenas os pagamentos efetivos. O "
+        "resultado é uma lista com cerca de 470 mil pagamentos diários, uma linha por crédito "
+        "e dia com pagamento, que é a base de todo o restante do trabalho.")
 
-    add_labeled(doc, "Fase 2, seleção de rota (SELECT2):",
-        "Após validar as credenciais, o servidor renderiza um segundo formulário com um dropdown "
-        "SELECT2 (biblioteca jQuery) para seleção da rota. O SELECT2 ignora completamente eventos "
-        "DOM nativos como 'input' ou 'change' disparados por Selenium; o widget escuta apenas "
-        "eventos jQuery internos. A solução implementada é a injeção direta de JavaScript que "
-        "escreve o valor no elemento <select> subjacente e dispara um evento 'change' nativo com "
-        "propagação (bubbles: true), contornando o interceptor jQuery:")
-
-    add_code(doc,
-        "# SELECT2 ignora eventos Selenium; usa-se DOM nativo com dispatchEvent\n"
-        "driver.execute_script(\"\"\"\n"
-        "    var sel = document.getElementById('campoRota');\n"
-        "    sel.value = arguments[0];\n"
-        "    sel.dispatchEvent(new Event('change', {bubbles: true}));\n"
-        "\"\"\", valor_ruta)"
-    )
-
-    add_body(doc,
-        "Após a seleção da rota, o servidor exibe um modal de boas-vindas (bootbox.js) que bloqueia "
-        "qualquer interação com o formulário subjacente. O tratamento utiliza find_elements() (que "
-        "retorna lista vazia em vez de lançar exceção) em vez de find_element(), evitando crash "
-        "quando o modal está ausente. O clique no botão de confirmação é realizado via JS para "
-        "garantir que interceptores DOM não interfiram. Após o fechamento do modal, o robô retorna "
-        "ao contexto padrão (switch_to.default_content()) e aguarda o carregamento do frameset "
-        "principal antes de prosseguir.")
-
-    add_body(doc,
-        "A navegação ao formulário de extração segue uma sequência rígida de troca de contexto "
-        "de frame, pois a arquitetura do Sistema ATLAS utiliza frameset aninhado em três níveis. "
-        "A Tabela 2 documenta a sequência exata implementada no método _navegar_ao_relatorio_pagamentos().")
-
+    add_heading(doc, "4.3  Tratamento de Dados Ausentes e Inconsistentes", level=2)
+    add_body_italico(doc,
+        "O sistema da instituição foi feito para a operação do dia a dia, não para pesquisa. "
+        "Por isso, antes de modelar, os dados passaram por uma auditoria que encontrou "
+        "valores ausentes, campos enganosos e registros que não correspondem a créditos de "
+        "clientes. Cada problema foi confirmado com a equipe da operação e recebeu um "
+        "tratamento específico, seguindo as técnicas de tratamento de dados faltantes, "
+        "*outliers* e redundância vistas no curso. A Tabela {tab:auditoria} resume a auditoria.")
     add_table_data(doc,
-        ["Passo", "Operação Selenium", "Frame / Elemento Alvo", "Finalidade"],
-        [
-            ["1", "switch_to.default_content()", "Contexto raiz do navegador", "Resetar contexto após qualquer operação anterior"],
-            ["2", "switch_to.frame(0)", "página principal do sistema (frame raiz)", "Entrar no frameset raiz do sistema"],
-            ["3", "frame_to_be_available_and_switch_to_it('frameMenu')", "frameMenu (menu lateral)", "Acessar o menu de navegação"],
-            ["4", "JS click: //op[normalize-space()='Reportes']", "Tag <op> do menu", "Expandir o submenu de relatórios"],
-            ["5", "JS click: //op[normalize-space()='Recaudador']", "Tag <op> do submenu", "Expandir o submenu de cobrança"],
-            ["6", "JS click: //a[contains(@href,'RelatorioPagamentos')]", "Link do relatório", "Carregar o formulário de extração no frameFormulario"],
-            ["7", "switch_to.default_content() e depois switch_to.frame(0)", "De volta ao frame raiz", "Preparar para entrar no frameFormulario"],
-            ["8", "frame_to_be_available_and_switch_to_it('frameFormulario')", "frameFormulario (formulário)", "Acessar o formulário de extração"],
-            ["9", "Select(campoOficina).select_by_value()", "Dropdown de oficina", "Configurar filtro estático de escritório"],
-            ["10", "Select(campoRota).select_by_value()", "Dropdown de rota", "Configurar filtro estático de rota (após AJAX)"],
-        ],
-        "Sequência de navegação no frameset aninhado do Sistema ATLAS",
-        table_num=2,
-    )
-
+        ["Problema encontrado", "Como foi identificado", "Tratamento"],
+        [["Campos com o estado do dia da descarga (saldo, parcelas em atraso, valor e número de parcelas)",
+          "O mesmo valor aparece em todos os relatórios do crédito, inclusive nos de anos anteriores",
+          "Não são usados como variáveis; saldo e atraso são recalculados a partir dos pagamentos diários"],
+         ["Pagamento de fechamento ausente",
+          "O crédito não aparece no relatório do período em que é quitado",
+          "A data do último abono registrada pelo sistema marca o fechamento (só define o desfecho)"],
+         ["Créditos sem nenhum movimento (250)",
+          "Saldo zero e nenhum abono registrado",
+          "Excluídos"],
+         ["Empréstimos internos a funcionários (150)",
+          "O nome do cliente começa com VALE",
+          "Excluídos, pois não são créditos de clientes"],
+         ["Créditos não diários (256) e anteriores a 2020 (43)",
+          "Dias entre parcelas acima de 1,5; histórico de pagamentos incompleto",
+          "Excluídos da coorte"],
+         ["Renegociação com parcela de 1 real (269)",
+          "Prazo alongado no mesmo crédito quando o comerciante fecha o negócio",
+          "Usa-se a parcela original estimada (total dividido por 20)"],
+         ["Baixa contábil de créditos abandonados",
+          "Abono pelo saldo total depois de meses sem pagamento",
+          "Não conta como pagamento: o default já está marcado no dia 120 sem pagar"],
+         ["Abonos depois do fechamento (89 créditos)",
+          "Valores pagos acima do total depois de o crédito estar quitado",
+          "Ignorados: usam-se só os pagamentos até o fechamento"],
+         ["Cliente sem créditos anteriores",
+          "Histórico do cliente ausente no primeiro crédito",
+          "Indicador de primeiro crédito e imputação pela mediana do conjunto de treino"],
+         ["Domingos e feriados",
+          "Não há cobrança nesses dias",
+          "O atraso é medido em dias de cobrança, por estado"]],
+        "Auditoria dos dados: problemas encontrados e tratamento", "auditoria")
     add_body(doc,
-        "Os filtros de escritório e rota (campoOficina e campoRota) são configurados uma única vez "
-        "antes do início do laço de extração batch, pois permanecem constantes para toda a "
-        "sequência temporal de uma rota. A seleção da oficina dispara uma chamada AJAX que "
-        "repopula o dropdown campoRota; o pipeline aguarda a presença da opção correta com "
-        "lambda WebDriverWait antes de prosseguir, garantindo sincronização com o servidor.")
+        "Dos 28.849 créditos lidos, 699 foram excluídos pelos critérios da Tabela "
+        "{tab:auditoria} e 1 por não ter dados de contrato, restando 28.149 créditos de "
+        "clientes para a análise.")
 
-    # ── 3.3 ──────────────────────────────────────────────────────────────────
-    add_heading(doc, "4.3  Extração Batch: Paginação Temporal e Filtro Anti-Zero", level=2)
-    add_body(doc,
-        "O Sistema ATLAS restringe cada extração a uma janela de exatamente 10 dias calendário. "
-        "Para cobrir o horizonte histórico completo de 2020 a 2026 (~2.327 dias), o pipeline "
-        "implementa um cursor temporal que avança em blocos estritos de 10 dias, gerando "
-        "aproximadamente 233 iterações por rota e 3.961 iterações no total corporativo.")
-
-    add_labeled(doc, "Early-exit [YA EXISTE]:",
-        "Antes de qualquer interação com o DOM, o pipeline verifica se o arquivo "
-        "relatorio_pagamentos_YYYYMMDD_YYYYMMDD.xlsx já existe no diretório de destino. Se existir, "
-        "o bloco é saltado completamente sem abrir o formulário, permitindo retomada eficiente "
-        "de sessões interrompidas sem reprocessamento.")
-
-    add_labeled(doc, "Injeção de data (datepicker bypass):",
-        "O campo campoDataInicial é marcado como readonly pelo jQuery UI datepicker, impedindo "
-        "qualquer edição via Selenium send_keys(). A solução injeta o valor diretamente no "
-        "elemento DOM via JavaScript e dispara o evento 'change' para ativar os listeners "
-        "do formulário:")
-
-    add_code(doc,
-        "# Campo readonly: injetar valor via JS e disparar evento change\n"
-        "driver.execute_script(\"\"\"\n"
-        "    arguments[0].value = arguments[1];\n"
-        "    arguments[0].dispatchEvent(new Event('change', {bubbles: true}));\n"
-        "\"\"\", campo_fecha, cursor.strftime('%Y-%m-%d'))"
-    )
-
-    add_labeled(doc, "Filtro anti-zero (visualizadorRelatorio):",
-        "Após pressionar botaoConfirmar, o servidor processa a consulta e renderiza um PDF "
-        "embebido no elemento <object id='visualizadorRelatorio'>. Quando o período consultado "
-        "não contém atividade para a rota (rota inativa naquele intervalo), o objeto "
-        "permanece oculto (display: none) ou com atributo data vazio. O pipeline valida a "
-        "presença de dados antes de tentar o download:")
-
-    add_code(doc,
-        "# Validar presença de dados antes de baixar\n"
-        "obj = driver.find_element(By.ID, 'visualizadorRelatorio')\n"
-        "tem_dados = (\n"
-        "    '.pdf' in (obj.get_attribute('data') or '') and\n"
-        "    'inline-block' in (obj.get_attribute('style') or '')\n"
-        ")\n"
-        "if not tem_dados:\n"
-        "    cursor += timedelta(days=10)  # [SKIP] rota inativa"
-    )
-
-    add_body(doc,
-        "Este filtro anti-zero é crítico para a integridade estatística do dataset: sem ele, "
-        "blocos sem atividade gerariam arquivos Excel vazios que, ao serem consolidados na "
-        "Matriz Mestra, introduziriam zeros espúrios nas colunas de pagamento e distorceriam "
-        "o cronômetro dias_sem_pagar, gerando falsos positivos no evento de default.")
-
-    add_labeled(doc, "Monitoramento de download e renomeação semântica:",
-        "Após pressionar botaoExportar, o Chrome inicia o download para a pasta staging "
-        "(data/raw/). O pipeline monitora a pasta em loop de 1 segundo, detectando o "
-        "arquivo .crdownload (parcial) e aguardando seu desaparecimento antes de renomear "
-        "o xlsx completo para o padrão relatorio_pagamentos_YYYYMMDD_YYYYMMDD.xlsx. Este padrão "
-        "de nomenclatura incorpora as datas de início e fim do bloco, viabilizando a extração "
-        "automática de metadados temporais durante o Data Stitching.")
-
-    # ── 3.4 ──────────────────────────────────────────────────────────────────
-    add_heading(doc, "4.4  Escalabilidade Corporativa: Auto-Discovery, Data Lake Hierárquico e Resiliência", level=2)
-    add_body(doc,
-        "Para escalar o pipeline piloto (uma rota) para o universo corporativo completo (17 "
-        "rotas em 3 escritórios), foi desenvolvida a classe AtlasMasivoExtractor "
-        "(src/atlas_masivo.py), que herda toda a infraestrutura de AtlasDataExtractor e "
-        "adiciona quatro capacidades fundamentais: auto-discovery do mapa corporativo, "
-        "organização hierárquica do Data Lake, tratamento de erros de elemento obsoleto "
-        "(StaleElementReferenceException) e sistema de checkpoint para resiliência a falhas.")
-
-    add_labeled(doc, "Auto-Discovery do mapa corporativo:",
-        "O método _descobrir_mapa_rotas() lê dinamicamente todas as opções dos dropdowns "
-        "campoOficina e campoRota diretamente do DOM do formulário. Para cada escritório detectado, "
-        "dispara uma mudança de valor no select (via JavaScript) que aciona a chamada AJAX de "
-        "repopulação do dropdown de rotas, coletando os IDs de todas as rotas disponíveis. "
-        "Este mecanismo elimina a necessidade de manutenção manual de um catálogo de rotas e "
-        "garante que novas rotas adicionadas pela instituição sejam automaticamente incluídas "
-        "em extrações futuras.")
-
-    add_body(doc,
-        "O mapa corporativo identificado automaticamente pelo Auto-Discovery compreende três "
-        "escritórios e 17 rotas geográficas, conforme documentado na Tabela 3.")
-
-    add_table_data(doc,
-        ["Escritório", "ID", "Região", "Rotas (IDs)", "Total"],
-        [
-            ["OFI_23 (São Paulo)",       "23", "São Paulo / Grande SP",
-             "82, 96, 423, 136, 367, 448, 494", "7"],
-            ["OFI_31 (Sociedades Brasil)","31", "Interior e Sul do Brasil",
-             "415, 68, 338, 347, 389", "5"],
-            ["OFI_44 (Cabo Frio)",        "44", "Região dos Lagos / RJ",
-             "114, 439, 396, 420, 511", "5"],
-        ],
-        "Mapa corporativo detectado pelo Auto-Discovery: escritórios e rotas do Sistema ATLAS",
-        table_num=3,
-    )
-
-    add_labeled(doc, "Organização hierárquica do Data Lake:",
-        "Os arquivos extraídos são organizados em uma hierarquia de diretórios que reflete "
-        "a topologia corporativa do sistema: data/raw/OFI_{id_oficina}/RTA_{id_ruta}/. "
-        "O Chrome baixa cada arquivo inicialmente para data/raw/ (staging area) e o pipeline "
-        "move o xlsx renomeado para o subdiretório correspondente via shutil.move(). "
-        "Esta estrutura garante rastreabilidade completa (Data Lineage): dado qualquer arquivo, "
-        "é possível identificar imediatamente a qual escritório, rota e período temporal "
-        "ele pertence, apenas pelo caminho e nome do arquivo.")
-
-    add_table_data(doc,
-        ["Métrica", "Valor"],
-        [
-            ["Arquivos Excel baixados",        "3.962 arquivos"],
-            ["Escritórios cobertos",           "3 (OFI_23, OFI_31, OFI_44)"],
-            ["Rotas cobertas",                 "17"],
-            ["Período de cobertura",           "2020-01-01 a 2026-05-15 (~6,4 anos)"],
-            ["Blocos temporais por rota",      "~233 blocos de 10 dias"],
-            ["Tamanho total do Data Lake",     "~14 GB"],
-            ["Pausa entre rotas",              "10 segundos (limpeza de cache do navegador)"],
-        ],
-        "Volumetria final do Data Lake extraído",
-        table_num=4,
-    )
-
-    add_labeled(doc, "Tratamento de StaleElementReferenceException:",
-        "O Sistema ATLAS realiza re-renderizações parciais do DOM durante transições entre "
-        "rotas (o AJAX de campoRota pode não ter terminado quando o SELECT já foi localizado). "
-        "O pipeline implementa até 3 tentativas com pausa de 3 segundos entre cada uma para "
-        "o método _seleccionar_oficina_y_ruta(), que renavega ao formulário desde o menu "
-        "lateral a cada tentativa, garantindo um estado DOM fresco.")
-
-    add_labeled(doc, "Sistema de Checkpoint JSON:",
-        "O arquivo oculto .checkpoint.json em data/raw/ persiste o estado da extração após "
-        "cada bloco temporal bem-sucedido. Na inicialização, o pipeline lê o checkpoint e "
-        "retoma exatamente do último ponto processado, saltando as rotas já completadas. "
-        "Ao concluir a maratón completa, o arquivo é deletado automaticamente.")
-
-    add_table_data(doc,
-        ["Campo JSON", "Tipo", "Exemplo", "Descrição"],
-        [
-            ["id_oficina", "String", '"44"',         "ID do escritório em extração"],
-            ["id_ruta",    "String", '"114"',        "ID da rota em extração"],
-            ["fecha",      "String", '"2023-07-15"', "Última data de início de bloco processada com sucesso"],
-        ],
-        "Estrutura do arquivo de checkpoint JSON (.checkpoint.json)",
-        table_num=5,
-    )
-
-    # ── 3.5 ──────────────────────────────────────────────────────────────────
-    add_heading(doc, "4.5  Consolidação da Matriz Mestra e Otimização de Memória (Data Stitching)", level=2)
-    add_body(doc,
-        "O script consolidar_datos.py implementa o processo de Data Stitching, que transforma "
-        "os 3.962 arquivos Excel fragmentados do Data Lake em um único painel longitudinal "
-        "contínuo: a Matriz Mestra (Silver Layer). O processo percorre recursivamente a "
-        "hierarquia data/raw/OFI_*/RTA_*/*.xlsx, extraindo dois tipos de metadados diretamente "
-        "do sistema de arquivos, sem necessidade de parsing do conteúdo dos arquivos:")
-
-    add_labeled(doc, "Metadados topológicos (do caminho do arquivo):",
-        "O identificador de escritório (ofi_id) e o identificador de rota (rta_id) são "
-        "extraídos do caminho relativo por expressão regular sobre os componentes do "
-        "Path. Estes metadados são injetados como colunas adicionais em cada linha do "
-        "arquivo correspondente, viabilizando análises estratificadas por escritório e "
-        "rota no modelo de Cox sem necessidade de joins posteriores.")
-
-    add_labeled(doc, "Metadados temporais (do nome do arquivo):",
-        "As datas de início e fim do bloco de 10 dias são extraídas do nome do arquivo "
-        "pelo padrão relatorio_pagamentos_YYYYMMDD_YYYYMMDD.xlsx via expressão regular "
-        r"(\d{8})_(\d{8})\.xlsx. Estas datas são utilizadas durante a Feature Engineering "
-        "para calcular a máscara de pagamentos do bloco e o cronômetro dias_sem_pagar.")
-
-    add_body(doc,
-        "O resultado do Data Stitching é a Matriz Mestra, cujas dimensões e características "
-        "são documentadas na Tabela 6. A estrutura matricial tem os créditos como linhas e "
-        "as datas calendário de 2020-01-01 a 2026-05-15 (~2.330 datas) como colunas, "
-        "com os valores de pagamento diário (abonos) preenchendo a interseção.")
-
-    add_table_data(doc,
-        ["Dimensão / Métrica", "Valor"],
-        [
-            ["Linhas (observações de crédito)", "344.869"],
-            ["Colunas totais",                   "2.358"],
-            ["Colunas de pagamentos diários",    "~2.330 (datas 2020-01-01 a 2026-05-15)"],
-            ["Colunas estáticas do crédito",     "28 (CÓDIGO CRÉDITO, SALDO, CUOTAS PACTADAS, etc.)"],
-            ["Tamanho em disco (CSV comprimido)","882 MB"],
-            ["Tamanho em RAM (expandido, float64)","~6 GB"],
-            ["Redução RAM por downcasting",       "~49% (float32 + categorização de strings)"],
-            ["arquivo_origen (coluna de rastreabilidade)", "OFI_{id}/RTA_{id}/planilla_abonos_*.xlsx"],
-        ],
-        "Dimensões da Matriz Mestra após consolidação (Data Stitching)",
-        table_num=6,
-    )
-
-    add_body(doc,
-        "O tamanho em RAM de ~6 GB impossibilita a carga completa da Matriz Mestra com "
-        "pd.read_csv() padrão em máquinas com menos de 16 GB de memória disponível. O "
-        "pipeline de Feature Engineering (src/feature_engineering.py) resolve este "
-        "problema mediante leitura em chunks com máscara NumPy vetorizada, descrita a seguir.")
-
-    add_labeled(doc, "Chunked loading com máscara NumPy vetorizada:",
-        "O pipeline lê a Matriz Mestra em blocos de 5.000 linhas por vez (chunksize=5000), "
-        "processando os agregados de pagamento de cada bloco em memória e descartando as "
-        "~2.330 colunas de data antes de concatenar. O cálculo dos agregados "
-        "(pago_promedio_diario, dias_con_abono) utiliza broadcasting NumPy para criar uma "
-        "máscara binária (n_linhas por n_colunas_pagamento) que seleciona apenas as colunas "
-        "de data dentro do intervalo do bloco, sem loop Python:")
-
-    add_code(doc,
-        "# Máscara vetorizada (n_linhas por n_colunas_pago), sem loop Python\n"
-        "ini_arr   = ini.values[:, np.newaxis]    # shape: (5000, 1)\n"
-        "fin_arr   = fin.values[:, np.newaxis]    # shape: (5000, 1)\n"
-        "dates_arr = pago_dates.values[np.newaxis, :]  # shape: (1, 2330)\n"
-        "\n"
-        "# Broadcasting: compara cada linha com todas as datas simultaneamente\n"
-        "mascara = (dates_arr >= ini_arr) & (dates_arr <= fin_arr)  # (5000, 2330)\n"
-        "\n"
-        "pagos_bloque       = pagos_vals * mascara\n"
-        "pago_promedio      = pagos_bloque.sum(axis=1) / n_dias_bloque\n"
-        "dias_com_abono     = (pagos_bloque > 0).sum(axis=1)"
-    )
-
-    add_table_data(doc,
-        ["Parâmetro", "Valor", "Justificativa"],
-        [
-            ["Chunk size",              "5.000 linhas",  "Equilíbrio entre velocidade e consumo de RAM (~100 MB/chunk)"],
-            ["Colunas de pagamento",    "~2.330",         "Datas 2020-01-01 a 2026-05-15 detectadas pelo header scan"],
-            ["Shape da máscara",        "(5000 por 2330)", "Broadcasting NumPy, operação vetorizada sem loop Python"],
-            ["Throughput",              "~5.000 linhas/s","Medido em hardware com 8 GB RAM / CPU 4 núcleos"],
-            ["RAM pico por chunk",      "~100 MB",        "Máscara booleana float32 + dados de pagamento"],
-            ["Tempo total de leitura",  "~70 segundos",   "Para 344.869 linhas e 2.358 colunas"],
-        ],
-        "Estratégia de chunked loading com máscara NumPy vetorizada",
-        table_num=7,
-    )
-
-    # ── 3.6 ──────────────────────────────────────────────────────────────────
-    add_heading(doc, "4.6  Governança de Dados, Conformidade LGPD e Metodologia CRISP-DS", level=2)
+    add_heading(doc, "4.4  Governança de Dados e LGPD", level=2)
     add_body(doc,
         "O pipeline ETL foi projetado com governança de dados desde a concepção, atendendo "
         "aos requisitos da Lei Geral de Proteção de Dados Pessoais (LGPD, Lei nº 13.709/2018) "
@@ -1349,6 +1135,8 @@ def build_secao_3(doc):
         table_num=8,
     )
 
+
+    add_heading(doc, "4.5  Gestão do Projeto", level=2)
     add_body(doc,
         "A metodologia CRISP-DS (Cross Industry Standard Process for Data Science), adotada "
         "como framework de gestão do projeto (Louzada Neto, 2026), estrutura o pipeline em seis "
@@ -1395,6 +1183,7 @@ def build_secao_3(doc):
     add_body(doc,
         "A formatação deste documento e pequenos trechos de código contaram com apoio pontual "
         "de uma ferramenta de inteligência artificial (ANTHROPIC, 2026).")
+
 
 
 # ── SEÇÃO 4 ──────────────────────────────────────────────────────────────────
@@ -1575,7 +1364,7 @@ def build_secao_4(doc):
     add_heading(doc, "5.6  Análise Exploratória de Dados (EDA)", level=2)
     add_body(doc,
         "A análise exploratória foi desenvolvida no notebook notebooks/01_eda_survival.ipynb, "
-        "gerando nove figuras de diagnóstico (Figuras 1 a 9).")
+        "gerando nove figuras de diagnóstico (Figuras {fig:1} a {fig:9}).")
 
     add_heading(doc, "5.6.1  Caracterização Geral do Dataset", level=3)
     add_table_data(doc,
@@ -1634,7 +1423,7 @@ def build_secao_4(doc):
         "à medida que os créditos saudáveis saem do conjunto em risco por terem pago tudo, o "
         "subconjunto remanescente concentra-se nos casos mais difíceis, distorcendo S(t) para "
         "baixo. Essa é exatamente a limitação que motiva o tratamento de Riscos Competitivos "
-        "introduzido em §5.9: a Função de Incidência Acumulada (Figura 10) mostra que o risco "
+        "introduzido em §5.9: a Função de Incidência Acumulada (Figura {fig:10}) mostra que o risco "
         "real de default se estabiliza perto de 1,1%, não de 62%.")
 
     add_heading(doc, "5.6.4  Análise Estratificada por Escritório (Teste de Log-Rank)", level=3)
@@ -1838,9 +1627,9 @@ def build_secao_4(doc):
          ["Censura verdadeira (evento_tipo=0)", "1.219",  "4,30%"]],
         "Desfechos sob o esquema de Riscos Competitivos", table_num=23)
     add_body(doc,
-        "A Figura 10 apresenta a Função de Incidência Acumulada (CIF, estimador de "
+        "A Figura {fig:10} apresenta a Função de Incidência Acumulada (CIF, estimador de "
         "Aalen-Johansen) para os dois desfechos, que substitui a curva de Kaplan-Meier da "
-        "Figura 2 como retrato correto do risco competitivo: a probabilidade acumulada de "
+        "Figura {fig:2} como retrato correto do risco competitivo: a probabilidade acumulada de "
         "Cura sobe rapidamente e se estabiliza próxima de 98,7% por volta do dia 300, "
         "enquanto a de Default cresce lentamente e se estabiliza perto de 1,1% logo após o "
         "umbral de 120 dias, confirmando que o risco real de default do portfólio é baixo e "
@@ -1921,7 +1710,7 @@ def build_secao_5(doc):
         "desses choques sistêmicos é uma extensão natural do modelo. Nesta versão, essas "
         "covariáveis ainda não foram incorporadas, sob a hipótese de que parte do efeito "
         "sistêmico já esteja capturada indiretamente pela heterogeneidade geográfica entre "
-        "escritórios (Tabela 14); a decisão de incluí-las será revisitada no Sprint 5, à luz "
+        "escritórios (Tabela {tab:14}); a decisão de incluí-las será revisitada no Sprint 5, à luz "
         "do ganho preditivo observado ao adicioná-las.")
 
 
@@ -2101,6 +1890,368 @@ def build_referencias(doc):
             _set_font(run, bold=False, italic=italic)
 
 
+# ── APÊNDICE A: DETALHE TÉCNICO DO PIPELINE ──────────────────────────────────
+
+def build_apendice_a(doc):
+    """Detalhe técnico da extração (antigas seções 4.1 a 4.5 da V26). Saiu do
+    corpo do texto a pedido da tutora e da aula de Metodologia: o capítulo 4
+    explica o pipeline em linguagem simples e remete a este apêndice."""
+    doc.add_page_break()
+    add_heading(doc, "APÊNDICE A – DETALHAMENTO TÉCNICO DO PIPELINE DE EXTRAÇÃO", level=1)
+    add_body_italico(doc,
+        "Este apêndice reúne os detalhes de implementação do robô de extração e da "
+        "consolidação dos relatórios, resumidos no capítulo 4. O código completo está no "
+        "repositório do projeto (pasta src).")
+
+    # ── 3.1 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "A.1  O Sistema ATLAS: Contexto e Barreiras Técnicas da Extração", level=2)
+    add_body(doc,
+        "O Sistema ATLAS (codinome atribuído neste trabalho por confidencialidade) é a "
+        "plataforma de gestão creditícia da instituição parceira. Trata-se de "
+        "uma aplicação web desenvolvida em PHP, hospedada em infraestrutura privada, sem "
+        "exposição de endpoints REST, GraphQL ou qualquer mecanismo programático de acesso "
+        "a dados. O único canal disponível é a interface de usuário no navegador, o que torna "
+        "a automação web (web scraping via Selenium) a única alternativa viável para a extração "
+        "sistemática do histórico transacional.")
+    add_body(doc,
+        "A interface do ATLAS impõe seis barreiras técnicas específicas que demandam soluções "
+        "individuais, detalhadas na Tabela {tab:1}. Cada barreira representa um ponto de falha "
+        "potencial no pipeline: a ausência de qualquer uma das soluções resulta em crash "
+        "silencioso do robô, extração parcial ou dados corrompidos.")
+
+    add_table_data(doc,
+        ["Barreira Técnica", "Causa Raiz", "Solução Implementada"],
+        [
+            ["Sem API REST",
+             "Backend PHP sem endpoints programáticos",
+             "Selenium WebDriver + ChromeDriver (webdriver-manager)"],
+            ["Frameset aninhado (3 níveis)",
+             "página principal, depois frameMenu e por fim frameFormulario",
+             "Sequência precisa de switch_to.frame() + switch_to.default_content()"],
+            ["Autenticação SELECT2 (fase 2)",
+             "Widget jQuery ignora eventos DOM nativos",
+             "DOM nativo: sel.value + dispatchEvent('change', {bubbles: true})"],
+            ["Menu com tags <op> não-padrão",
+             "Tags HTML proprietárias sem suporte is_displayed()",
+             "XPath //op[normalize-space()='...'] + JS click via execute_script()"],
+            ["Campo de data readonly (datepicker)",
+             "jQuery UI bloqueia edição manual do campo",
+             "Injeção via JS: arguments[0].value + dispatchEvent('change')"],
+            ["Modal bootbox dinâmico",
+             "bootbox.js intercepta cliques e bloqueia o formulário",
+             "find_elements() (sem exceção se ausente) + JS click no botão de confirmação"],
+            ["Download silencioso de múltiplos arquivos",
+             "Chrome exige confirmação do usuário por padrão",
+             "Chrome prefs: automatic_downloads: 1, prompt_for_download: False"],
+        ],
+        "Barreiras técnicas do Sistema ATLAS e soluções implementadas no pipeline RPA",
+        table_num=1,
+    )
+
+    # ── 3.2 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "A.2  Autenticação Bifásica e Navegação no Frameset Aninhado", level=2)
+    add_body(doc,
+        "O pipeline de autenticação foi implementado na classe orientada a objetos "
+        "AtlasDataExtractor (src/atlas_extractor.py), que encapsula toda a lógica de interação "
+        "com o Sistema ATLAS. A autenticação ocorre em duas fases distintas, separadas por uma "
+        "transição de estado do servidor que invalida os elementos DOM previamente carregados.")
+
+    add_labeled(doc, "Fase 1, credenciais:",
+        "O formulário de login reside dentro de um iframe (frame index 0 de página de autenticação do sistema). "
+        "O robô utiliza WebDriverWait com expected_conditions para aguardar a disponibilidade de "
+        "cada elemento antes de interagir, garantindo tolerância a variações de latência do "
+        "servidor. Os campos campoUsuario e campoSenha recebem as credenciais lidas de variáveis de "
+        "ambiente (.env), e o botão botaoEntrar é ativado via clique nativo do Selenium.")
+
+    add_labeled(doc, "Fase 2, seleção de rota (SELECT2):",
+        "Após validar as credenciais, o servidor renderiza um segundo formulário com um dropdown "
+        "SELECT2 (biblioteca jQuery) para seleção da rota. O SELECT2 ignora completamente eventos "
+        "DOM nativos como 'input' ou 'change' disparados por Selenium; o widget escuta apenas "
+        "eventos jQuery internos. A solução implementada é a injeção direta de JavaScript que "
+        "escreve o valor no elemento <select> subjacente e dispara um evento 'change' nativo com "
+        "propagação (bubbles: true), contornando o interceptor jQuery:")
+
+    add_code(doc,
+        "# SELECT2 ignora eventos Selenium; usa-se DOM nativo com dispatchEvent\n"
+        "driver.execute_script(\"\"\"\n"
+        "    var sel = document.getElementById('campoRota');\n"
+        "    sel.value = arguments[0];\n"
+        "    sel.dispatchEvent(new Event('change', {bubbles: true}));\n"
+        "\"\"\", valor_ruta)"
+    )
+
+    add_body(doc,
+        "Após a seleção da rota, o servidor exibe um modal de boas-vindas (bootbox.js) que bloqueia "
+        "qualquer interação com o formulário subjacente. O tratamento utiliza find_elements() (que "
+        "retorna lista vazia em vez de lançar exceção) em vez de find_element(), evitando crash "
+        "quando o modal está ausente. O clique no botão de confirmação é realizado via JS para "
+        "garantir que interceptores DOM não interfiram. Após o fechamento do modal, o robô retorna "
+        "ao contexto padrão (switch_to.default_content()) e aguarda o carregamento do frameset "
+        "principal antes de prosseguir.")
+
+    add_body(doc,
+        "A navegação ao formulário de extração segue uma sequência rígida de troca de contexto "
+        "de frame, pois a arquitetura do Sistema ATLAS utiliza frameset aninhado em três níveis. "
+        "A Tabela {tab:2} documenta a sequência exata implementada no método _navegar_ao_relatorio_pagamentos().")
+
+    add_table_data(doc,
+        ["Passo", "Operação Selenium", "Frame / Elemento Alvo", "Finalidade"],
+        [
+            ["1", "switch_to.default_content()", "Contexto raiz do navegador", "Resetar contexto após qualquer operação anterior"],
+            ["2", "switch_to.frame(0)", "página principal do sistema (frame raiz)", "Entrar no frameset raiz do sistema"],
+            ["3", "frame_to_be_available_and_switch_to_it('frameMenu')", "frameMenu (menu lateral)", "Acessar o menu de navegação"],
+            ["4", "JS click: //op[normalize-space()='Reportes']", "Tag <op> do menu", "Expandir o submenu de relatórios"],
+            ["5", "JS click: //op[normalize-space()='Recaudador']", "Tag <op> do submenu", "Expandir o submenu de cobrança"],
+            ["6", "JS click: //a[contains(@href,'RelatorioPagamentos')]", "Link do relatório", "Carregar o formulário de extração no frameFormulario"],
+            ["7", "switch_to.default_content() e depois switch_to.frame(0)", "De volta ao frame raiz", "Preparar para entrar no frameFormulario"],
+            ["8", "frame_to_be_available_and_switch_to_it('frameFormulario')", "frameFormulario (formulário)", "Acessar o formulário de extração"],
+            ["9", "Select(campoOficina).select_by_value()", "Dropdown de oficina", "Configurar filtro estático de escritório"],
+            ["10", "Select(campoRota).select_by_value()", "Dropdown de rota", "Configurar filtro estático de rota (após AJAX)"],
+        ],
+        "Sequência de navegação no frameset aninhado do Sistema ATLAS",
+        table_num=2,
+    )
+
+    add_body(doc,
+        "Os filtros de escritório e rota (campoOficina e campoRota) são configurados uma única vez "
+        "antes do início do laço de extração batch, pois permanecem constantes para toda a "
+        "sequência temporal de uma rota. A seleção da oficina dispara uma chamada AJAX que "
+        "repopula o dropdown campoRota; o pipeline aguarda a presença da opção correta com "
+        "lambda WebDriverWait antes de prosseguir, garantindo sincronização com o servidor.")
+
+    # ── 3.3 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "A.3  Extração Batch: Paginação Temporal e Filtro Anti-Zero", level=2)
+    add_body(doc,
+        "O Sistema ATLAS restringe cada extração a uma janela de exatamente 10 dias calendário. "
+        "Para cobrir o horizonte histórico completo de 2020 a 2026 (~2.327 dias), o pipeline "
+        "implementa um cursor temporal que avança em blocos estritos de 10 dias, gerando "
+        "aproximadamente 233 iterações por rota e 3.961 iterações no total corporativo.")
+
+    add_labeled(doc, "Early-exit [YA EXISTE]:",
+        "Antes de qualquer interação com o DOM, o pipeline verifica se o arquivo "
+        "relatorio_pagamentos_YYYYMMDD_YYYYMMDD.xlsx já existe no diretório de destino. Se existir, "
+        "o bloco é saltado completamente sem abrir o formulário, permitindo retomada eficiente "
+        "de sessões interrompidas sem reprocessamento.")
+
+    add_labeled(doc, "Injeção de data (datepicker bypass):",
+        "O campo campoDataInicial é marcado como readonly pelo jQuery UI datepicker, impedindo "
+        "qualquer edição via Selenium send_keys(). A solução injeta o valor diretamente no "
+        "elemento DOM via JavaScript e dispara o evento 'change' para ativar os listeners "
+        "do formulário:")
+
+    add_code(doc,
+        "# Campo readonly: injetar valor via JS e disparar evento change\n"
+        "driver.execute_script(\"\"\"\n"
+        "    arguments[0].value = arguments[1];\n"
+        "    arguments[0].dispatchEvent(new Event('change', {bubbles: true}));\n"
+        "\"\"\", campo_fecha, cursor.strftime('%Y-%m-%d'))"
+    )
+
+    add_labeled(doc, "Filtro anti-zero (visualizadorRelatorio):",
+        "Após pressionar botaoConfirmar, o servidor processa a consulta e renderiza um PDF "
+        "embebido no elemento <object id='visualizadorRelatorio'>. Quando o período consultado "
+        "não contém atividade para a rota (rota inativa naquele intervalo), o objeto "
+        "permanece oculto (display: none) ou com atributo data vazio. O pipeline valida a "
+        "presença de dados antes de tentar o download:")
+
+    add_code(doc,
+        "# Validar presença de dados antes de baixar\n"
+        "obj = driver.find_element(By.ID, 'visualizadorRelatorio')\n"
+        "tem_dados = (\n"
+        "    '.pdf' in (obj.get_attribute('data') or '') and\n"
+        "    'inline-block' in (obj.get_attribute('style') or '')\n"
+        ")\n"
+        "if not tem_dados:\n"
+        "    cursor += timedelta(days=10)  # [SKIP] rota inativa"
+    )
+
+    add_body(doc,
+        "Este filtro anti-zero é crítico para a integridade estatística do dataset: sem ele, "
+        "blocos sem atividade gerariam arquivos Excel vazios que, ao serem consolidados na "
+        "Matriz Mestra, introduziriam zeros espúrios nas colunas de pagamento e distorceriam "
+        "o cronômetro dias_sem_pagar, gerando falsos positivos no evento de default.")
+
+    add_labeled(doc, "Monitoramento de download e renomeação semântica:",
+        "Após pressionar botaoExportar, o Chrome inicia o download para a pasta staging "
+        "(data/raw/). O pipeline monitora a pasta em loop de 1 segundo, detectando o "
+        "arquivo .crdownload (parcial) e aguardando seu desaparecimento antes de renomear "
+        "o xlsx completo para o padrão relatorio_pagamentos_YYYYMMDD_YYYYMMDD.xlsx. Este padrão "
+        "de nomenclatura incorpora as datas de início e fim do bloco, viabilizando a extração "
+        "automática de metadados temporais durante o Data Stitching.")
+
+    # ── 3.4 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "A.4  Escalabilidade Corporativa: Auto-Discovery, Data Lake Hierárquico e Resiliência", level=2)
+    add_body(doc,
+        "Para escalar o pipeline piloto (uma rota) para o universo corporativo completo (17 "
+        "rotas em 3 escritórios), foi desenvolvida a classe AtlasMasivoExtractor "
+        "(src/atlas_masivo.py), que herda toda a infraestrutura de AtlasDataExtractor e "
+        "adiciona quatro capacidades fundamentais: auto-discovery do mapa corporativo, "
+        "organização hierárquica do Data Lake, tratamento de erros de elemento obsoleto "
+        "(StaleElementReferenceException) e sistema de checkpoint para resiliência a falhas.")
+
+    add_labeled(doc, "Auto-Discovery do mapa corporativo:",
+        "O método _descobrir_mapa_rotas() lê dinamicamente todas as opções dos dropdowns "
+        "campoOficina e campoRota diretamente do DOM do formulário. Para cada escritório detectado, "
+        "dispara uma mudança de valor no select (via JavaScript) que aciona a chamada AJAX de "
+        "repopulação do dropdown de rotas, coletando os IDs de todas as rotas disponíveis. "
+        "Este mecanismo elimina a necessidade de manutenção manual de um catálogo de rotas e "
+        "garante que novas rotas adicionadas pela instituição sejam automaticamente incluídas "
+        "em extrações futuras.")
+
+    add_body(doc,
+        "O mapa corporativo identificado automaticamente pelo Auto-Discovery compreende três "
+        "escritórios e 17 rotas geográficas, conforme documentado na Tabela {tab:3}.")
+
+    add_table_data(doc,
+        ["Escritório", "ID", "Região", "Rotas (IDs)", "Total"],
+        [
+            ["OFI_23 (São Paulo)",       "23", "São Paulo / Grande SP",
+             "82, 96, 423, 136, 367, 448, 494", "7"],
+            ["OFI_31 (Sociedades Brasil)","31", "Interior e Sul do Brasil",
+             "415, 68, 338, 347, 389", "5"],
+            ["OFI_44 (Cabo Frio)",        "44", "Região dos Lagos / RJ",
+             "114, 439, 396, 420, 511", "5"],
+        ],
+        "Mapa corporativo detectado pelo Auto-Discovery: escritórios e rotas do Sistema ATLAS",
+        table_num=3,
+    )
+
+    add_labeled(doc, "Organização hierárquica do Data Lake:",
+        "Os arquivos extraídos são organizados em uma hierarquia de diretórios que reflete "
+        "a topologia corporativa do sistema: data/raw/OFI_{id_oficina}/RTA_{id_ruta}/. "
+        "O Chrome baixa cada arquivo inicialmente para data/raw/ (staging area) e o pipeline "
+        "move o xlsx renomeado para o subdiretório correspondente via shutil.move(). "
+        "Esta estrutura garante rastreabilidade completa (Data Lineage): dado qualquer arquivo, "
+        "é possível identificar imediatamente a qual escritório, rota e período temporal "
+        "ele pertence, apenas pelo caminho e nome do arquivo.")
+
+    add_table_data(doc,
+        ["Métrica", "Valor"],
+        [
+            ["Arquivos Excel baixados",        "3.962 arquivos"],
+            ["Escritórios cobertos",           "3 (OFI_23, OFI_31, OFI_44)"],
+            ["Rotas cobertas",                 "17"],
+            ["Período de cobertura",           "2020-01-01 a 2026-05-15 (~6,4 anos)"],
+            ["Blocos temporais por rota",      "~233 blocos de 10 dias"],
+            ["Tamanho total do Data Lake",     "~14 GB"],
+            ["Pausa entre rotas",              "10 segundos (limpeza de cache do navegador)"],
+        ],
+        "Volumetria final do Data Lake extraído",
+        table_num=4,
+    )
+
+    add_labeled(doc, "Tratamento de StaleElementReferenceException:",
+        "O Sistema ATLAS realiza re-renderizações parciais do DOM durante transições entre "
+        "rotas (o AJAX de campoRota pode não ter terminado quando o SELECT já foi localizado). "
+        "O pipeline implementa até 3 tentativas com pausa de 3 segundos entre cada uma para "
+        "o método _seleccionar_oficina_y_ruta(), que renavega ao formulário desde o menu "
+        "lateral a cada tentativa, garantindo um estado DOM fresco.")
+
+    add_labeled(doc, "Sistema de Checkpoint JSON:",
+        "O arquivo oculto .checkpoint.json em data/raw/ persiste o estado da extração após "
+        "cada bloco temporal bem-sucedido. Na inicialização, o pipeline lê o checkpoint e "
+        "retoma exatamente do último ponto processado, saltando as rotas já completadas. "
+        "Ao concluir a maratón completa, o arquivo é deletado automaticamente.")
+
+    add_table_data(doc,
+        ["Campo JSON", "Tipo", "Exemplo", "Descrição"],
+        [
+            ["id_oficina", "String", '"44"',         "ID do escritório em extração"],
+            ["id_ruta",    "String", '"114"',        "ID da rota em extração"],
+            ["fecha",      "String", '"2023-07-15"', "Última data de início de bloco processada com sucesso"],
+        ],
+        "Estrutura do arquivo de checkpoint JSON (.checkpoint.json)",
+        table_num=5,
+    )
+
+    # ── 3.5 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "A.5  Consolidação da Matriz Mestra e Otimização de Memória (Data Stitching)", level=2)
+    add_body(doc,
+        "O script consolidar_datos.py implementa o processo de Data Stitching, que transforma "
+        "os 3.962 arquivos Excel fragmentados do Data Lake em um único painel longitudinal "
+        "contínuo: a Matriz Mestra (Silver Layer). O processo percorre recursivamente a "
+        "hierarquia data/raw/OFI_*/RTA_*/*.xlsx, extraindo dois tipos de metadados diretamente "
+        "do sistema de arquivos, sem necessidade de parsing do conteúdo dos arquivos:")
+
+    add_labeled(doc, "Metadados topológicos (do caminho do arquivo):",
+        "O identificador de escritório (ofi_id) e o identificador de rota (rta_id) são "
+        "extraídos do caminho relativo por expressão regular sobre os componentes do "
+        "Path. Estes metadados são injetados como colunas adicionais em cada linha do "
+        "arquivo correspondente, viabilizando análises estratificadas por escritório e "
+        "rota no modelo de Cox sem necessidade de joins posteriores.")
+
+    add_labeled(doc, "Metadados temporais (do nome do arquivo):",
+        "As datas de início e fim do bloco de 10 dias são extraídas do nome do arquivo "
+        "pelo padrão relatorio_pagamentos_YYYYMMDD_YYYYMMDD.xlsx via expressão regular "
+        r"(\d{8})_(\d{8})\.xlsx. Estas datas são utilizadas durante a Feature Engineering "
+        "para calcular a máscara de pagamentos do bloco e o cronômetro dias_sem_pagar.")
+
+    add_body(doc,
+        "O resultado do Data Stitching é a Matriz Mestra, cujas dimensões e características "
+        "são documentadas na Tabela {tab:6}. A estrutura matricial tem os créditos como linhas e "
+        "as datas calendário de 2020-01-01 a 2026-05-15 (~2.330 datas) como colunas, "
+        "com os valores de pagamento diário (abonos) preenchendo a interseção.")
+
+    add_table_data(doc,
+        ["Dimensão / Métrica", "Valor"],
+        [
+            ["Linhas (observações de crédito)", "344.869"],
+            ["Colunas totais",                   "2.358"],
+            ["Colunas de pagamentos diários",    "~2.330 (datas 2020-01-01 a 2026-05-15)"],
+            ["Colunas estáticas do crédito",     "28 (CÓDIGO CRÉDITO, SALDO, CUOTAS PACTADAS, etc.)"],
+            ["Tamanho em disco (CSV comprimido)","882 MB"],
+            ["Tamanho em RAM (expandido, float64)","~6 GB"],
+            ["Redução RAM por downcasting",       "~49% (float32 + categorização de strings)"],
+            ["arquivo_origen (coluna de rastreabilidade)", "OFI_{id}/RTA_{id}/planilla_abonos_*.xlsx"],
+        ],
+        "Dimensões da Matriz Mestra após consolidação (Data Stitching)",
+        table_num=6,
+    )
+
+    add_body(doc,
+        "O tamanho em RAM de ~6 GB impossibilita a carga completa da Matriz Mestra com "
+        "pd.read_csv() padrão em máquinas com menos de 16 GB de memória disponível. O "
+        "pipeline de Feature Engineering (src/feature_engineering.py) resolve este "
+        "problema mediante leitura em chunks com máscara NumPy vetorizada, descrita a seguir.")
+
+    add_labeled(doc, "Chunked loading com máscara NumPy vetorizada:",
+        "O pipeline lê a Matriz Mestra em blocos de 5.000 linhas por vez (chunksize=5000), "
+        "processando os agregados de pagamento de cada bloco em memória e descartando as "
+        "~2.330 colunas de data antes de concatenar. O cálculo dos agregados "
+        "(pago_promedio_diario, dias_con_abono) utiliza broadcasting NumPy para criar uma "
+        "máscara binária (n_linhas por n_colunas_pagamento) que seleciona apenas as colunas "
+        "de data dentro do intervalo do bloco, sem loop Python:")
+
+    add_code(doc,
+        "# Máscara vetorizada (n_linhas por n_colunas_pago), sem loop Python\n"
+        "ini_arr   = ini.values[:, np.newaxis]    # shape: (5000, 1)\n"
+        "fin_arr   = fin.values[:, np.newaxis]    # shape: (5000, 1)\n"
+        "dates_arr = pago_dates.values[np.newaxis, :]  # shape: (1, 2330)\n"
+        "\n"
+        "# Broadcasting: compara cada linha com todas as datas simultaneamente\n"
+        "mascara = (dates_arr >= ini_arr) & (dates_arr <= fin_arr)  # (5000, 2330)\n"
+        "\n"
+        "pagos_bloque       = pagos_vals * mascara\n"
+        "pago_promedio      = pagos_bloque.sum(axis=1) / n_dias_bloque\n"
+        "dias_com_abono     = (pagos_bloque > 0).sum(axis=1)"
+    )
+
+    add_table_data(doc,
+        ["Parâmetro", "Valor", "Justificativa"],
+        [
+            ["Chunk size",              "5.000 linhas",  "Equilíbrio entre velocidade e consumo de RAM (~100 MB/chunk)"],
+            ["Colunas de pagamento",    "~2.330",         "Datas 2020-01-01 a 2026-05-15 detectadas pelo header scan"],
+            ["Shape da máscara",        "(5000 por 2330)", "Broadcasting NumPy, operação vetorizada sem loop Python"],
+            ["Throughput",              "~5.000 linhas/s","Medido em hardware com 8 GB RAM / CPU 4 núcleos"],
+            ["RAM pico por chunk",      "~100 MB",        "Máscara booleana float32 + dados de pagamento"],
+            ["Tempo total de leitura",  "~70 segundos",   "Para 344.869 linhas e 2.358 colunas"],
+        ],
+        "Estratégia de chunked loading com máscara NumPy vetorizada",
+        table_num=7,
+    )
+
+
+
 # ── MAIN ──────────────────────────────────────────────────────────────────────
 
 def _montar(registro_anterior):
@@ -2110,6 +2261,9 @@ def _montar(registro_anterior):
         REGISTRO[k] = list(registro_anterior[k])
     REGISTRO["texto_corpo"] = registro_anterior.get("texto_corpo", "")
     REGISTRO["ativo"] = False
+    NUMEROS.clear()
+    NUMEROS.update(registro_anterior.get("numeros", {}))
+    CONTADOR.update({"tab": 0, "fig": 0})
     doc = Document()
     configure_doc(doc)
 
@@ -2131,6 +2285,7 @@ def _montar(registro_anterior):
     build_secao_6(doc)
     build_secao_7(doc)
     build_referencias(doc)
+    build_apendice_a(doc)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     doc.save(OUTPUT)
@@ -2138,6 +2293,7 @@ def _montar(registro_anterior):
     corpo += [c.text for t in doc.tables for row in t.rows for c in row.cells]
     registro = {k: list(REGISTRO[k]) for k in ("titulos", "figuras", "tabelas")}
     registro["texto_corpo"] = "\n".join(corpo)
+    registro["numeros"] = dict(NUMEROS)
     return registro
 
 

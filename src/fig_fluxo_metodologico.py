@@ -90,11 +90,11 @@ ETAPAS = [
     ("Pré-processamento", VERDE, _funil,
      ["Reconstrução do desfecho", "pelos pagamentos diários", "(limiar de 120 dias)", "Exclusões e coorte diária"]),
     ("Engenharia\nde atributos", VERDE, _linha_do_tempo,
-     ["Blocos de 10 dias", "Covariáveis sem", "informação futura", "Região, feriados, macro"]),
+     ["Blocos de 7 dias", "Histórico do cliente", "Dias de cobrança", "Região e contexto macro"]),
     ("Modelagem", LARANJA, _rede,
-     ["Riscos competitivos", "(default × cura)", "Cox cause-specific", "e DeepHit"]),
+     ["Riscos competitivos", "(default e cura)", "Fine-Gray e Cox", "RSF e DeepHit"]),
     ("Avaliação", LARANJA, _curva,
-     ["C-index e Brier", "dependentes do tempo", "Comparação de", "conjuntos de atributos"]),
+     ["Validação por cliente", "AUC e C-index", "Defaults no top 10%", "de maior risco"]),
 ]
 
 GRUPOS = [(0, 1, "Engenharia de dados (ETL)", AZUL),

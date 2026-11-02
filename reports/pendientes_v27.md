@@ -27,7 +27,7 @@ Se marca con [x] cuando queda resuelto. Última actualización: 02/11/2026.
 - [x] Introdução reescrita (fuentes Mapa de Empresas y Sebrae 2026).
 - [ ] Revisão Bibliográfica: nueva estructura + referencias que Juan debe buscar (ver chat 16/10).
 - [ ] Títulos de figuras y tablas: quitar "vs.", "—", nombres de código (se corrige al reescribir cada sección).
-- [ ] Agregar "Fonte:" debajo de cada figura y tabla (ABNT; hoy no hay ninguna).
+- [x] "Fonte:" debajo de cada figura y tabla (02/11, automático; por defecto "Elaborada pelo autor (2026)."). Título de figura arriba (NBR 14724).
 - [ ] Revisar si cada capítulo (sección primaria) debe empezar en página nueva.
 - [x] Quitar guiones largos, flechas, "×", "≥", "✓" del texto (02/11: 87 guiones y ~60 símbolos; solo quedan dentro de las fórmulas). El texto nuevo se escribe sin ellos.
 - [ ] Usar "comerciante" para describir al cliente; producto descrito de forma neutral (sin cobrador ni tasa).
@@ -35,7 +35,7 @@ Se marca con [x] cuando queda resuelto. Última actualización: 02/11/2026.
 
 ## Adelanto para Isadora (enviar el domingo 08/11/2026)
 Recomendaciones de Isadora y dónde se atienden:
-- [ ] 1. Resumo simple; explicar cómo se superaron las barreras de la extracción; definir *Data Stitching* (§3, mar 3).
+- [x] 1. Resumo simple (V26); barreras de la extracción explicadas sin jerga y *Data Stitching* definido (§4.1 y §4.2, 02/11).
 - [ ] 2. Justificar granularidad diaria contra mensual (§4, mié 4): 7 días alerta antes que 10 (73% contra 61%
       en el día 14); lo mensual no ve pago incompleto ni domingos/feriados.
 - [ ] 3. Referencias recientes, contexto socioeconómico, comparación entre clases sociales (§2, vie 6; regiones
@@ -43,7 +43,7 @@ Recomendaciones de Isadora y dónde se atienden:
 - [x] 4. Reducir travessões (hecho el 02/11 en toda la V27).
 - [ ] 5. Artículos contemporáneos de supervivencia y métricas de crédito después de 2002 (§2, vie 6).
 - [ ] 6. Sentido práctico de covariables que cambian por bloque: riesgo actualizado cada semana (§4, mié 4).
-- [ ] 7. Tratamiento de datos ausentes o inconsistentes en el pipeline (§3, mar 3): auditoría.
+- [x] 7. Tratamiento de datos ausentes o inconsistentes: §4.3 con tabla de auditoría (02/11).
 - [ ] 8. Itálico en todos los términos extranjeros (sáb 7).
 - [ ] 9. Párrafo de transición del EDA a los modelos (§5, jue 5).
 - [ ] Nota corta para Isadora en portugués (cuerpo del email y de Moodle): qué se cambió por cada recomendación (sáb 7).
@@ -52,7 +52,7 @@ Recomendaciones de Isadora y dónde se atienden:
 
 ## Materias del MBA aplicadas al TCC (revisión 02/11/2026)
 Para el adelanto (enriquecen las secciones de esta semana):
-- [ ] §3: citar los módulos de Técnicas Avançadas de Captura e Tratamento (missing values, outliers,
+- [x] §4.3: técnicas de Técnicas Avançadas de Captura e Tratamento (missing values, outliers,
       class imbalance, normalization, web scraping); responde la recomendación 7 de Isadora.
 - [ ] §3: diagrama conceptual del ETL, como en Processamento Massivo (Modelagem Conceitual de ETL/ELT);
       responde la recomendación 1 de Isadora.
@@ -74,6 +74,12 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
       figuras de resultados (Reporte dos Resultados).
 - [ ] Actualizar las menciones a sprints dentro del texto (§4 y §5 todavía dicen DeepSurv/pycox en el
       Sprint 4-5); se corrige al reescribir esas secciones.
+
+## Sección 4 (ETL) reescrita el 02/11
+- [x] De 10 a ~5 páginas, sin código; detalle técnico en el Apêndice A. Figura del flujo (7 días, Fine-Gray).
+- [x] Numeración automática de tablas y figuras: en el texto usar {tab:clave} / {fig:clave}.
+- [ ] §4.5 Gestão do Projeto (CRISP-DS) todavía con texto viejo (DeepSurv, Sprints 4-5): rehacer con CRISP-DM el miércoles.
+- [ ] Diagrama conceptual del ETL (Processamento Massivo): opcional, la Figura 1 ya cumple esa función.
 
 ## Sprint 4 en el texto (V27)
 - [ ] §3: dataset reconstruido (vales excluidos, calendario de cobro, cuota de 1 real = renegociación,
