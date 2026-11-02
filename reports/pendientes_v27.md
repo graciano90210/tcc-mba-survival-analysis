@@ -46,7 +46,9 @@ Recomendaciones de Isadora y dónde se atienden:
 - [ ] 7. Tratamiento de datos ausentes o inconsistentes en el pipeline (§3, mar 3): auditoría.
 - [ ] 8. Itálico en todos los términos extranjeros (sáb 7).
 - [ ] 9. Párrafo de transición del EDA a los modelos (§5, jue 5).
-- [ ] Nota corta para Isadora: qué se cambió por cada recomendación (sáb 7).
+- [ ] Nota corta para Isadora en portugués (cuerpo del email y de Moodle): qué se cambió por cada recomendación (sáb 7).
+- [ ] Exportar la V27 a PDF y enviarla por Moodle y por email (dom 8).
+- [ ] Referencias: Claude las busca (título, autor, año, enlace) y Juan confirma (vie 6).
 
 ## Sprint 4 en el texto (V27)
 - [ ] §3: dataset reconstruido (vales excluidos, calendario de cobro, cuota de 1 real = renegociación,
