@@ -1,0 +1,155 @@
+{
+ "tempo_mediano": {
+  "censura": 16.0,
+  "default": 147.5,
+  "cura": 24.0
+ },
+ "cif_2": {
+  "20": 30.012,
+  "30": 78.103,
+  "60": 95.492,
+  "120": 97.907,
+  "150": 98.391,
+  "180": 98.671,
+  "365": 99.077
+ },
+ "cif_1": {
+  "20": 0.0,
+  "30": 0.0,
+  "60": 0.0,
+  "120": 0.044,
+  "150": 0.442,
+  "180": 0.647,
+  "365": 0.823
+ },
+ "cif_default_365": {
+  "São Paulo": 0.564,
+  "Sociedades Brasil": 1.513,
+  "Cabo Frio": 0.587
+ },
+ "escritorio": {
+  "São Paulo": {
+   "creditos": 13793,
+   "default": 69,
+   "cura": 13480,
+   "censura": 244
+  },
+  "Sociedades Brasil": {
+   "creditos": 7276,
+   "default": 100,
+   "cura": 6983,
+   "censura": 193
+  },
+  "Cabo Frio": {
+   "creditos": 7080,
+   "default": 31,
+   "cura": 6728,
+   "censura": 321
+  }
+ },
+ "logrank_escritorio": {
+  "estatistica": 16.19,
+  "p": 0.00030545040368815975
+ },
+ "dia14": {
+  "creditos": 25223,
+  "default_pct": 0.793,
+  "Dias com pagamento na semana anterior": {
+   "0 a 1": 7.51,
+   "2 a 3": 1.74,
+   "4 a 5": 0.32,
+   "6 a 7": 0.07
+  },
+  "Pagamento diário dividido pela parcela": {
+   "até 0,5": 3.1,
+   "0,5 a 0,9": 0.29,
+   "0,9 a 1,1": 0.15,
+   "acima\nde 1,1": 0.19
+  },
+  "Atraso relativo": {
+   "até 10%": 0.17,
+   "10 a 25%": 0.96,
+   "25 a 50%": 5.7,
+   "acima\nde 50%": 15.7
+  },
+  "Saldo que falta pagar": {
+   "até 50%": 0.13,
+   "50 a 70%": 0.7,
+   "70 a 85%": 2.63,
+   "acima\nde 85%": 7.87
+  }
+ },
+ "historico": {
+  "primeiro_credito": {
+   "Primeiro\ncrédito": 1.44,
+   "Com créditos\nanteriores": 0.59
+  },
+  "Pontualidade no crédito anterior": {
+   "até 70%": 1.22,
+   "70 a 85%": 0.51,
+   "85 a 95%": 0.23,
+   "acima\nde 95%": 0.39
+  },
+  "Prazo usado no crédito anterior": {
+   "até 0,9": 0.46,
+   "0,9 a 1,0": 0.42,
+   "1,0 a 1,2": 0.58,
+   "acima\nde 1,2": 1.0
+  },
+  "Último pagamento do crédito anterior (em parcelas)": {
+   "até 1,5": 0.23,
+   "1,5 a 3": 0.52,
+   "3 a 9": 0.68,
+   "acima\nde 9": 0.86
+  }
+ },
+ "regioes_ddd": {
+  "Vale do Itajaí / Litoral Norte (SC)": {
+   "clientes": 307,
+   "pct_volaram": 19.9
+  },
+  "Baixada Santista (SP)": {
+   "clientes": 212,
+   "pct_volaram": 7.1
+  },
+  "Rio de Janeiro (metrópole)": {
+   "clientes": 672,
+   "pct_volaram": 4.0
+  },
+  "Grande São Paulo": {
+   "clientes": 973,
+   "pct_volaram": 3.3
+  },
+  "Vale do Paraíba (SP)": {
+   "clientes": 343,
+   "pct_volaram": 2.6
+  },
+  "Campinas (SP)": {
+   "clientes": 121,
+   "pct_volaram": 2.5
+  },
+  "Serrana / Sul Fluminense (RJ)": {
+   "clientes": 167,
+   "pct_volaram": 1.8
+  },
+  "Região dos Lagos / Norte Fluminense (RJ)": {
+   "clientes": 543,
+   "pct_volaram": 1.1
+  }
+ },
+ "clientes_sem_ddd": 618,
+ "cobranca_relativa": {
+  "Dia útil": 100.0,
+  "Sábado": 86.0,
+  "Carnaval": 53.7,
+  "Feriado": 22.3,
+  "Domingo": 0.3
+ },
+ "pagamentos_mensais_2026_04": 14213,
+ "pagamentos_mensais": {
+  "2020-03": 554,
+  "2020-04": 83,
+  "2020-05": 50,
+  "2020-12": 490
+ }
+}

@@ -718,17 +718,20 @@ def build_resumo(doc):
         "pagamentos, de 2020 a 2026, de três escritórios. Os arquivos foram unidos em uma única "
         "base, processo conhecido como *Data Stitching*, e revisados com cuidado: o abandono do "
         "crédito foi definido como 120 dias seguidos sem nenhum pagamento, contados a partir dos "
-        "pagamentos realmente registrados. A base final tem 28.294 créditos, dos quais 202, ou "
+        "pagamentos realmente registrados. A base final tem 28.149 créditos, dos quais 200, ou "
         "0,71%, terminaram em abandono. Como um crédito pode terminar de duas formas, pelo "
         "abandono ou pela quitação, o risco é estudado com análise de sobrevivência para riscos "
-        "competitivos. O modelo de Cox, que permite usar informações que mudam ao longo do "
-        "tempo, é comparado com modelos de aprendizado de máquina. O trabalho também analisa "
-        "como o risco varia entre regiões e níveis socioeconômicos.", indent_first=False)
+        "competitivos, pelo modelo de Fine e Gray, comparado com a regressão logística e, nas "
+        "próximas etapas, com modelos de aprendizado de máquina. Com as informações disponíveis "
+        "no 21º dia do crédito, o modelo coloca 81% dos futuros abandonos entre os 10% de "
+        "clientes de maior risco, cerca de quatro meses antes de o abandono se confirmar. O "
+        "trabalho também analisa como o risco varia entre regiões e níveis socioeconômicos.",
+        indent_first=False)
     p = doc.add_paragraph()
     _set_spacing(p)
     run = p.add_run(
         "Palavras-chave: análise de sobrevivência; riscos competitivos; risco de crédito; "
-        "microcrédito; pequenos negócios; modelo de Cox.")
+        "microcrédito; pequenos negócios; modelo de Fine e Gray.")
     _set_font(run)
     page_break(doc)
 
@@ -751,17 +754,19 @@ def build_abstract(doc):
         "of payments, from 2020 to 2026, from three offices. The files were merged into a single "
         "database, a process known as Data Stitching, and carefully reviewed: loan abandonment "
         "was defined as 120 consecutive days without any payment, counted from the payments "
-        "actually recorded. The final database has 28,294 loans, of which 202, or 0.71%, ended "
+        "actually recorded. The final database has 28,149 loans, of which 200, or 0.71%, ended "
         "in abandonment. Since a loan can end in two ways, abandonment or full repayment, the "
-        "risk is studied with survival analysis for competing risks. The Cox model, which "
-        "allows the use of information that changes over time, is compared with machine "
-        "learning models. The work also analyzes how risk varies across regions and "
-        "socioeconomic levels.", indent_first=False)
+        "risk is studied with survival analysis for competing risks, using the Fine and Gray "
+        "model, compared with logistic regression and, in the next stages, with machine "
+        "learning models. With the information available on the 21st day of the loan, the "
+        "model places 81% of future abandonments among the 10% of clients with the highest "
+        "risk, about four months before the abandonment is confirmed. The work also analyzes "
+        "how risk varies across regions and socioeconomic levels.", indent_first=False)
     p = doc.add_paragraph()
     _set_spacing(p)
     run = p.add_run(
         "Keywords: survival analysis; competing risks; credit risk; microcredit; small "
-        "businesses; Cox model.")
+        "businesses; Fine and Gray model.")
     _set_font(run)
     page_break(doc)
 
@@ -934,7 +939,7 @@ def build_secao_2_revisao_bibliografica(doc):
         "ao reescrever o Modelo de Riscos Proporcionais de Cox em intervalos (t_start, t_stop], "
         "ele permite que covariáveis como o cronômetro dias_sem_pagar e o saldo devedor variem a "
         "cada snapshot de 10 dias, em vez de permanecerem fixas como em uma especificação clássica "
-        "de Cox. Por fim, os diagnósticos de Therneau e Grambsch (2000), em particular os resíduos de Schoenfeld, serão o critério para checar, já na fase de modelagem (Seção 6), "
+        "de Cox. Por fim, os diagnósticos de Therneau e Grambsch (2000), em particular os resíduos de Schoenfeld, serão o critério para checar, já na fase de modelagem (Capítulo 7), "
         "se a suposição de riscos proporcionais se sustenta nesse regime tempo-variante.")
 
     add_heading(doc, "2.3  Deep Learning em Análise de Sobrevivência", level=2)
@@ -968,33 +973,29 @@ def build_secao_2(doc):
     add_heading(doc, "3  OBJETIVOS", level=1)
     add_heading(doc, "3.1  Objetivo Geral", level=2)
     add_body(doc,
-        "Desenvolver um modelo preditivo de risco de crédito baseado em Análise de Sobrevivência "
-        "para estimar o tempo exato até a ruptura do fluxo de caixa e da capacidade de pagamento "
-        "(inadimplência técnica) de microempreendedores, integrando variáveis estáticas demográficas "
-        "e dados longitudinais de fluxo transacional de alta frequência.")
+        "Desenvolver e avaliar modelos de análise de sobrevivência com riscos competitivos "
+        "que antecipem, a partir do comportamento diário de pagamento e do histórico do "
+        "cliente, quais créditos de microempreendedores terminarão em abandono (default), "
+        "comparando modelos estatísticos clássicos com modelos de aprendizado de máquina.")
     add_heading(doc, "3.2  Objetivos Específicos", level=2)
     items = [
-        ("Engenharia de Dados (ETL/RPA):",
-         "Projetar e implementar um sistema robusto de ingestão massiva capaz de contornar "
-         "limitações de sistemas legados, extraindo e organizando o histórico transacional de "
-         "múltiplas unidades de negócio em um Data Lake."),
-        ("Data Stitching e MLOps:",
-         "Unificar os snapshots temporais em uma Matriz Mestra (Silver Layer) com rastreabilidade "
-         "total (Data Lineage) e otimização computacional de memória."),
-        ("Tratamento e EDA:",
-         "Aplicar o estimador não-paramétrico de Kaplan-Meier para análise exploratória do tempo "
-         "de sobrevivência da capacidade de pagamento da carteira, e extrair covariáveis "
-         "espaço-temporais (clusters de rotas)."),
-        ("Modelagem de Baseline Clássico:",
-         "Treinar e ajustar o Modelo de Riscos Proporcionais de Cox para quantificar o impacto "
-         "das covariáveis estáticas e dependentes do tempo na função de risco basal."),
-        ("Inovação e Aporte Acadêmico (Deep Learning):",
-         "Comparar a performance preditiva do modelo paramétrico de Cox com arquiteturas "
-         "contemporâneas de Deep Learning adaptadas para dados de sobrevivência (DeepSurv/RNNs), "
-         "incorporando tratamento para censura (Negative Partial Log-Likelihood)."),
-        ("Comparativo Classificatório:",
-         "Avaliar os ganhos marginais da abordagem de sobrevivência contra os modelos tradicionais "
-         "de Credit Scoring de classificação binária."),
+        ("Extração e consolidação:",
+         "Construir um processo automatizado para extrair e consolidar o histórico diário de "
+         "pagamentos do sistema da instituição."),
+        ("Qualidade dos dados:",
+         "Auditar a base, tratar dados ausentes e inconsistentes e reconstruir o desfecho de "
+         "cada crédito a partir das datas reais dos pagamentos."),
+        ("Análise exploratória:",
+         "Descrever quando e onde ocorrem os desfechos, os sinais que antecedem o default e o "
+         "efeito do calendário e da conjuntura, incluindo diferenças regionais e socioeconômicas."),
+        ("Modelos clássicos:",
+         "Ajustar os modelos de Cox e de Fine e Gray e a regressão logística para estimar o "
+         "risco de default em diferentes momentos da vida do crédito."),
+        ("Aprendizado de máquina:",
+         "Comparar esses modelos com o modelo de fração de cura, o Random Survival Forest e o "
+         "DeepHit, com a mesma validação e as mesmas métricas."),
+        ("Aplicação:",
+         "Traduzir os resultados em um alerta semanal de risco útil para a operação."),
     ]
     for label, text in items:
         add_labeled(doc, label, text)
@@ -1154,28 +1155,23 @@ def build_secao_3(doc):
 
     fases = [
         ("(1) Entendimento do Negócio:",
-         "Definição do evento de castigo de carteira (dias_sem_pagar maior ou igual a 120) a partir do "
-         "processo operativo da instituição parceira. Identificação do Sistema ATLAS como "
-         "fonte primária e design do pipeline RPA como solução de ingestão."),
+         "Definição dos desfechos com a operação da instituição: default após 120 dias sem "
+         "pagamento, cura pelo pagamento de pelo menos 98% do total (Seção 5.2)."),
         ("(2) Entendimento dos Dados:",
-         "Análise exploratória da estrutura da Matriz Mestra (344.869 linhas e 2.358 colunas), identificação "
-         "das ~2.330 colunas de pagamento, caracterização da cohorte diária e EDA do dataset "
-         "de sobrevivência (Seção 5.6)."),
+         "Extração e consolidação dos relatórios, auditoria dos dados (Capítulo 4) e análise "
+         "exploratória da base reconstruída (Capítulo 6)."),
         ("(3) Preparação dos Dados:",
-         "Feature Engineering no formato Counting Process de Anderson-Gill: cronômetro "
-         "dias_sem_pagar, correção de left truncation, continuidade via shift(), filtro de "
-         "coorte diária e construção das 7 covariáveis tempo-variantes."),
+         "Reconstrução dos desfechos a partir dos pagamentos diários, blocos de 7 dias, "
+         "calendário de cobrança e histórico do cliente (Capítulo 5)."),
         ("(4) Modelagem:",
-         "Ajuste do Modelo de Riscos Proporcionais de Cox com covariáveis tempo-variantes "
-         "(lifelines.CoxTimeVaryingFitter) e implementação de DeepSurv/RNN-Survival com "
-         "Negative Partial Log-Likelihood (pycox/PyTorch). [Sprints 4 e 5, pendente]"),
+         "Modelo de Fine e Gray em landmark, regressão logística e Cox tempo-variante "
+         "(Capítulo 7); modelo de fração de cura, Random Survival Forest e DeepHit nos "
+         "próximos Sprints."),
         ("(5) Avaliação:",
-         "Comparação de modelos via C-index de Harrell, Brier Score temporal e Teste de "
-         "Log-Rank. Diagnóstico de resíduos de Schoenfeld para validar a suposição de "
-         "proporcionalidade do Cox. [Sprint 6, pendente]"),
+         "Validação cruzada agrupada por cliente, AUC, captura dos defaults no top 10% de "
+         "risco e índice de concordância (Seção 7.2)."),
         ("(6) Implantação:",
-         "Modelo em produção para scoring dinâmico de novos créditos, integrado ao pipeline "
-         "ETL para atualização periódica das covariáveis tempo-variantes. [trabalho futuro]"),
+         "Lista semanal de clientes priorizados por risco para a operação. [trabalho futuro]"),
     ]
     for label, text in fases:
         add_labeled(doc, label, text)
@@ -1338,371 +1334,268 @@ def build_secao_4(doc):
         "anteriores, as variáveis de histórico são preenchidas com a mediana do conjunto de "
         "treino, junto com o indicador de primeiro crédito.")
 
-    # ── 4.6 EDA ──────────────────────────────────────────────────────────────
-    add_heading(doc, "5.6  Análise Exploratória de Dados (EDA)", level=2)
-    add_body(doc,
-        "A análise exploratória foi desenvolvida no notebook notebooks/01_eda_survival.ipynb, "
-        "gerando nove figuras de diagnóstico (Figuras {fig:1} a {fig:9}).")
 
-    add_heading(doc, "5.6.1  Caracterização Geral do Dataset", level=3)
+
+# ── CAPÍTULO 6: ANÁLISE EXPLORATÓRIA (figuras de src/fig_eda_v27.py) ─────────
+
+FIG_EDA = REPORTS / "figuras_v27"
+
+
+def build_capitulo_6(doc):
+    add_heading(doc, "6  ANÁLISE EXPLORATÓRIA DOS DADOS", level=1)
+    add_body(doc,
+        "A análise exploratória descreve a base reconstruída de 28.149 créditos de 4.024 "
+        "clientes, desembolsados entre janeiro de 2020 e maio de 2026. O objetivo é entender "
+        "quando os créditos terminam, onde o risco se concentra, que comportamento antecede o "
+        "default e como o calendário e a conjuntura afetam os pagamentos, para então definir "
+        "a estratégia de modelagem.")
+
+    add_heading(doc, "6.1  Quando os Créditos Terminam", level=2)
+    add_body(doc,
+        "A Figura {fig:cif} mostra a incidência acumulada de cada desfecho, estimada pelo "
+        "método de Aalen-Johansen, que leva em conta os riscos competitivos. A cura é rápida: "
+        "30% dos créditos estão quitados até o dia 20, 78% até o dia 30 e 95,5% até o dia 60, "
+        "o que corresponde aos prazos de 20 a 50 dias. O default, por definição, só aparece "
+        "a partir do dia 120 e cresce até cerca de 0,8% em um ano. O tempo mediano até a cura "
+        "é de 24 dias; até o default, de 148 dias. Como o default é marcado 120 dias depois do "
+        "último pagamento, isso significa que o cliente que se perde costuma parar de pagar "
+        "perto da quarta semana, isto é, ainda dentro do prazo do crédito. Há, portanto, uma "
+        "janela de algumas semanas em que os sinais de risco já existem e ainda é possível agir.")
+    add_figure(doc, FIG_EDA / "fig_cif_desfechos.png",
+               "Incidência acumulada de cura e de default ao longo do tempo", "cif", largura=16)
+
+    add_heading(doc, "6.2  Diferenças entre Escritórios e Regiões", level=2)
+    add_body(doc,
+        "O risco não é igual em toda a carteira (Tabela {tab:escritorios} e Figura "
+        "{fig:escritorio}). O escritório Sociedades Brasil, que reúne as rotas de Santa "
+        "Catarina, Campinas e parte do Rio de Janeiro, tem 1,37% de default, contra 0,50% em "
+        "São Paulo e 0,44% em Cabo Frio. O teste de log-rank para o risco de default, com a "
+        "cura tratada como censura, rejeita a igualdade entre os três escritórios "
+        "(estatística de 16,2 com 2 graus de liberdade; valor-p de 0,0003).")
     add_table_data(doc,
-        ["Métrica", "Valor"],
-        [["Créditos únicos",              "28.386"],
-         ["Intervalos totais (linhas)",   "300.926"],
-         ["Eventos (E=1)",                "273"],
-         ["Taxa de default (nível crédito)", "0,96%"],
-         ["Créditos censurados (E=0)",    "28.113 (99,04%)"],
-         ["Escritórios",                  "3"],
-         ["Rotas",                        "17"],
-         ["Período de observação",        "2020-01-01 a 2026-05-15 (~6,4 anos)"]],
-        "Caracterização geral do dataset de sobrevivência (após auditoria de integridade, "
-        "ver §5.8)", table_num=13)
+        ["Escritório", "Créditos", "Default", "Taxa de default", "Cura", "Censura"],
+        [["São Paulo", "13.793", "69", "0,50%", "13.480", "244"],
+         ["Sociedades Brasil", "7.276", "100", "1,37%", "6.983", "193"],
+         ["Cabo Frio", "7.080", "31", "0,44%", "6.728", "321"],
+         ["Total", "28.149", "200", "0,71%", "27.191", "758"]],
+        "Desfechos por escritório", "escritorios", larguras=[3.6, 2.4, 2.0, 3.0, 2.4, 2.6])
+    add_figure(doc, FIG_EDA / "fig_default_escritorio.png",
+               "Incidência acumulada de default por escritório", "escritorio", largura=15)
     add_body(doc,
-        "O baixo índice de default (0,96%) reflete a gestão de cobrança intensiva via cobrador "
-        "de rota: a maioria dos inadimplentes é transitória e se resolve antes de atingir 120 "
-        "dias de inatividade. A taxa é coerente com referências de microcrédito de pagamento "
-        "diário em economias emergentes (Schreiner, 2002). Este número já incorpora a "
-        "correção descrita em §5.8; a versão original do dataset apresentava 425 eventos "
-        "(1,50%), dos quais 152 eram falsos positivos.")
-
-    add_heading(doc, "5.6.2  Distribuição do Evento de Default", level=3)
-    add_figure(doc, REPORTS / "fig01_distribucion_evento.png",
-               "Distribuição do evento de default: proporção (pie), taxa por escritório e taxa por rota", 1)
+        "Olhando para a região do cliente, identificada pelo código de área (DDD) do "
+        "celular, a diferença é ainda maior (Tabela {tab:regioes}): no Vale do Itajaí e Litoral "
+        "Norte de Santa Catarina, 19,9% dos clientes abandonaram algum crédito, contra 1,1% "
+        "na Região dos Lagos, no Rio de Janeiro. Esse é um primeiro passo para a comparação "
+        "socioeconômica entre regiões e classes sociais; o passo seguinte, em andamento, é "
+        "cruzar a localização dos clientes com a renda por setor censitário do IBGE.")
     add_table_data(doc,
-        ["Escritório", "Créditos", "Eventos", "Taxa de Default"],
-        [["OFI_23 (São Paulo)",      "14.031", "126", "0,90%"],
-         ["OFI_31 (Soc. Brasil)",     "7.333",  "53",  "0,72%"],
-         ["OFI_44 (Cabo Frio)",       "7.022",  "94",  "1,34%"]],
-        "Taxa de default por escritório", table_num=14)
-    add_body(doc,
-        "A versão original do dataset (antes da correção de §5.8) indicava uma taxa quase "
-        "quatro vezes superior em OFI_44 (3,50%), mas 152 dos seus eventos eram créditos "
-        "corretamente pagos e falsamente etiquetados como default pelo bug do cronômetro, "
-        "concentrados nesse escritório. Após a correção, OFI_44 ainda apresenta a maior taxa "
-        "(1,34% contra 0,72% a 0,90%), porém a diferença é bem menor do que a inicialmente observada "
-        "e, como mostra §5.6.4, agora estatisticamente significativa.")
+        ["Região do cliente (DDD)", "Clientes", "Clientes que abandonaram algum crédito"],
+        [["Vale do Itajaí / Litoral Norte (SC)", "307", "19,9%"],
+         ["Baixada Santista (SP)", "212", "7,1%"],
+         ["Rio de Janeiro, região metropolitana", "672", "4,0%"],
+         ["Grande São Paulo", "973", "3,3%"],
+         ["Vale do Paraíba (SP)", "343", "2,6%"],
+         ["Campinas (SP)", "121", "2,5%"],
+         ["Serrana / Sul Fluminense (RJ)", "167", "1,8%"],
+         ["Região dos Lagos / Norte Fluminense (RJ)", "543", "1,1%"]],
+        "Abandono por região do cliente (regiões com pelo menos 100 clientes)", "regioes",
+        fonte="Elaborada pelo autor (2026). Não inclui 618 clientes sem DDD válido.",
+        larguras=[8.0, 2.5, 5.5])
 
-    add_heading(doc, "5.6.3  Curva de Kaplan-Meier Global", level=3)
-    add_figure(doc, REPORTS / "fig02_kaplan_meier_global.png",
-               "Curva de Kaplan-Meier global do portfólio com tabela de n em risco", 2)
+    add_heading(doc, "6.3  Comportamento nas Primeiras Semanas", level=2)
+    add_body(doc,
+        "A Figura {fig:dia14} mostra, para os 25.223 créditos ainda abertos no dia 14, a taxa "
+        "de default final segundo o comportamento observado até aquele dia. Entre os clientes "
+        "que pagaram em no máximo um dia da semana anterior, 7,51% terminaram em default, "
+        "contra 0,07% entre os que pagaram em seis ou sete dias. Quem pagou até metade da "
+        "parcela chegou a 3,10%; quem acumulava mais de 50% de atraso, a 15,70%; e quem ainda "
+        "devia mais de 85% do total, a 7,87%. Para comparação, a taxa média nesse grupo é de "
+        "0,79%. Os sinais de risco, portanto, aparecem cedo e são fortes.")
+    add_figure(doc, FIG_EDA / "fig_comportamento_dia14.png",
+               "Taxa de default segundo o comportamento de pagamento até o dia 14", "dia14", largura=16)
+
+    add_heading(doc, "6.4  Histórico do Cliente", level=2)
+    add_body(doc,
+        "O comportamento nos créditos anteriores também informa sobre o risco, como havia "
+        "apontado a equipe da operação (Figura {fig:historico}). No primeiro crédito do "
+        "cliente, a taxa de default é de 1,44%, contra 0,59% para quem já tem histórico. Entre "
+        "quem já teve créditos, o risco é maior quando, no crédito anterior, o cliente pagou "
+        "em até 70% dos dias esperados (1,22%), usou mais de 1,2 vez o prazo pactuado (1,00%) "
+        "ou fechou o crédito com um pagamento final de mais de nove parcelas, típico de quem "
+        "junta o saldo de uma vez apenas para conseguir renovar (0,86%, contra 0,23% quando o "
+        "último pagamento foi de até uma parcela e meia).")
+    add_figure(doc, FIG_EDA / "fig_historico_cliente.png",
+               "Taxa de default segundo o histórico do cliente no crédito anterior", "historico", largura=16)
+
+    add_heading(doc, "6.5  Calendário de Cobrança e Contexto Social", level=2)
+    add_body(doc,
+        "A cobrança depende do calendário (Figura {fig:cobranca}). Aos domingos praticamente "
+        "não há pagamentos, nos feriados nacionais e estaduais o volume cai para 22% de um dia "
+        "útil e no Carnaval para 54%. Um dia sem pagamento nessas datas não é atraso, e por "
+        "isso o atraso é medido em dias de cobrança, com o calendário de cada estado. Nos "
+        "dias de jogos da seleção brasileira na Copa do Mundo de 2022, a queda foi menor, "
+        "entre 15% e 20%, e esses dias foram mantidos como dias de cobrança.")
+    add_figure(doc, FIG_EDA / "fig_cobranca_tipo_dia.png",
+               "Pagamentos por tipo de dia em relação a um dia útil", "cobranca", largura=15)
+    add_body(doc,
+        "A conjuntura também pesa. No início da pandemia de covid-19, os pagamentos da "
+        "carteira caíram de 554 em março de 2020 para 83 em abril e 50 em maio, e só voltaram "
+        "ao patamar anterior no fim daquele ano (Figura {fig:pandemia}). Depois disso, a "
+        "carteira cresceu até cerca de 14 mil pagamentos por mês em 2026. Choques como esse "
+        "motivam a inclusão de variáveis macroeconômicas e sociais na próxima etapa.")
+    add_figure(doc, FIG_EDA / "fig_pagamentos_mensais.png",
+               "Pagamentos por mês em 2020 e 2021, com o período da pandemia destacado", "pandemia",
+               largura=15)
+
+    add_heading(doc, "6.6  Síntese e Implicações para a Modelagem", level=2)
+    add_body(doc,
+        "Os resultados da análise exploratória orientam diretamente as escolhas de "
+        "modelagem do Capítulo 7. Primeiro, o default é raro e tardio, enquanto a cura domina "
+        "e acontece cedo; por isso o problema é tratado com riscos competitivos, pelo modelo "
+        "de Fine e Gray (1999), e avaliado com métricas de ordenação, que medem se os poucos "
+        "defaults ficam entre os clientes de maior risco, em vez da acurácia, que seria alta "
+        "mesmo para um modelo que nunca previsse default. Segundo, os sinais de risco "
+        "aparecem nas primeiras semanas; daí a ideia de dar o alerta em datas fixas da vida "
+        "do crédito, nos dias 14 e 21, com variáveis atualizadas a cada semana. Terceiro, o "
+        "histórico do cliente já informa sobre o risco antes do desembolso, o que justifica "
+        "as variáveis de histórico. Quarto, as diferenças entre escritórios e regiões indicam "
+        "que a localização precisa entrar no modelo.")
+    add_body_italico(doc,
+        "Por fim, várias relações observadas não são lineares: a taxa de default pouco muda "
+        "entre faixas intermediárias e salta nos extremos, como no atraso acima de 50%, e o "
+        "efeito de uma variável pode depender de outra. Um modelo linear como o de Cox ou o "
+        "de Fine e Gray capta essas relações só em parte. Esse é o ponto de partida da fase de "
+        "aprendizado de máquina e *Deep Learning*: o *Random Survival Forest* e o DeepHit "
+        "aprendem não linearidades e interações diretamente dos dados, sem que seja preciso "
+        "especificá-las à mão, e serão comparados ao modelo de Fine e Gray com as mesmas "
+        "métricas e a mesma validação.")
+
+def build_capitulo_7(doc):
+    """Resultados do Sprint 4 (src/cox_v2.py, reports/modelagem_v2/)."""
+    add_heading(doc, "7  MODELAGEM E RESULTADOS", level=1)
+
+    add_heading(doc, "7.1  Estratégia de Modelagem", level=2)
+    add_body_italico(doc,
+        "A pergunta prática é: com o que se sabe hoje sobre um crédito em andamento, ele vai "
+        "terminar em default? Para respondê-la, adotou-se a abordagem de *landmark* "
+        "(marco temporal): em datas fixas da vida do crédito, os dias 14 e 21, tira-se uma "
+        "fotografia das variáveis de todos os créditos ainda abertos e estima-se, a partir "
+        "dela, o risco de o crédito terminar em default. As datas foram escolhidas porque a "
+        "maior parte dos créditos ainda está aberta nesses dias e porque o cliente que se "
+        "perde costuma parar de pagar perto da quarta semana (Seção 6.1).")
+    add_body(doc,
+        "O modelo principal é o de Fine e Gray (1999), que estima diretamente a incidência "
+        "acumulada de default levando em conta que a cura impede o default. Como a censura é "
+        "pequena (2,69% dos créditos), ele foi ajustado nesta etapa de forma simplificada, "
+        "mantendo os créditos curados no conjunto de risco até o fim do seguimento; a versão "
+        "com pesos para a censura será ajustada no próximo Sprint. Como modelo de comparação "
+        "usou-se a regressão logística, um modelo linear generalizado que estima a "
+        "probabilidade de o crédito terminar em default a partir da mesma fotografia.")
+    add_body(doc,
+        "Também foi ajustado o modelo de Cox com covariáveis que mudam a cada bloco, na "
+        "versão de riscos específicos por causa (Kalbfleisch e Prentice, 2002). Ele revelou "
+        "uma armadilha importante: como o default é definido por 120 dias sem pagamento, no "
+        "último bloco antes do evento o cliente já está entre 113 e 119 dias sem pagar, e a "
+        "variável de dias sem pagamento praticamente anuncia o evento. Com ela, o índice de "
+        "concordância chega a 0,98, mas o modelo apenas confirma o que a operação já vê. Sem "
+        "ela, o índice cai para 0,90, e ainda assim o modelo ordena mal os créditos nas "
+        "primeiras semanas, porque, no dia 120, compara quem abandonou o crédito com os poucos "
+        "créditos lentos que ainda estão abertos, já que os bons pagadores saíram pela cura. "
+        "Por isso ele ficou como referência, e não como modelo principal.")
+
+    add_heading(doc, "7.2  Validação e Métricas", level=2)
+    add_body(doc,
+        "Os modelos foram avaliados por validação cruzada agrupada por cliente: os clientes "
+        "foram divididos em cinco partes, e cada parte serviu uma vez de conjunto de teste "
+        "enquanto as outras quatro treinavam o modelo; o processo foi repetido três vezes com "
+        "sorteios diferentes. Assim, nenhum cliente aparece ao mesmo tempo no treino e no "
+        "teste, o que evitaria um resultado otimista para quem tem vários créditos. A "
+        "padronização das variáveis e o preenchimento de valores ausentes usaram apenas os "
+        "dados de treino de cada partição.")
+    add_body(doc,
+        "Como o default é raro, a acurácia não serve: um modelo que nunca previsse default "
+        "acertaria 99,3% das vezes. Foram usadas duas métricas de ordenação. A AUC é a "
+        "probabilidade de um crédito que terminou em default receber risco maior que um "
+        "crédito que não terminou; vale 0,5 para um sorteio e 1 para uma ordenação perfeita. "
+        "A captura no top 10% é a porcentagem dos defaults que ficam entre os 10% de créditos "
+        "com maior risco previsto; ela traduz o uso prático do modelo, que é dizer à operação "
+        "quais clientes acompanhar primeiro. Para o modelo de Cox foi usado o índice de "
+        "concordância de Harrell.")
+
+    add_heading(doc, "7.3  Resultados", level=2)
+    add_body(doc,
+        "A Tabela {tab:resultados} resume o desempenho com blocos de 7 dias. No dia 21, o "
+        "modelo de Fine e Gray alcança AUC de 0,93 e coloca 81% dos futuros defaults entre os "
+        "10% de créditos de maior risco. Em termos práticos, uma lista semanal com um em cada "
+        "dez clientes concentraria oito em cada dez dos que vão abandonar o crédito, cerca de "
+        "quatro meses antes de o default ser confirmado pela regra dos 120 dias. No dia 14 a "
+        "alerta é um pouco menos precisa (AUC de 0,90 e captura de 73%), mas chega uma semana "
+        "antes. A regressão logística teve desempenho praticamente igual, o que é esperado "
+        "quando há pouca censura.")
     add_table_data(doc,
-        ["Tempo (dias)", "S(t)", "Risco Acumulado"],
-        [["120", "1,0000", "0,00%"],
-         ["180", "0,5919", "40,81%"],
-         ["270", "0,5575", "44,25%"],
-         ["365", "0,5256", "47,44%"],
-         ["540", "0,3824", "61,76%"]],
-        "Valores da curva de Kaplan-Meier global (evento binário)", table_num=15)
+        ["Modelo", "AUC dia 14", "Top 10% dia 14", "AUC dia 21", "Top 10% dia 21"],
+        [["Fine e Gray (crédito atual e histórico)", "0,896 (0,022)", "72,8%", "0,930 (0,012)", "81,2%"],
+         ["Regressão logística (mesmas variáveis)", "0,899 (0,020)", "72,7%", "0,928 (0,012)", "80,5%"],
+         ["Regressão logística, só histórico e contrato", "0,759 (0,038)", "35,7%", "0,753 (0,040)", "34,5%"],
+         ["Cox tempo-variante, sem dias sem pagar", "0,704", "47,8%", "0,806", "58,1%"]],
+        "Desempenho dos modelos na validação cruzada por cliente (blocos de 7 dias)", "resultados",
+        fonte="Elaborada pelo autor (2026). Média de 15 partições; desvio-padrão da AUC entre parênteses.",
+        larguras=[6.0, 2.6, 2.2, 2.6, 2.2])
     add_body(doc,
-        "S(t) = 1,0 até o dia 120 é consequência direta da definição do evento (dias_sem_pagar "
-        "maior ou igual a 120 é impossível antes de 120 dias de seguimento). A queda acentuada de S(t) após o "
-        "dia 180 (S(540)=0,38) não deve ser lida como \"risco de default de 62%\": é um "
-        "artefato de tratar Cura (pagamento total, ~94,7% da carteira) como censura simples: "
-        "à medida que os créditos saudáveis saem do conjunto em risco por terem pago tudo, o "
-        "subconjunto remanescente concentra-se nos casos mais difíceis, distorcendo S(t) para "
-        "baixo. Essa é exatamente a limitação que motiva o tratamento de Riscos Competitivos "
-        "introduzido em §5.9: a Função de Incidência Acumulada (Figura {fig:10}) mostra que o risco "
-        "real de default se estabiliza perto de 1,1%, não de 62%.")
-
-    add_heading(doc, "5.6.4  Análise Estratificada por Escritório (Teste de Log-Rank)", level=3)
-    add_figure(doc, REPORTS / "fig03_kaplan_meier_oficinas.png",
-               "Curvas de Kaplan-Meier por escritório com teste de log-rank (OFI_23 vs. OFI_44)", 3)
+        "O modelo que usa apenas o histórico do cliente e os dados do contrato, informação "
+        "disponível praticamente no dia do desembolso, ainda captura 36% dos defaults no top "
+        "10%, mais de três vezes o que se esperaria de uma escolha ao acaso. Isso indica que o "
+        "histórico já pode apoiar a decisão de conceder ou não um novo crédito, enquanto o "
+        "comportamento das primeiras semanas permite um alerta bem mais preciso.")
+    add_body(doc,
+        "A comparação entre os tamanhos de bloco (Tabela {tab:blocos}) confirma a escolha de "
+        "7 dias. No dia 14, o bloco de 7 dias captura 73% dos defaults no top 10%, contra 61% "
+        "com blocos de 10 dias, porque usa informação mais recente: com blocos de 10 dias, a "
+        "fotografia do dia 14 ainda é a do dia 10. No dia 21 a diferença diminui.")
     add_table_data(doc,
-        ["Estatístico", "Valor"],
-        [["χ² (log-rank)", "8,2672"], ["p-valor", "0,0040"]],
-        "Resultado do teste de log-rank (OFI_23 vs. OFI_44)", table_num=16)
-    add_body(doc,
-        "p = 0,0040 rejeita H₀ de igualdade de curvas ao nível de 5%, indicando diferença real e "
-        "estatisticamente significativa entre os escritórios. Antes da correção descrita em "
-        "§5.8, esse mesmo teste resultava em p = 0,775 (não significativo): os 152 falsos "
-        "positivos concentrados em OFI_44 introduziam ruído suficiente para mascarar a "
-        "diferença real de risco entre escritórios. Este é o efeito mais direto da auditoria "
-        "de integridade sobre a validade estatística do trabalho: o teste passou de \"sem "
-        "poder estatístico\" a \"diferença detectada com confiança\", sem qualquer mudança na "
-        "definição do umbral de 120 dias.")
+        ["Bloco", "AUC dia 14", "Top 10% dia 14", "AUC dia 21", "Top 10% dia 21"],
+        [["7 dias", "0,896", "72,8%", "0,930", "81,2%"],
+         ["10 dias", "0,867", "61,3%", "0,926", "78,3%"]],
+        "Modelo de Fine e Gray com blocos de 7 e de 10 dias", "blocos",
+        larguras=[3.2, 3.2, 3.2, 3.2, 3.2])
 
-    add_heading(doc, "5.6.5  Tempo de Seguimento e Granularidade Longitudinal", level=3)
-    add_figure(doc, REPORTS / "fig04_tiempo_seguimiento.png",
-               "Distribuição do tempo de seguimento (t_stop) e número de intervalos por crédito", 4)
+    add_heading(doc, "7.4  Interpretação das Variáveis", level=2)
+    add_body_italico(doc,
+        "A Tabela {tab:shr} mostra as razões de risco do modelo de Fine e Gray no dia 21, "
+        "para as variáveis com efeito estatisticamente significativo. Como as variáveis foram "
+        "padronizadas, cada razão indica quanto o risco de default se multiplica quando a "
+        "variável aumenta um desvio-padrão, mantidas as demais. Um atraso relativo maior "
+        "eleva o risco em 38%, e um saldo maior a pagar, em 28%; mais dias com pagamento na "
+        "semana anterior reduzem o risco em 36%, e um pagamento maior em relação à parcela, "
+        "em 28%. Mesmo com essas variáveis, os créditos do escritório Sociedades Brasil "
+        "continuam com risco 28% maior, e o primeiro crédito do cliente, 11% maior.")
     add_table_data(doc,
-        ["Estatístico", "t_stop (dias)", "n_intervalos"],
-        [["Mediana", "29 dias", "3"],
-         ["Média",   "34,1 dias", "10,6"],
-         ["Máximo",  "815 dias", "233"]],
-        "Estatísticas do tempo de seguimento e intervalos por crédito", table_num=17)
+        ["Variável", "Razão de risco", "Intervalo de 95%", "Valor-p"],
+        [["Atraso relativo", "1,38", "1,24 a 1,54", "menor que 0,001"],
+         ["Saldo relativo", "1,28", "1,13 a 1,44", "menor que 0,001"],
+         ["Dias com pagamento no bloco anterior", "0,64", "0,57 a 0,72", "menor que 0,001"],
+         ["Pagamento relativo no bloco anterior", "0,72", "0,64 a 0,82", "menor que 0,001"],
+         ["Escritório Sociedades Brasil", "1,28", "1,16 a 1,42", "menor que 0,001"],
+         ["Primeiro crédito do cliente", "1,11", "1,01 a 1,22", "0,038"]],
+        "Razões de risco do modelo de Fine e Gray no dia 21, por desvio-padrão da variável",
+        "shr", larguras=[6.4, 2.8, 3.6, 3.2])
     add_body(doc,
-        "A mediana de 29 dias reflete créditos curtos (20 a 30 dias). A cauda direita pronunciada "
-        "(máx 815 dias, 233 snapshots) corresponde a clientes com múltiplas renovações, uma estrutura bimodal típica do microcrédito diário que justifica a análise de sobrevivência.")
+        "As demais variáveis de histórico perdem significância quando o comportamento atual "
+        "entra no modelo. A leitura é que, no dia 21, o modo como o cliente está pagando o "
+        "crédito atual já resume boa parte do que o histórico dizia; o histórico pesa mais "
+        "antes de haver pagamentos, como mostrou o modelo que usa só essa informação.")
 
-    add_heading(doc, "5.6.6  Cronômetro dias_sem_pagar", level=3)
-    add_figure(doc, REPORTS / "fig05_dias_sin_pagar.png",
-               "Distribuição de dias_sem_pagar: global, zoom de 0 a 150 dias e máximo por crédito", 5)
-    add_table_data(doc,
-        ["Estatístico", "Valor"],
-        [["Mediana", "0 dias"], ["Percentil 95", "0 dias"],
-         ["Percentil 99", "21 dias"], ["Máximo", "400 dias"]],
-        "Estatísticas do cronômetro dias_sem_pagar", table_num=18)
-    add_body(doc,
-        "Em mais de 95% dos intervalos, dias_sem_pagar = 0: o cliente realizou pelo menos um "
-        "abono no bloco de 10 dias. Valores altos (>21 dias) correspondem quase exclusivamente "
-        "a créditos que eventualmente defaultam. Correlação de Pearson com evento: r = 0,478, "
-        "a mais alta do conjunto de covariáveis, porém mais baixa que a estimativa anterior "
-        "(r=0,680), já que a correção de §5.8 removeu créditos saudáveis que artificialmente "
-        "inflavam essa correlação com valores altos de dias_sem_pagar sem corresponder a "
-        "default real.")
-
-    add_heading(doc, "5.6.7  Análise de Covariáveis: Default vs. Censurado", level=3)
-    add_figure(doc, REPORTS / "fig06_covariables_evento.png",
-               "Distribuição das covariáveis por grupo: Default (E=1) versus Censurado (E=0)", 6)
-    add_table_data(doc,
-        ["Covariável", "r com evento", "Direção"],
-        [["dias_sem_pagar",          "+0,4779", "Cronômetro direto do evento"],
-         ["saldo_relativo",          "−0,0277", "Maior saldo, menor default"],
-         ["dias_con_abono",          "−0,0174", "Mais dias com abono, menor risco"],
-         ["ratio_atraso",            "−0,0131", "Contra-intuitivo por composição"],
-         ["pago_promedio_diario",    "−0,0122", "Mais pagamentos, menor risco"],
-         ["dias_desde_ultimo_abono_no_bloco", "+0,0190", "Sinal fraco, mesma direção de dias_sem_pagar"],
-         ["variabilidade_pago_diario", "−0,0092", "Sinal fraco, mesma direção de pago_promedio_diario"],
-         ["intensidade_recuperacao", "−0,0058", "Efeito fraco e agora protetor (ver §5.8)"]],
-        "Correlações das covariáveis com o evento (recalculadas após auditoria, §5.8)", table_num=19)
-    add_body(doc,
-        "As correlações lineares baixas das covariáveis de mora e pagamento com o evento não "
-        "implicam ausência de efeito preditivo, refletem a natureza não linear e dinâmica "
-        "das relações no contexto do Counting Process, que o modelo de Cox quantificará "
-        "corretamente via hazard ratios (ver resultados reais em §6.1).")
-
-    add_heading(doc, "5.6.8  Perfil Econômico do Portfólio", level=3)
-    add_figure(doc, REPORTS / "fig07_perfil_credito.png",
-               "Perfil econômico: distribuição do prazo, montante e boxplot por evento", 7)
-    add_table_data(doc,
-        ["Estatístico", "Valor"],
-        [["Mediana", "R$ 1.200"], ["Média", "R$ 1.491"],
-         ["Percentil 10", "R$ 540"], ["Percentil 90", "R$ 3.000"]],
-        "Montante do crédito por grupo de evento", table_num=20)
-    add_body(doc,
-        "Créditos de baixo montante (mediana R$ 1.200), com prazo concentrado em 20 dias "
-        "(62,7%), 24 dias (29,3%) e 30 dias (5,2%). A grande maioria (92,0%) tem prazo de "
-        "20 ou 24 dias, que são produtos pré-definidos pela instituição, não negociados individualmente.")
-
-    add_heading(doc, "5.6.9  Estrutura de Correlações", level=3)
-    add_figure(doc, REPORTS / "fig08_correlaciones.png",
-               "Mapa de calor de correlações das covariáveis (triângulo inferior)", 8)
-    add_body(doc,
-        "Correlação entre ratio_atraso e cuotas_atrasadas: r = +0,977, uma redundância severa. "
-        "A covariável variabilidade_pago_diario apresenta correlação de r = +0,854 com "
-        "pago_promedio_diario, o que é esperado, já que blocos com pagamento médio mais alto tendem "
-        "a ter maior dispersão absoluta entre os dias. Decisão adotada na modelagem (§6.1): "
-        "remover cuotas_atrasadas (mantendo ratio_atraso, mais informativo por ser "
-        "normalizado pelo prazo) e remover variabilidade_pago_diario (mantendo "
-        "pago_promedio_diario, de interpretação mais direta). Já dias_desde_ultimo_abono_no_bloco "
-        "apresenta correlação moderada e negativa (r = −0,558) com pago_promedio_diario, sem "
-        "redundância grave que justifique removê-la. Fora esses dois pares, não há "
-        "correlações problemáticas (> 0,7) no restante do conjunto.")
-
-    add_heading(doc, "5.6.10  Análise de Trajetórias Individuais", level=3)
-    add_figure(doc, REPORTS / "fig09_trayectorias.png",
-               "Trajetórias individuais: 5 créditos em default versus 5 censurados", 9)
-    add_body(doc,
-        "Créditos em default: dias_sem_pagar cresce monotonicamente nos últimos blocos, "
-        "cruzando 120 dias exatamente no intervalo marcado como evento. Créditos censurados: "
-        "cronômetro permanece em zero com reinicializações frequentes; o forward-fill captura "
-        "corretamente a mora transitória vs. abandono real.")
-
-    add_heading(doc, "5.7  Síntese e Validação do Dataset", level=2)
-    add_table_data(doc,
-        ["Validação", "Resultado"],
-        [["t_stop > t_start em todos os intervalos",   "Verificado"],
-         ["Cadeia perfeita t_start[k] = t_stop[k−1]", "Verificado (via shift)"],
-         ["Evento E=1 apenas no último intervalo",      "Regra de censura aplicada"],
-         ["Sem valores nulos em colunas-chave",         "Verificado"],
-         ["Número de eventos > 100",                    "Sim, 273 eventos"],
-         ["Covariáveis em faixa esperada",              "Clip aplicado a todas as razões"]],
-        "Validação do formato Counting Process", table_num=21)
-    add_body(doc,
-        "O dataset fica preparado para a etapa seguinte: ajuste do Modelo de Cox de Riscos "
-        "Proporcionais com covariáveis tempo-variantes (lifelines.CoxTimeVaryingFitter).")
-
-    # ── 5.8 Auditoria de integridade do target ──────────────────────────────
-    add_heading(doc, "5.8  Auditoria de Integridade do Target: Viés de Contabilização "
-                      "Pós-Pagamento", level=2)
-    add_body(doc,
-        "A avaliação externa do orientador sobre a alta proporção de censura (98,50%) "
-        "motivou uma auditoria da variável evento que revelou um problema mais grave do que "
-        "a simples escassez de eventos: parte dos 425 eventos originalmente identificados "
-        "eram falsos positivos, gerados por uma falha no cronômetro dias_sem_pagar, não por "
-        "inadimplência real.")
-    add_labeled(doc, "Mecanismo do viés:",
-        "dias_sem_pagar é calculado por forward-fill a partir da data do último abono. Um "
-        "cliente que quita integralmente o crédito não registra mais abonos, não por evasão, "
-        "mas porque não deve mais nada. Como o sistema continua reportando esse crédito a "
-        "cada bloco de 10 dias, o cronômetro seguia contando indefinidamente, eventualmente "
-        "cruzando o umbral de 120 dias e marcando evento=1 em créditos já saudáveis, meses "
-        "depois de quitados.")
-    add_labeled(doc, "Evidência empírica:",
-        "reconstruindo o histórico real de abonos dos 425 créditos com evento=1, "
-        "identificaram-se 4 grupos: (a) 250 créditos sem nenhum abono real, default "
-        "genuíno; (b) 164 créditos cuja soma de abonos reais atinge ~100% do total "
-        "(\"Grupo B1\"); (c) 10 créditos com pagamento parcial seguido de silêncio, default "
-        "genuíno; (d) 1 caso de sobrepagamento. Dentro do Grupo B1, uma análise temporal "
-        "distinguiu 140 créditos com padrão de pagamento orgânico e frequente (sem "
-        "interrupção relevante) dos ~24 restantes, cujo fechamento seguia um padrão distinto: "
-        "um vazio de silêncio superior a 90 dias seguido de um único abono tardio que cobre "
-        "grande parte do saldo. Este último padrão coincide com um processo administrativo "
-        "da instituição parceira: créditos em default são periodicamente encerrados via um "
-        "lançamento contábil que credita o saldo devedor remanescente por completo, "
-        "permitindo o fechamento do crédito no sistema, um registro contábil de baixa de "
-        "carteira, não um pagamento real do cliente. Consistente com essa origem "
-        "administrativa, os 24 casos concentram-se em apenas três datas de calendário "
-        "(2025-02-17, 2025-09-28 e 2025-11-16), cada uma compartilhada por créditos "
-        "distintos e sem relação aparente entre si, o que é assinatura típica de um processamento "
-        "em lote, e não de decisões de pagamento individuais.")
-    add_labeled(doc, "Correção aplicada:",
-        "em feature_engineering.py, quando o pagamento acumulado real de um crédito atinge "
-        "98% do TOTAL_CRÉDITO, sua trajetória é truncada como censura (crédito quitado), não "
-        "como evento de default, independentemente de quaisquer lançamentos contábeis "
-        "posteriores. Os 24 casos de fechamento administrativo permanecem corretamente "
-        "classificados como default, pois seu cronômetro já havia cruzado 120 dias de "
-        "silêncio real antes do lançamento contábil tardio ser processado; a correção não interfere nesses casos.")
-    add_table_data(doc,
-        ["Grupo", "Créditos", "Classificação final"],
-        [["Sem nenhum abono real",                       "250", "Default genuíno"],
-         ["Pagamento parcial + silêncio",                 "10", "Default genuíno"],
-         ["Fechamento administrativo (padrão de lote)",   "~24", "Default genuíno (já correto)"],
-         ["Pagamento orgânico completo (falso positivo)", "140", "Corrigido para cura ou censura"],
-         ["Sobrepagamento",                                 "1", "Irrelevante"]],
-        "Auditoria de integridade do target: decomposição dos 425 eventos originais",
-        table_num=22)
-    add_body(doc,
-        "O efeito da correção é substancial e mensurável: o número de eventos cai de 425 "
-        "(1,50%) para 273 (0,96%), e o teste de log-rank entre OFI_23 e OFI_44 (§5.6.4) passa "
-        "de não significativo (p=0,775) para altamente significativo (p=0,0040), evidência "
-        "direta de que a limpeza dos falsos positivos recuperou poder estatístico real, sem "
-        "qualquer alteração na definição do umbral de 120 dias.")
-
-    # ── 5.9 Riscos Competitivos ──────────────────────────────────────────────
-    add_heading(doc, "5.9  Riscos Competitivos: Separando Default de Cura", level=2)
-    add_body(doc,
-        "A auditoria de §5.8 corrigiu um erro de rotulagem, mas não resolve a limitação "
-        "estrutural apontada pelo orientador: mesmo após a correção, 98,04% dos créditos "
-        "permanecem fora do evento de default, porque a definição binária de evento trata "
-        "\"cliente pagou tudo\" (Cura) e \"ainda não se sabe o desfecho\" (censura "
-        "verdadeira) da mesma forma. Isso é estatisticamente inadequado quando existem dois "
-        "desfechos terminais que competem entre si (Kalbfleisch e Prentice, 2002): um "
-        "crédito que já foi quitado não pode, por definição, entrar em default no futuro.")
-    add_body(doc,
-        "Adota-se, portanto, um esquema de Riscos Competitivos com três desfechos "
-        "mutuamente exclusivos, formalizados na variável evento_tipo:")
-    add_formula(doc,
-        "evento_tipo = 0 (censura verdadeira) | 1 (default) | 2 (cura/pagamento total)")
-    add_body(doc,
-        "O critério de Cura reaproveita exatamente a regra de fechamento por pagamento total "
-        "introduzida em §5.8 (pagamento acumulado de pelo menos 98% do total do crédito), agora "
-        "formalizado como um desfecho explícito em vez de apenas uma regra de censura.")
-    add_table_data(doc,
-        ["Desfecho", "Créditos", "Proporção"],
-        [["Default (evento_tipo=1)",          "273",    "0,96%"],
-         ["Cura / pagamento total (evento_tipo=2)", "26.894", "94,74%"],
-         ["Censura verdadeira (evento_tipo=0)", "1.219",  "4,30%"]],
-        "Desfechos sob o esquema de Riscos Competitivos", table_num=23)
-    add_body(doc,
-        "A Figura {fig:10} apresenta a Função de Incidência Acumulada (CIF, estimador de "
-        "Aalen-Johansen) para os dois desfechos, que substitui a curva de Kaplan-Meier da "
-        "Figura {fig:2} como retrato correto do risco competitivo: a probabilidade acumulada de "
-        "Cura sobe rapidamente e se estabiliza próxima de 98,7% por volta do dia 300, "
-        "enquanto a de Default cresce lentamente e se estabiliza perto de 1,1% logo após o "
-        "umbral de 120 dias, confirmando que o risco real de default do portfólio é baixo e "
-        "estável, ao contrário do que sugeria a curva de Kaplan-Meier binária de §5.6.3.")
-    add_figure(doc, REPORTS / "fig10_cif_riscos_competitivos.png",
-               "Função de Incidência Acumulada de Default (evento_tipo=1) e de Cura "
-               "(evento_tipo=2), estimador de Aalen-Johansen", 10)
-    add_body(doc,
-        "A modelagem correspondente, dois modelos de Cox cause-specific, um por desfecho, "
-        "é apresentada em §6.1, junto com os resultados reais já obtidos nesse baseline.")
-
-
-# ── SEÇÃO 5 ──────────────────────────────────────────────────────────────────
-
-def build_secao_5(doc):
-    add_heading(doc, "6  MODELAGEM MATEMÁTICA E COMPUTACIONAL (O DESAFIO DA CENSURA)", level=1)
-    add_heading(doc, "6.1  Baseline Clássico: Cox Cause-Specific para Riscos Competitivos", level=2)
-    add_body(doc,
-        "Em vez de um único Modelo de Cox de evento binário, ajustam-se dois modelos de Cox "
-        "de Riscos Proporcionais tempo-variantes independentes, um por desfecho de §5.9 "
-        "(cause-specific hazards, Kalbfleisch e Prentice, 2002): o Modelo Default trata Cura "
-        "como censura, e o Modelo Cura trata Default como censura. Essa é a alternativa "
-        "clássica ao modelo de subdistribution hazard de Fine e Gray (1999), mais simples de "
-        "ajustar com as ferramentas já disponíveis (lifelines.CoxTimeVaryingFitter) e "
-        "igualmente válida para descrever como cada covariável afeta o risco de cada "
-        "desfecho especificamente. As covariáveis cuotas_atrasadas e variabilidade_pago_diario "
-        "foram excluídas por multicolinearidade (§5.6.9).")
-    add_table_data(doc,
-        ["Modelo", "Eventos", "EPV", "C-index"],
-        [["Default",  "272",    "27,2",   "0,8017"],
-         ["Cura",      "26.894", "2.689,4", "0,7612"]],
-        "Resultados do baseline Cox cause-specific (dados reais, sem tuning)", table_num=24)
-    add_body(doc,
-        "Resultado obtido no Modelo Default (C-index=0,80): preditores significativos "
-        "(p<0,05) foram dias_sem_pagar (coeficiente positivo, esperado por construção do "
-        "evento), intensidade_recuperacao (coeficiente negativo, mais recuperação recente "
-        "protege contra default) e dias_desde_ultimo_abono_no_bloco (coeficiente positivo, "
-        "maior recência de silêncio dentro do bloco aumenta o risco). As demais covariáveis "
-        "não atingiram significância individual, plausível dado o número modesto de eventos "
-        "(272) e a forte relação estrutural entre dias_sem_pagar e a definição do evento.")
-    add_body(doc,
-        "Resultado obtido no Modelo Cura (C-index=0,76): dado o grande número de eventos "
-        "(26.894), todas as covariáveis atingiram significância estatística, com direções "
-        "coerentes: pago_promedio_diario e dias_con_abono aumentam o hazard de cura (mais "
-        "pagamento e mais frequência aceleram a quitação); cuotas_pactadas e total_credito o "
-        "diminuem (créditos mais longos ou de maior valor levam mais tempo para serem "
-        "quitados integralmente, como esperado).")
-
-    add_heading(doc, "6.2  O Desafio da Censura à Direita em Arquiteturas Neurais", level=2)
-    add_body(doc,
-        "Arquiteturas de Deep Learning tradicionais falham ao ignorar a informação contida "
-        "nos registros censurados à direita. Descartar essas observações introduz viés severo "
-        "e subestima o tempo real de sobrevivência.")
-    add_heading(doc, "6.3  Abordagem Estado da Arte (Deep Learning sob Riscos Competitivos)", level=2)
-    add_body(doc,
-        "A extensão natural do baseline cause-specific para Deep Learning não é o DeepSurv "
-        "de evento único, mas uma arquitetura pensada especificamente para riscos "
-        "competitivos, como o DeepHit (Lee et al., 2018), que estima diretamente a "
-        "distribuição conjunta dos tempos de primeiro evento e do desfecho (Default vs. "
-        "Cura) via uma rede neural com função de perda combinando verossimilhança e um termo "
-        "de ranking baseado em concordância. [IMPLEMENTAÇÃO PENDENTE, Sprint 5]")
-
-    add_heading(doc, "6.4  Desbalanceamento de Classes e Direções Adicionais", level=2)
-    add_body(doc,
-        "A taxa de evento de Default, após a correção de §5.8, é de 0,96% (273 eventos em "
-        "28.386 créditos), mais baixa que a estimativa original de 1,50%, porém sobre uma "
-        "base de dados agora livre dos falsos positivos que a inflavam artificialmente. Isso "
-        "ainda exige tratamento estatístico explícito no treinamento de arquiteturas neurais: "
-        "duas alternativas serão avaliadas no Sprint 5: amostragem estratificada por lote, "
-        "garantindo uma proporção mínima de eventos positivos em cada lote de treinamento, e "
-        "ponderação da função de perda, atribuindo peso maior aos exemplos de default. A "
-        "escolha entre as duas será decidida empiricamente, comparando o C-index de Harrell "
-        "obtido com e sem cada correção.")
-    add_body(doc,
-        "O período observado (2020 a 2026) inclui choques sistêmicos (pandemia, variações da taxa Selic e da inflação) que podem afetar a liquidez do microempreendedor "
-        "independentemente do seu comportamento individual de pagamento. A inclusão de "
-        "covariáveis macroeconômicas tempo-variantes (ex.: Selic e IPCA mensais) como proxies "
-        "desses choques sistêmicos é uma extensão natural do modelo. Nesta versão, essas "
-        "covariáveis ainda não foram incorporadas, sob a hipótese de que parte do efeito "
-        "sistêmico já esteja capturada indiretamente pela heterogeneidade geográfica entre "
-        "escritórios (Tabela {tab:14}); a decisão de incluí-las será revisitada no Sprint 5, à luz "
-        "do ganho preditivo observado ao adicioná-las.")
-
-
-# ── SEÇÃO 6 ──────────────────────────────────────────────────────────────────
-
-def build_secao_6(doc):
-    add_heading(doc, "7  VALIDAÇÃO", level=1)
-    add_body(doc,
-        "Testes de performance compararão o modelo de sobrevivência clássico com as técnicas "
-        "de Deep Learning, utilizando: C-index de Harrell (concordance index), Brier Score "
-        "temporal e Teste de Log-Rank entre modelos. [RESULTADOS PENDENTES, Sprint 6]")
-
-
-# ── SEÇÃO 7 ──────────────────────────────────────────────────────────────────
+    add_heading(doc, "7.5  Limitações e Próximos Passos", level=2)
+    add_body_italico(doc,
+        "Estes resultados são da primeira rodada de modelagem e têm limitações conhecidas. O "
+        "modelo de Fine e Gray foi ajustado sem os pesos de censura; a validação foi por "
+        "cliente, mas ainda não temporal, isto é, treinando com créditos antigos e testando "
+        "com os mais recentes; e faltam as variáveis macroeconômicas e sociais. Os próximos "
+        "Sprints tratam desses pontos e comparam o modelo de Fine e Gray com o modelo de "
+        "fração de cura (*mixture cure model*), com o *Random Survival Forest* e com o "
+        "DeepHit (Lee et al., 2018), sempre com a mesma "
+        "validação por cliente e as mesmas métricas, e acrescentam a interpretação das "
+        "previsões com valores SHAP.")
 
 def build_secao_7(doc):
     add_heading(doc, "8  CRONOGRAMA INTEGRADO DE PESQUISA", level=1)
@@ -2259,8 +2152,8 @@ def _montar(registro_anterior):
     build_secao_2(doc)
     build_secao_3(doc)
     build_secao_4(doc)
-    build_secao_5(doc)
-    build_secao_6(doc)
+    build_capitulo_6(doc)
+    build_capitulo_7(doc)
     build_secao_7(doc)
     build_referencias(doc)
     build_apendice_a(doc)

@@ -14,7 +14,7 @@ Se marca con [x] cuando queda resuelto. Última actualización: 02/11/2026.
 - [x] Dedicatória sin título, abajo a la derecha.
 - [ ] Agradecimentos: decidir si se incluye (borrador ofrecido).
 - [x] Resumo y Abstract en lenguaje simple, sin símbolos.
-- [ ] Resumo y Abstract: actualizar cifras (28.149 créditos, 200 defaults) y agregar la frase del resultado
+- [x] Resumo y Abstract: cifras actualizadas (28.149 créditos, 200 defaults) y frase del resultado (02/11)
       (Fine-Gray landmark día 21: AUC 0,93, 81% de los volados en el 10% de mayor riesgo).
 - [x] Sumário, Lista de Ilustrações y Lista de Tabelas automáticas con página.
 - [x] Lista de Siglas automática (solo las usadas en el texto).
@@ -45,7 +45,7 @@ Recomendaciones de Isadora y dónde se atienden:
 - [x] 6. Sentido práctico de covariables que cambian por bloque: riesgo actualizado cada semana (§5.3, 02/11).
 - [x] 7. Tratamiento de datos ausentes o inconsistentes: §4.3 con tabla de auditoría (02/11).
 - [ ] 8. Itálico en todos los términos extranjeros (sáb 7).
-- [ ] 9. Párrafo de transición del EDA a los modelos (§5, jue 5).
+- [x] 9. Párrafo de transición del EDA a los modelos (§6.6, 02/11).
 - [ ] Nota corta para Isadora en portugués (cuerpo del email y de Moodle): qué se cambió por cada recomendación (sáb 7).
 - [ ] Exportar la V27 a PDF y enviarla por Moodle y por email (dom 8).
 - [ ] Referencias: Claude las busca (título, autor, año, enlace) y Juan confirma (vie 6).
@@ -78,8 +78,18 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
 ## Sección 4 (ETL) reescrita el 02/11
 - [x] De 10 a ~5 páginas, sin código; detalle técnico en el Apêndice A. Figura del flujo (7 días, Fine-Gray).
 - [x] Numeración automática de tablas y figuras: en el texto usar {tab:clave} / {fig:clave}.
-- [ ] §4.5 Gestão do Projeto (CRISP-DS) todavía con texto viejo (DeepSurv, Sprints 4-5): rehacer con CRISP-DM el miércoles.
+- [x] §4.5 Gestão do Projeto: fases CRISP-DS actualizadas (02/11).
 - [ ] Diagrama conceptual del ETL (Processamento Massivo): opcional, la Figura 1 ya cumple esa función.
+
+## Capítulos 5, 6 y 7 reescritos el 02/11
+- [x] Cap. 5: conceptos (pocas fórmulas), desfechos, granularidad de 7 días, variables.
+- [x] Cap. 6: EDA nueva (src/fig_eda_v27.py, 6 figuras, tablas de oficina y región por DDD).
+      Ojo: el AalenJohansenFitter de lifelines mete ruido en los tiempos; se usa un estimador propio.
+- [x] Cap. 7: estrategia landmark, validación, resultados (tablas de AUC/top 10%, 7 contra 10 días,
+      razones de riesgo de Fine-Gray) y limitaciones. Objetivos (cap. 3) alineados.
+- [ ] Lista de Símbolos: hoy solo quedan S(t), P y T en el texto; rehacer la lista.
+- [ ] Cap. 2 (Revisão Bibliográfica) todavía menciona DeepSurv y "Seção 8"; se reescribe el viernes.
+- [ ] Citar Ishwaran et al. (2008) para el RSF cuando se confirme la referencia.
 
 ## Sprint 4 en el texto (V27)
 - [ ] §3: dataset reconstruido (vales excluidos, calendario de cobro, cuota de 1 real = renegociación,
