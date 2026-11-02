@@ -88,7 +88,7 @@ def incidencia_acumulada(T, evento, de_interesse):
 def fig_cif(d, resumo):
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(16 * CM, 6.5 * CM))
     for ax, evento, cor, titulo, limite in [
-            (a1, 2, AZUL, "Cura (pagamento total)", 120),
+            (a1, 2, AZUL, "Quitação (pagamento total)", 120),
             (a2, 1, LARANJA, "Default (120 dias sem pagar)", 540)]:
         cif_total = incidencia_acumulada(d["T"], d["evento_tipo"], evento)
         cif = cif_total[cif_total.index <= limite] * 100

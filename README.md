@@ -24,7 +24,7 @@ primeiras semanas do crédito e o histórico do cliente, é possível antecipar 
 abandonar o crédito, meses antes de a perda se confirmar?**
 
 Cada crédito pode terminar de duas formas que competem entre si: **default** (o cliente
-abandona) ou **cura** (o cliente paga tudo). Por isso o trabalho usa análise de
+abandona) ou **quitação** (o cliente paga tudo). Por isso o trabalho usa análise de
 sobrevivência com **riscos competitivos** e compara modelos clássicos (Cox, Fine-Gray,
 regressão logística) com modelos de aprendizado de máquina (Random Survival Forest e
 DeepHit, próximos sprints).
@@ -38,7 +38,7 @@ DeepHit, próximos sprints).
 | Período | jan. 2020 a 15 mai. 2026 |
 | Créditos de clientes | 28.149 |
 | Default | 200 (0,71%) |
-| Cura | 27.191 (96,60%) |
+| Quitação | 27.191 (96,60%) |
 | Censura (abertos no corte) | 758 (2,69%) |
 | Escritórios / rotas | 3 / 17 (SP, RJ e SC) |
 | Pagamentos diários | ≈ 470 mil |
@@ -51,7 +51,7 @@ O sistema de gestão da instituição aparece no texto do TCC com o pseudônimo 
 | Desfecho | Regra (confirmada com a operação) |
 |---|---|
 | **Default** | 120 dias corridos sem nenhum pagamento, contados do último pagamento real (ou do desembolso, se nunca pagou) |
-| **Cura** | Pagamento acumulado de pelo menos 98% do total antes de qualquer silêncio de 120 dias |
+| **Quitação** | Pagamento acumulado de pelo menos 98% do total antes de qualquer silêncio de 120 dias |
 | **Censura** | Nenhum dos dois até a data de corte |
 
 A baixa contábil dos créditos abandonados (um abono pelo saldo seguido de uma saída de

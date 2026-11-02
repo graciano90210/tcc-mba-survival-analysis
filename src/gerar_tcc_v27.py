@@ -1156,7 +1156,7 @@ def build_secao_3(doc):
     fases = [
         ("(1) Entendimento do Negócio:",
          "Definição dos desfechos com a operação da instituição: default após 120 dias sem "
-         "pagamento, cura pelo pagamento de pelo menos 98% do total (Seção 5.2)."),
+         "pagamento, quitação pelo pagamento de pelo menos 98% do total (Seção 5.2)."),
         ("(2) Entendimento dos Dados:",
          "Extração e consolidação dos relatórios, auditoria dos dados (Capítulo 4) e análise "
          "exploratória da base reconstruída (Capítulo 6)."),
@@ -1226,13 +1226,13 @@ def build_secao_4(doc):
         "nenhuma forma para a distribuição do tempo.")
     add_body_italico(doc,
         "Neste problema, porém, cada crédito pode terminar de duas formas que competem "
-        "entre si: em default (o cliente abandona o crédito) ou em cura (o cliente paga tudo). "
-        "Uma impede a outra, situação chamada de riscos competitivos. Tratar a cura como "
+        "entre si: em default (o cliente abandona o crédito) ou em quitação (o cliente paga tudo). "
+        "Uma impede a outra, situação chamada de riscos competitivos. Tratar a quitação como "
         "simples censura, como faz o Kaplan-Meier comum, superestima o risco, porque supõe que "
         "quem já pagou tudo ainda poderia entrar em default. A medida correta é a função de "
         "incidência acumulada (CIF, *cumulative incidence function*), que dá a probabilidade "
         "de o crédito ter terminado em default até o dia t, considerando que a maioria termina "
-        "antes em cura.")
+        "antes em quitação.")
     add_body_italico(doc,
         "Para relacionar o risco com as características do crédito e do cliente, o modelo de "
         "Cox (1972) é a referência clássica. Ele estima quanto cada variável multiplica o "
@@ -1251,7 +1251,7 @@ def build_secao_4(doc):
         [["Default",
           "120 dias corridos sem nenhum pagamento, contados do último pagamento (ou do desembolso, se nunca pagou)",
           "200", "0,71"],
-         ["Cura",
+         ["Quitação",
           "Pagamento acumulado de pelo menos 98% do total antes de qualquer silêncio de 120 dias",
           "27.191", "96,60"],
          ["Censura",
@@ -1353,16 +1353,16 @@ def build_capitulo_6(doc):
     add_heading(doc, "6.1  Quando os Créditos Terminam", level=2)
     add_body(doc,
         "A Figura {fig:cif} mostra a incidência acumulada de cada desfecho, estimada pelo "
-        "método de Aalen-Johansen, que leva em conta os riscos competitivos. A cura é rápida: "
+        "método de Aalen-Johansen, que leva em conta os riscos competitivos. A quitação é rápida: "
         "30% dos créditos estão quitados até o dia 20, 78% até o dia 30 e 95,5% até o dia 60, "
         "o que corresponde aos prazos de 20 a 50 dias. O default, por definição, só aparece "
-        "a partir do dia 120 e cresce até cerca de 0,8% em um ano. O tempo mediano até a cura "
+        "a partir do dia 120 e cresce até cerca de 0,8% em um ano. O tempo mediano até a quitação "
         "é de 24 dias; até o default, de 148 dias. Como o default é marcado 120 dias depois do "
         "último pagamento, isso significa que o cliente que se perde costuma parar de pagar "
         "perto da quarta semana, isto é, ainda dentro do prazo do crédito. Há, portanto, uma "
         "janela de algumas semanas em que os sinais de risco já existem e ainda é possível agir.")
     add_figure(doc, FIG_EDA / "fig_cif_desfechos.png",
-               "Incidência acumulada de cura e de default ao longo do tempo", "cif", largura=16)
+               "Incidência acumulada de quitação e de default ao longo do tempo", "cif", largura=16)
 
     add_heading(doc, "6.2  Diferenças entre Escritórios e Regiões", level=2)
     add_body(doc,
@@ -1370,10 +1370,10 @@ def build_capitulo_6(doc):
         "{fig:escritorio}). O escritório Sociedades Brasil, que reúne as rotas de Santa "
         "Catarina, Campinas e parte do Rio de Janeiro, tem 1,37% de default, contra 0,50% em "
         "São Paulo e 0,44% em Cabo Frio. O teste de log-rank para o risco de default, com a "
-        "cura tratada como censura, rejeita a igualdade entre os três escritórios "
+        "quitação tratada como censura, rejeita a igualdade entre os três escritórios "
         "(estatística de 16,2 com 2 graus de liberdade; valor-p de 0,0003).")
     add_table_data(doc,
-        ["Escritório", "Créditos", "Default", "Taxa de default", "Cura", "Censura"],
+        ["Escritório", "Créditos", "Default", "Taxa de default", "Quitação", "Censura"],
         [["São Paulo", "13.793", "69", "0,50%", "13.480", "244"],
          ["Sociedades Brasil", "7.276", "100", "1,37%", "6.983", "193"],
          ["Cabo Frio", "7.080", "31", "0,44%", "6.728", "321"],
@@ -1450,7 +1450,7 @@ def build_capitulo_6(doc):
     add_heading(doc, "6.6  Síntese e Implicações para a Modelagem", level=2)
     add_body(doc,
         "Os resultados da análise exploratória orientam diretamente as escolhas de "
-        "modelagem do Capítulo 7. Primeiro, o default é raro e tardio, enquanto a cura domina "
+        "modelagem do Capítulo 7. Primeiro, o default é raro e tardio, enquanto a quitação domina "
         "e acontece cedo; por isso o problema é tratado com riscos competitivos, pelo modelo "
         "de Fine e Gray (1999), e avaliado com métricas de ordenação, que medem se os poucos "
         "defaults ficam entre os clientes de maior risco, em vez da acurácia, que seria alta "
@@ -1485,9 +1485,9 @@ def build_capitulo_7(doc):
         "perde costuma parar de pagar perto da quarta semana (Seção 6.1).")
     add_body(doc,
         "O modelo principal é o de Fine e Gray (1999), que estima diretamente a incidência "
-        "acumulada de default levando em conta que a cura impede o default. Como a censura é "
+        "acumulada de default levando em conta que a quitação impede o default. Como a censura é "
         "pequena (2,69% dos créditos), ele foi ajustado nesta etapa de forma simplificada, "
-        "mantendo os créditos curados no conjunto de risco até o fim do seguimento; a versão "
+        "mantendo os créditos quitados no conjunto de risco até o fim do seguimento; a versão "
         "com pesos para a censura será ajustada no próximo Sprint. Como modelo de comparação "
         "usou-se a regressão logística, um modelo linear generalizado que estima a "
         "probabilidade de o crédito terminar em default a partir da mesma fotografia.")
@@ -1500,7 +1500,7 @@ def build_capitulo_7(doc):
         "concordância chega a 0,98, mas o modelo apenas confirma o que a operação já vê. Sem "
         "ela, o índice cai para 0,90, e ainda assim o modelo ordena mal os créditos nas "
         "primeiras semanas, porque, no dia 120, compara quem abandonou o crédito com os poucos "
-        "créditos lentos que ainda estão abertos, já que os bons pagadores saíram pela cura. "
+        "créditos lentos que ainda estão abertos, já que os bons pagadores saíram pela quitação. "
         "Por isso ele ficou como referência, e não como modelo principal.")
 
     add_heading(doc, "7.2  Validação e Métricas", level=2)
