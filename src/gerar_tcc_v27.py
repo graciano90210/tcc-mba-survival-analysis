@@ -720,20 +720,21 @@ def build_resumo(doc):
         "direto aos dados, foi desenvolvido um processo automatizado de extração (*web scraping*) "
         "que reuniu seis anos de "
         "pagamentos, de 2020 a 2026, de três escritórios. Os arquivos foram unidos em uma única "
-        "base, processo conhecido como *Data Stitching*, e revisados com cuidado: o abandono do "
-        "crédito foi definido como 120 dias seguidos sem nenhum pagamento, contados a partir dos "
-        "pagamentos realmente registrados. A base final tem 28.149 créditos, dos quais 200, ou "
+        "base e revisados com cuidado, e o abandono do crédito foi definido como 120 dias "
+        "seguidos sem nenhum pagamento. A base final tem 28.149 créditos, dos quais 200, ou "
         "0,71%, terminaram em abandono. Como um crédito pode terminar de duas formas, pelo "
         "abandono ou pela quitação, o risco é estudado com análise de sobrevivência para riscos "
         "competitivos, pelo modelo de Fine e Gray, comparado com a regressão logística e, nas "
         "próximas etapas, com modelos de aprendizado de máquina. Com as informações disponíveis "
         "no 21º dia do crédito, o modelo coloca 81% dos futuros abandonos entre os 10% de "
         "clientes de maior risco, cerca de quatro meses antes de o abandono se confirmar. O "
-        "risco também varia entre regiões: no Vale do Itajaí, em Santa Catarina, 19,9% dos "
-        "clientes abandonaram algum crédito, contra 1,1% na Região dos Lagos, no Rio de "
-        "Janeiro. Os resultados indicam que o acompanhamento semanal dos pagamentos permite "
-        "identificar cedo os clientes em dificuldade e priorizar a cobrança antes que o atraso "
-        "se transforme em perda.", indent_first=False)
+        "histórico do cliente também informa: usando apenas a informação disponível no dia do "
+        "desembolso, o modelo reúne "
+        "36% dos futuros abandonos entre os 10% de maior risco, mais de três vezes o esperado "
+        "ao acaso. Os resultados indicam que o histórico pode apoiar a decisão de conceder o "
+        "crédito e que o acompanhamento semanal dos pagamentos permite identificar cedo os "
+        "clientes em dificuldade, antes que o atraso se transforme em perda.",
+        indent_first=False)
     p = doc.add_paragraph()
     _set_spacing(p)
     run = p.add_run(
@@ -762,20 +763,21 @@ def build_abstract(doc):
         "direct access to its data, an automated extraction process (web scraping) was developed "
         "to collect six years "
         "of payments, from 2020 to 2026, from three offices. The files were merged into a single "
-        "database, a process known as Data Stitching, and carefully reviewed: loan abandonment "
-        "was defined as 120 consecutive days without any payment, counted from the payments "
-        "actually recorded. The final database has 28,149 loans, of which 200, or 0.71%, ended "
+        "database and carefully reviewed, and loan abandonment was defined as 120 consecutive "
+        "days without any payment. The final database has 28,149 loans, of which 200, or 0.71%, ended "
         "in abandonment. Since a loan can end in two ways, abandonment or full repayment, the "
         "risk is studied with survival analysis for competing risks, using the Fine and Gray "
         "model, compared with logistic regression and, in the next stages, with machine "
         "learning models. With the information available on the 21st day of the loan, the "
         "model places 81% of future abandonments among the 10% of clients with the highest "
         "risk, about four months before the abandonment is confirmed. The work also analyzes "
-        "Risk also varies across regions: in the Itajaí Valley, in Santa Catarina, 19.9% of "
-        "clients abandoned at least one loan, against 1.1% in the Lakes Region, in Rio de "
-        "Janeiro. The results indicate that weekly monitoring of payments makes it possible to "
-        "identify clients in difficulty early and to prioritize collection before the delay "
-        "turns into a loss.", indent_first=False)
+        "The client's history is also informative: using only the information available on the "
+        "disbursement day, the model places "
+        "36% of future abandonments among the 10% with the highest risk, more than three times "
+        "what would be expected by chance. The results indicate that the history can support "
+        "the decision to grant credit and that weekly monitoring of payments makes it possible "
+        "to identify clients in difficulty early, before the delay turns into a loss.",
+        indent_first=False)
     p = doc.add_paragraph()
     _set_spacing(p)
     run = p.add_run(
