@@ -3,7 +3,7 @@
 La V27 (`src/gerar_tcc_v27.py`) parte de la V26 y recibe los resultados del Sprint 4.
 
 Todo lo que se dejó "para después" mientras revisamos el TCC página por página.
-Se marca con [x] cuando queda resuelto. Última actualización: 02/11/2026.
+Se marca con [x] cuando queda resuelto. Última actualización: 04/11/2026.
 
 ## Pre-textuales
 - [x] Portada: texto vertical USP/ICMC nítido (fuente real).
@@ -81,6 +81,22 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
 - [x] Numeración automática de tablas y figuras: en el texto usar {tab:clave} / {fig:clave}.
 - [x] §4.5 Gestão do Projeto: fases CRISP-DS actualizadas (02/11).
 - [ ] Diagrama conceptual del ETL (Processamento Massivo): opcional, la Figura 1 ya cumple esa función.
+
+## Revisión página por página (iniciada 03/11)
+- [x] Portada, folha de rosto (modelo oficial: Monografia, Ciências de Dados, USP – São Carlos), dedicatoria
+      (alineada a la izquierda), Resumo y Abstract (sin "robô", sin regiones, con resultado del historial y conclusión),
+      listas de figuras, tablas y siglas.
+- [ ] Seguir en la Lista de Símbolos (pág. 10 del visor) y luego Introdução, Objetivos, cap. 4 a 7, cronograma, apéndice.
+
+## Análisis socioeconómico mejor (decidido 04/11; Juan no está convencido del análisis por DDD)
+- [ ] Decidir §6.2 para el adelanto: (a) quitar la tabla de regiones por DDD y anunciar el análisis por renta (recomendado)
+      o (b) dejarla como primera aproximación.
+- [ ] Juan: descargar del IBGE la malha de setores censitários 2022 de SP, RJ y SC y la renta por setor
+      (Agregados por Setores Censitários, rendimento do responsável; si no hay 2022, Censo 2010 Básico V005 + malha 2010).
+- [ ] Cruce local GPS del cliente (3.781 de 4.024, 94%) con el setor censitário (geopandas, sin servicios externos):
+      quintiles de renta, tasa de abandono por quintil y renta como variable del modelo (Sprint 5).
+- [ ] Opcional: actividad del negocio a partir del nombre (1/3 identificable): belleza 6,6%, alimentación 5,3%,
+      vestuario 1,8% de clientes que se volaron.
 
 ## Capítulos 5, 6 y 7 reescritos el 02/11
 - [x] Cap. 5: conceptos (pocas fórmulas), desfechos, granularidad de 7 días, variables.
