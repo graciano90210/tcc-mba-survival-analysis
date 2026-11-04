@@ -1,7 +1,7 @@
 # Modelagem de Risco de Crédito Dinâmico para Microempreendedores
 ### Uma Abordagem via Análise de Sobrevivência em Fluxos de Alta Frequência sob Censura
 
-> **Trabalho de Conclusão de Curso (TCC)** · MBA em Ciência de Dados · ICMC/USP · CeMEAI
+> **Trabalho de Conclusão de Curso (TCC)** · MBA em Ciências de Dados · ICMC/USP · CeMEAI
 > **Autor:** Juan Fernando Graciano Pinzón · **Orientador:** Prof. Dr. Vicente Garibay Cancho
 
 <p align="center">
@@ -190,6 +190,6 @@ python src/gerar_tcc_v27.py
 ---
 
 <p align="center">
-  <sub>MBA em Ciência de Dados · ICMC/USP · 2025–2026</sub><br>
+  <sub>MBA em Ciências de Dados · ICMC/USP · 2025–2026</sub><br>
   <sub>Dados protegidos pela LGPD, de propriedade da instituição parceira</sub>
 </p>

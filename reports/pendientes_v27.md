@@ -11,7 +11,7 @@ Se marca con [x] cuando queda resuelto. Última actualización: 02/11/2026.
 - [x] Portada: subtítulo con coma en vez de guion largo.
 - [ ] Ficha catalográfica: pedir una nueva a la Biblioteca ICMC al final (cambian páginas y palabras clave).
 - [ ] Título: proponer al Prof. Vicente "...Análise de Sobrevivência com Riscos Competitivos em Fluxos de Alta Frequência" (en vez de "...em Fluxos de Alta Frequência sob Censura"); si aprueba, cambiarlo al final (portada, folha de rosto, resumo, abstract, README) junto con la ficha nueva.
-- [x] Folha de rosto, Resumo y Abstract alineados con el modelo oficial del MBA (Monografia, Ciências de Dados, USP – São Carlos, número de folhas automático). 03/11. Confirmar "Ciência" o "Ciências" en la matrícula.
+- [x] Folha de rosto, Resumo y Abstract alineados con el modelo oficial del MBA (Monografia, Ciências de Dados, USP – São Carlos, número de folhas automático). 03/11. Confirmado en cemeai.icmc.usp.br: "MBA em Ciências de Dados".
 - [x] Dedicatória sin título, abajo a la derecha.
 - [ ] Agradecimentos: decidir si se incluye (borrador ofrecido).
 - [x] Resumo y Abstract en lenguaje simple, sin símbolos.

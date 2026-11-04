@@ -1741,7 +1741,7 @@ def build_referencias(doc):
          (" [S.l.]: AAAI Press, 2018. p. 2314-2321.", False)],
         [("LOUZADA NETO, F. ", False),
          ("Gestão de Projetos de Ciência de Dados e Inteligência Artificial", True),
-         (". Material didático, MBA em Ciência de Dados. ICMC/USP, São Carlos, 2026.", False)],
+         (". Material didático, MBA em Ciências de Dados. ICMC/USP, São Carlos, 2026.", False)],
         [("MANTEL, N. Evaluation of survival data and two new rank order statistics arising in "
           "its consideration. ", False),
          ("Cancer Chemotherapy Reports", True),
