@@ -84,7 +84,7 @@ def _curva(ax, cx, cy, s):
 
 ETAPAS = [
     ("Extração", AZUL, _navegador,
-     ["Robô de automação web", "(sistema sem API)", "3.962 planilhas", "17 rotas, 2020 a 2026"]),
+     ["Extração automatizada", "(web scraping)", "3.962 relatórios", "17 rotas, 2020 a 2026"]),
     ("Consolidação", AZUL, _banco,
      ["Data Stitching: união", "dos arquivos em um", "painel único", "(Matriz Mestra)"]),
     ("Pré-processamento", VERDE, _funil,

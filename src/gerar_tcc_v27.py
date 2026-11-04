@@ -717,7 +717,8 @@ def build_resumo(doc):
         "Este trabalho propõe um modelo de risco que acompanha cada crédito ao longo do tempo, "
         "usando o histórico diário de pagamentos de uma instituição de microcrédito voltada a "
         "comerciantes formais e informais. Como o sistema da instituição não oferece acesso "
-        "direto aos dados, foi desenvolvido um robô de automação web que reuniu seis anos de "
+        "direto aos dados, foi desenvolvido um processo automatizado de extração (*web scraping*) "
+        "que reuniu seis anos de "
         "pagamentos, de 2020 a 2026, de três escritórios. Os arquivos foram unidos em uma única "
         "base, processo conhecido como *Data Stitching*, e revisados com cuidado: o abandono do "
         "crédito foi definido como 120 dias seguidos sem nenhum pagamento, contados a partir dos "
@@ -728,19 +729,23 @@ def build_resumo(doc):
         "próximas etapas, com modelos de aprendizado de máquina. Com as informações disponíveis "
         "no 21º dia do crédito, o modelo coloca 81% dos futuros abandonos entre os 10% de "
         "clientes de maior risco, cerca de quatro meses antes de o abandono se confirmar. O "
-        "trabalho também analisa como o risco varia entre regiões e níveis socioeconômicos.",
-        indent_first=False)
+        "risco também varia entre regiões: no Vale do Itajaí, em Santa Catarina, 19,9% dos "
+        "clientes abandonaram algum crédito, contra 1,1% na Região dos Lagos, no Rio de "
+        "Janeiro. Os resultados indicam que o acompanhamento semanal dos pagamentos permite "
+        "identificar cedo os clientes em dificuldade e priorizar a cobrança antes que o atraso "
+        "se transforme em perda.", indent_first=False)
     p = doc.add_paragraph()
     _set_spacing(p)
     run = p.add_run(
         "Palavras-chave: análise de sobrevivência; riscos competitivos; risco de crédito; "
         "microcrédito; pequenos negócios; modelo de Fine e Gray.")
     _set_font(run)
-    page_break(doc)
+    # sem quebra explícita: o ABSTRACT começa em página nova pelo próprio título
+    # (evita uma página em branco quando o resumo ocupa a página inteira)
 
 
 def build_abstract(doc):
-    add_heading(doc, "ABSTRACT", level=1)
+    add_heading(doc, "ABSTRACT", level=1).paragraph_format.page_break_before = True
     add_body(doc,
         "GRACIANO PINZÓN, J. F. Dynamic Credit Risk Modeling for Microentrepreneurs: "
         f"A Survival Analysis Approach on High-Frequency Flows under Censoring. 2026. "
@@ -754,7 +759,8 @@ def build_abstract(doc):
         "whether a client will default or not. This work proposes a risk model that follows "
         "each loan over time, using the daily payment history of a microcredit institution that "
         "serves formal and informal merchants. Because the institution's system does not offer "
-        "direct access to its data, a web automation robot was developed to collect six years "
+        "direct access to its data, an automated extraction process (web scraping) was developed "
+        "to collect six years "
         "of payments, from 2020 to 2026, from three offices. The files were merged into a single "
         "database, a process known as Data Stitching, and carefully reviewed: loan abandonment "
         "was defined as 120 consecutive days without any payment, counted from the payments "
@@ -765,7 +771,11 @@ def build_abstract(doc):
         "learning models. With the information available on the 21st day of the loan, the "
         "model places 81% of future abandonments among the 10% of clients with the highest "
         "risk, about four months before the abandonment is confirmed. The work also analyzes "
-        "how risk varies across regions and socioeconomic levels.", indent_first=False)
+        "Risk also varies across regions: in the Itajaí Valley, in Santa Catarina, 19.9% of "
+        "clients abandoned at least one loan, against 1.1% in the Lakes Region, in Rio de "
+        "Janeiro. The results indicate that weekly monitoring of payments makes it possible to "
+        "identify clients in difficulty early and to prioritize collection before the delay "
+        "turns into a loss.", indent_first=False)
     p = doc.add_paragraph()
     _set_spacing(p)
     run = p.add_run(
@@ -1029,7 +1039,8 @@ def build_secao_3(doc):
         "de uma rota por vez. Para cobrir 17 rotas entre janeiro de 2020 e maio de 2026 "
         "seriam necessários cerca de 4 mil downloads, o que é inviável de forma manual.")
     add_body_italico(doc,
-        "A solução foi construir um robô em Python, com a biblioteca Selenium, que repete "
+        "A solução foi construir um processo automatizado de extração em Python, com a "
+        "biblioteca Selenium, que repete "
         "no navegador os mesmos passos que uma pessoa faria: entrar com usuário e senha, "
         "escolher o escritório e a rota, preencher as datas e baixar o relatório. Essa "
         "técnica é conhecida como automação web (*web scraping*). A Tabela {tab:barreiras} "
@@ -1039,16 +1050,16 @@ def build_secao_3(doc):
         ["Dificuldade", "O que acontecia", "Como foi resolvida"],
         [["Sistema sem opção de exportar a base",
           "Só era possível baixar relatórios de 10 dias pela tela",
-          "Robô que baixa os relatórios um a um, avançando 10 dias por vez"],
+          "Rotina que baixa os relatórios um a um, avançando 10 dias por vez"],
          ["Campos que não respondem a cliques automáticos",
-          "O robô selecionava a rota ou a data, mas o sistema não registrava",
-          "O robô escreve o valor diretamente na página, como se o usuário o tivesse escolhido"],
+          "A rotina selecionava a rota ou a data, mas o sistema não registrava",
+          "A rotina escreve o valor diretamente na página, como se o usuário o tivesse escolhido"],
          ["Períodos sem movimento",
           "Relatórios vazios criariam zeros falsos na base",
-          "Antes de baixar, o robô verifica se o relatório tem dados"],
+          "Antes de baixar, a rotina verifica se o relatório tem dados"],
          ["Extração longa sujeita a quedas",
           "Uma falha obrigaria a recomeçar do zero",
-          "O robô guarda o último relatório baixado, retoma desse ponto e pula os já existentes"]],
+          "A rotina guarda o último relatório baixado, retoma desse ponto e pula os já existentes"]],
         "Principais dificuldades da extração e soluções adotadas", "barreiras",
         larguras=[4.2, 5.4, 6.4])
     add_body(doc,
@@ -1774,7 +1785,7 @@ def build_apendice_a(doc):
     doc.add_page_break()
     add_heading(doc, "APÊNDICE A – DETALHAMENTO TÉCNICO DO PIPELINE DE EXTRAÇÃO", level=1)
     add_body_italico(doc,
-        "Este apêndice reúne os detalhes de implementação do robô de extração e da "
+        "Este apêndice reúne os detalhes de implementação do pipeline de extração e da "
         "consolidação dos relatórios, resumidos no capítulo 4. O código completo está no "
         "repositório do projeto (pasta src).")
 
@@ -1792,7 +1803,7 @@ def build_apendice_a(doc):
         "A interface do ATLAS impõe seis barreiras técnicas específicas que demandam soluções "
         "individuais, detalhadas na Tabela {tab:1}. Cada barreira representa um ponto de falha "
         "potencial no pipeline: a ausência de qualquer uma das soluções resulta em crash "
-        "silencioso do robô, extração parcial ou dados corrompidos.")
+        "silencioso do pipeline, extração parcial ou dados corrompidos.")
 
     add_table_data(doc,
         ["Barreira Técnica", "Causa Raiz", "Solução Implementada"],
@@ -1833,7 +1844,7 @@ def build_apendice_a(doc):
 
     add_labeled(doc, "Fase 1, credenciais:",
         "O formulário de login reside dentro de um iframe (frame index 0 de página de autenticação do sistema). "
-        "O robô utiliza WebDriverWait com expected_conditions para aguardar a disponibilidade de "
+        "O pipeline utiliza WebDriverWait com expected_conditions para aguardar a disponibilidade de "
         "cada elemento antes de interagir, garantindo tolerância a variações de latência do "
         "servidor. Os campos campoUsuario e campoSenha recebem as credenciais lidas de variáveis de "
         "ambiente (.env), e o botão botaoEntrar é ativado via clique nativo do Selenium.")
@@ -1860,7 +1871,7 @@ def build_apendice_a(doc):
         "qualquer interação com o formulário subjacente. O tratamento utiliza find_elements() (que "
         "retorna lista vazia em vez de lançar exceção) em vez de find_element(), evitando crash "
         "quando o modal está ausente. O clique no botão de confirmação é realizado via JS para "
-        "garantir que interceptores DOM não interfiram. Após o fechamento do modal, o robô retorna "
+        "garantir que interceptores DOM não interfiram. Após o fechamento do modal, o pipeline retorna "
         "ao contexto padrão (switch_to.default_content()) e aguarda o carregamento do frameset "
         "principal antes de prosseguir.")
 
