@@ -691,7 +691,7 @@ def build_dedicatoria(doc):
     espaco.paragraph_format.space_after = Cm(17)
     for i, texto in enumerate(textos):
         p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT   # justificado abria espaços na coluna estreita
         _set_spacing(p, multiple=1.5)
         p.paragraph_format.first_line_indent = Cm(0)
         p.paragraph_format.left_indent = Cm(8)
