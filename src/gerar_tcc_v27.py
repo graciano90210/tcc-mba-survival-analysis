@@ -520,7 +520,7 @@ def _gerar_imagem_capa():
     author_box = (305 * SCALE, 480 * SCALE, 839 * SCALE, 535 * SCALE)
     subtitle_box = (305 * SCALE, 535 * SCALE, 839 * SCALE, 585 * SCALE)
     _fit_wrapped_text(draw, "Juan Fernando Graciano Pinzón", author_box, BOLD, max_size=36)
-    _fit_wrapped_text(draw, "Trabalho de Conclusão de Curso, MBA em Ciência de Dados (CeMEAI)",
+    _fit_wrapped_text(draw, "Monografia, MBA em Ciências de Dados (CeMEAI)",
                        subtitle_box, REG, max_size=26)
 
     buf = io.BytesIO()
@@ -623,10 +623,10 @@ def build_folha_rosto(doc):
     p.paragraph_format.left_indent = Cm(8)
     _set_spacing(p, multiple=1.0)
     run = p.add_run(
-        "Trabalho de Conclusão de Curso apresentado ao Centro de Ciências Matemáticas "
+        "Monografia apresentada ao Centro de Ciências Matemáticas "
         "Aplicadas à Indústria do Instituto de Ciências Matemáticas e de Computação, "
         "Universidade de São Paulo - ICMC/USP, como parte dos requisitos para obtenção "
-        "do título de Especialista em Ciência de Dados.")
+        "do título de Especialista em Ciências de Dados.")
     _set_font(run, size=12)
 
     doc.add_paragraph()
@@ -634,18 +634,20 @@ def build_folha_rosto(doc):
     p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p.paragraph_format.left_indent = Cm(8)
     _set_spacing(p, multiple=1.0)
-    run = p.add_run("Área de concentração: Ciência de Dados")
+    run = p.add_run("Área de concentração: Ciências de Dados")
     _set_font(run, size=12)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p.paragraph_format.left_indent = Cm(8)
     _set_spacing(p, multiple=1.0)
-    run = p.add_run("Orientador: Prof. Dr. Vicente Garibay Cancho")
+    # espaços não separáveis: o nome do orientador não se divide entre linhas
+    run = p.add_run("Orientador: " + "Prof. Dr. Vicente Garibay Cancho".replace(" ", "\u00a0"))
     _set_font(run, size=12)
 
     for _ in range(6): add_centered(doc, "", size=12, spacing=1.0)
-    add_centered(doc, "São Paulo / São Carlos, 2026", size=11, spacing=1.0)
+    add_centered(doc, "USP – São Carlos", size=12, spacing=1.0)
+    add_centered(doc, "2026", size=12, spacing=1.0)
     page_break(doc)
 
 
@@ -703,9 +705,10 @@ def build_resumo(doc):
     add_body(doc,
         "GRACIANO PINZÓN, J. F. Modelagem de Risco de Crédito Dinâmico para "
         "Microempreendedores: Uma Abordagem via Análise de Sobrevivência em Fluxos de Alta "
-        "Frequência sob Censura. 2026. Trabalho de Conclusão de Curso (MBA em Ciência de Dados), "
-        "Instituto de Ciências Matemáticas e de Computação, Universidade de São Paulo, "
-        "São Paulo/São Carlos, 2026.", indent_first=False)
+        f"Frequência sob Censura. 2026. {_pagina(('total', 0))} f. Monografia (MBA em Ciências de "
+        "Dados) – Centro de Ciências Matemáticas Aplicadas à Indústria, Instituto de Ciências "
+        "Matemáticas e de Computação, Universidade de São Paulo, São Carlos, 2026.",
+        indent_first=False)
     doc.add_paragraph()
     add_body_italico(doc,
         "A concessão de crédito para pequenos comerciantes no Brasil é dificultada pela falta "
@@ -740,9 +743,10 @@ def build_abstract(doc):
     add_heading(doc, "ABSTRACT", level=1)
     add_body(doc,
         "GRACIANO PINZÓN, J. F. Dynamic Credit Risk Modeling for Microentrepreneurs: "
-        "A Survival Analysis Approach on High-Frequency Flows under Censoring. 2026. Final Course "
-        "Work (MBA in Data Science), Institute of Mathematics and Computer Science, University of "
-        "São Paulo, São Paulo/São Carlos, 2026.", indent_first=False)
+        f"A Survival Analysis Approach on High-Frequency Flows under Censoring. 2026. "
+        f"{_pagina(('total', 0))} f. Monografia (MBA em Ciências de Dados) – Centro de Ciências "
+        "Matemáticas Aplicadas à Indústria, Instituto de Ciências Matemáticas e de Computação, "
+        "Universidade de São Paulo, São Carlos, 2026.", indent_first=False)
     doc.add_paragraph()
     add_body(doc,
         "Lending to small merchants in Brazil is hindered by the lack of information about their "
@@ -2186,7 +2190,7 @@ def _ler_paginas(pdf, registro):
 
     # O corpo começa na página da Introdução que vem depois do sumário.
     sumario = next(i for i, t in enumerate(textos) if "SUMÁRIO" in t)
-    paginas, atual = {}, sumario + 1
+    paginas, atual = {("total", 0): str(n)}, sumario + 1
     for i, (_, titulo) in enumerate(registro["titulos"]):
         alvo = norm(titulo)[:40]
         for j in range(atual, n):
@@ -2217,7 +2221,7 @@ def build_doc():
     # 3ª passada: versão final com os números de página.
     _montar(registro)
     faltando = (len(registro["titulos"]) + len(registro["figuras"])
-                + len(registro["tabelas"]) - len(PAGINAS))
+                + len(registro["tabelas"]) - len(PAGINAS) + 1)
     print(f"\n[PT] V27 gerado: {OUTPUT}")
     print(f"     Sumário: {len(registro['titulos'])} títulos | figuras: "
           f"{len(registro['figuras'])} | tabelas: {len(registro['tabelas'])} | "
