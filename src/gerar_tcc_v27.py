@@ -1008,11 +1008,12 @@ def build_secao_2(doc):
          "Descrever quando e onde ocorrem os desfechos, os sinais que antecedem o default e o "
          "efeito do calendário e da conjuntura, incluindo diferenças regionais e socioeconômicas."),
         ("Modelos clássicos:",
-         "Ajustar os modelos de Cox e de Fine e Gray e a regressão logística para estimar o "
-         "risco de default em diferentes momentos da vida do crédito."),
+         "Ajustar os modelos de Cox, de Fine e Gray e de fração de cura e a regressão "
+         "logística para estimar o risco de default em diferentes momentos da vida do "
+         "crédito, comparando-os com regras simples de decisão."),
         ("Aprendizado de máquina:",
-         "Comparar esses modelos com o modelo de fração de cura, o Random Survival Forest e o "
-         "DeepHit, com a mesma validação e as mesmas métricas."),
+         "Comparar esses modelos com o Random Survival Forest e o DeepHit, com a mesma "
+         "validação e as mesmas métricas."),
         ("Aplicação:",
          "Traduzir os resultados em um alerta semanal de risco útil para a operação."),
     ]
