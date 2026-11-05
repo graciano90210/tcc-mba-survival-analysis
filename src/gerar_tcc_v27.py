@@ -1095,7 +1095,8 @@ def build_secao_3(doc):
         "valores ausentes, campos enganosos e registros que não correspondem a créditos de "
         "clientes. Cada problema foi confirmado com a equipe da operação e recebeu um "
         "tratamento específico, seguindo as técnicas de tratamento de dados faltantes, "
-        "*outliers* e redundância vistas no curso. A Tabela {tab:auditoria} resume a auditoria.")
+        "*outliers* e redundância vistas na disciplina Técnicas Avançadas de Captura e "
+        "Tratamento de Dados do MBA. A Tabela {tab:auditoria} resume a auditoria.")
     add_table_data(doc,
         ["Problema encontrado", "Como foi identificado", "Tratamento"],
         [["Campos com o estado do dia da descarga (saldo, parcelas em atraso, valor e número de parcelas)",
@@ -1111,7 +1112,7 @@ def build_secao_3(doc):
           "O nome do cliente começa com VALE",
           "Excluídos, pois não são créditos de clientes"],
          ["Créditos não diários (256) e anteriores a 2020 (43)",
-          "Dias entre parcelas acima de 1,5; histórico de pagamentos incompleto",
+          "Mais de 1,5 dia entre parcelas (créditos semanais ou quinzenais); histórico de pagamentos incompleto",
           "Excluídos da coorte"],
          ["Renegociação com parcela de 1 real (269)",
           "Prazo alongado no mesmo crédito quando o comerciante fecha o negócio",
