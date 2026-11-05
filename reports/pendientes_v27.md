@@ -96,7 +96,7 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
 - [x] Explicado qué aporta supervivencia frente a la logística (censurados y el "cuándo").
 - [ ] **Validación temporal (entrenar 2020 a 2024, probar 2025 y 2026): prioridad del Sprint 5, antes que DeepHit.**
 - [ ] Figura de incidencia acumulada de default por grupo de riesgo previsto (muestra el "cuándo").
-- [ ] Ética: frase explícita de que la institución autorizó la extracción y el uso de los datos (esperando confirmación de Juan).
+- [x] Ética: §4.4 dice que el dueño de la institución autorizó y suministró el acceso a los datos (confirmado por Juan 04/11).
 - [ ] "45 f." contra "46 p." de la ficha: se resuelve con la ficha nueva al final.
 
 ## Análisis socioeconómico mejor (decidido 04/11; Juan no está convencido del análisis por DDD)

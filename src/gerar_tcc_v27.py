@@ -1136,6 +1136,12 @@ def build_secao_3(doc):
         "O pipeline ETL foi projetado com governança de dados desde a concepção, atendendo "
         "aos requisitos da Lei Geral de Proteção de Dados Pessoais (LGPD, Lei nº 13.709/2018) "
         "e às melhores práticas de segurança da informação em projetos de Ciência de Dados.")
+    add_body(doc,
+        "O uso dos dados foi autorizado pelo proprietário da instituição parceira, que também "
+        "forneceu o acesso ao sistema para a extração, exclusivamente para fins acadêmicos. Os "
+        "dados não saem do ambiente local da pesquisa: o nome da instituição e o do sistema "
+        "foram substituídos por pseudônimos, os clientes são identificados apenas por códigos "
+        "e nenhum dado individual é publicado neste trabalho.")
 
     add_table_data(doc,
         ["Controle de Governança", "Implementação", "Artigo LGPD"],
