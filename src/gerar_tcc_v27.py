@@ -898,9 +898,11 @@ def build_secao_1(doc):
         "escritórios, em três estados. A segunda é a construção e a revisão de uma base de "
         "dados em que o desfecho de cada crédito é definido a partir dos pagamentos reais. A "
         "terceira é a modelagem do risco considerando os dois finais possíveis de um crédito, "
-        "o abandono e a quitação, que competem entre si. A quarta é a comparação entre o "
-        "modelo clássico de Cox e modelos de aprendizado de máquina. A quinta é uma análise de "
-        "como o risco varia entre regiões e níveis socioeconômicos.")
+        "o abandono e a quitação, que competem entre si. A quarta é a comparação entre "
+        "modelos estatísticos clássicos, como o de Fine e Gray, regras simples de decisão e "
+        "modelos de aprendizado de máquina. A quinta é uma análise de como o risco varia entre "
+        "regiões e níveis socioeconômicos. Do ponto de vista prático, o trabalho mostra como "
+        "transformar esses modelos em uma lista semanal de clientes priorizados por risco.")
     add_body(doc,
         "O texto está organizado da seguinte forma. O Capítulo 2 apresenta a revisão da "
         "literatura e o Capítulo 3, os objetivos. O Capítulo 4 descreve como os dados foram "
