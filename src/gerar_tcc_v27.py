@@ -770,7 +770,7 @@ def build_abstract(doc):
         "model, compared with logistic regression and, in the next stages, with machine "
         "learning models. With the information available on the 21st day of the loan, the "
         "model places 81% of future abandonments among the 10% of clients with the highest "
-        "risk, about four months before the abandonment is confirmed. The work also analyzes "
+        "risk, about four months before the abandonment is confirmed. "
         "The client's history is also informative: using only the information available on the "
         "disbursement day, the model places "
         "36% of future abandonments among the 10% with the highest risk, more than three times "
@@ -905,8 +905,8 @@ def build_secao_1(doc):
         "O texto está organizado da seguinte forma. O Capítulo 2 apresenta a revisão da "
         "literatura e o Capítulo 3, os objetivos. O Capítulo 4 descreve como os dados foram "
         "obtidos e organizados, e o Capítulo 5 explica o tratamento dos dados e a definição do "
-        "evento estudado. Os Capítulos 6 e 7 tratam dos modelos e da forma de avaliação, e o "
-        "Capítulo 8 apresenta o cronograma.")
+        "evento estudado. O Capítulo 6 apresenta a análise exploratória, o Capítulo 7 traz os "
+        "modelos e os resultados, e o Capítulo 8 apresenta o cronograma.")
 
 
 # ── SEÇÃO 2 — REVISÃO BIBLIOGRÁFICA ──────────────────────────────────────────
@@ -951,10 +951,10 @@ def build_secao_2_revisao_bibliografica(doc):
         "igualmente pressupostos paramétricos. Kalbfleisch e Prentice (2002) e Klein e "
         "Moeschberger (2003) reúnem esse ferramental (Kaplan-Meier, log-rank e suas extensões) nos dois tratamentos de referência utilizados ao longo deste trabalho para dados "
         "censurados e truncados. A peça que conecta essa base clássica ao problema de alta "
-        "frequência tratado aqui é o formato de Processo de Contagem de Anderson e Gill (1982): "
+        "frequência tratado aqui é o formato de Processo de Contagem de Andersen e Gill (1982): "
         "ao reescrever o Modelo de Riscos Proporcionais de Cox em intervalos (t_start, t_stop], "
-        "ele permite que covariáveis como o cronômetro dias_sem_pagar e o saldo devedor variem a "
-        "cada snapshot de 10 dias, em vez de permanecerem fixas como em uma especificação clássica "
+        "ele permite que covariáveis como o atraso e o saldo devedor variem a "
+        "cada bloco de tempo, em vez de permanecerem fixas como em uma especificação clássica "
         "de Cox. Por fim, os diagnósticos de Therneau e Grambsch (2000), em particular os resíduos de Schoenfeld, serão o critério para checar, já na fase de modelagem (Capítulo 7), "
         "se a suposição de riscos proporcionais se sustenta nesse regime tempo-variante.")
 
@@ -966,8 +966,8 @@ def build_secao_2_revisao_bibliografica(doc):
         "dispensando a especificação manual de interações entre variáveis, ponto relevante aqui, "
         "dado o número elevado de covariáveis tempo-variantes derivadas do histórico de "
         "pagamentos. Kim (2026) mapeia esse campo em expansão, incluindo variantes recorrentes "
-        "(LSTM/GRU) pensadas para sequências longas, como as séries de até centenas de snapshots "
-        "por crédito observadas neste portfólio, e aponta abordagens multimodais como direção "
+        "(LSTM/GRU) pensadas para sequências longas, como as séries diárias de pagamentos "
+        "observadas neste portfólio, e aponta abordagens multimodais como direção "
         "futura. É esse mapeamento que orienta a comparação prevista para o Sprint 5 (Seção 8) "
         "entre o baseline de Cox e uma arquitetura de Deep Learning sob censura.")
 
@@ -979,7 +979,7 @@ def build_secao_2_revisao_bibliografica(doc):
         "a longo prazo, propondo a adoção conjunta do ciclo CRISP-DS (Cross Industry Standard "
         "Process for Data Science) e de práticas ágeis de gestão (Scrum) como mitigadores desse "
         "risco. Esse referencial é adotado neste trabalho tanto para estruturar o pipeline de "
-        "dados em seis etapas (Seção 3.6) quanto para organizar o cronograma de pesquisa em "
+        "dados em seis etapas (Seção 4.5) quanto para organizar o cronograma de pesquisa em "
         "Sprints com entregas incrementais (Seção 8).")
 
 
@@ -1547,17 +1547,39 @@ def build_capitulo_7(doc):
         "dez clientes concentraria oito em cada dez dos que vão abandonar o crédito, cerca de "
         "quatro meses antes de o default ser confirmado pela regra dos 120 dias. No dia 14 a "
         "alerta é um pouco menos precisa (AUC de 0,90 e captura de 73%), mas chega uma semana "
-        "antes. A regressão logística teve desempenho praticamente igual, o que é esperado "
-        "quando há pouca censura.")
+        "antes. Como cada partição de teste tem apenas cerca de 40 defaults, a captura varia "
+        "bastante entre as partições: no dia 21, ficou entre 72% e 88%.")
     add_table_data(doc,
         ["Modelo", "AUC dia 14", "Top 10% dia 14", "AUC dia 21", "Top 10% dia 21"],
-        [["Fine e Gray (crédito atual e histórico)", "0,896 (0,022)", "72,8%", "0,930 (0,012)", "81,2%"],
-         ["Regressão logística (mesmas variáveis)", "0,899 (0,020)", "72,7%", "0,928 (0,012)", "80,5%"],
-         ["Regressão logística, só histórico e contrato", "0,759 (0,038)", "35,7%", "0,753 (0,040)", "34,5%"],
-         ["Cox tempo-variante, sem dias sem pagar", "0,704", "47,8%", "0,806", "58,1%"]],
+        [["Fine e Gray (crédito atual e histórico)", "0,896 (0,022)", "72,8% (7,1)", "0,930 (0,012)", "81,2% (4,9)"],
+         ["Regressão logística (mesmas variáveis)", "0,899 (0,020)", "72,7% (6,4)", "0,928 (0,012)", "80,5% (4,3)"],
+         ["Regressão logística, só histórico e contrato", "0,759 (0,038)", "35,7% (5,9)", "0,753 (0,040)", "34,5% (5,0)"],
+         ["Cox tempo-variante, sem dias sem pagar", "0,704 (0,061)", "47,8% (11,4)", "0,806 (0,037)", "58,1% (7,1)"],
+         ["Regra simples: dias com pagamento na semana anterior", "0,863 (0,027)", "64,2% (6,7)", "0,902 (0,017)", "72,1% (5,6)"],
+         ["Regra simples: pagamento em relação à parcela", "0,833 (0,025)", "60,7% (4,9)", "0,897 (0,024)", "73,5% (6,8)"]],
         "Desempenho dos modelos na validação cruzada por cliente (blocos de 7 dias)", "resultados",
-        fonte="Elaborada pelo autor (2026). Média de 15 partições; desvio-padrão da AUC entre parênteses.",
-        larguras=[6.0, 2.6, 2.2, 2.6, 2.2])
+        fonte="Elaborada pelo autor (2026). Média de 15 partições; desvio-padrão entre parênteses.",
+        larguras=[5.6, 2.6, 2.4, 2.6, 2.4])
+    add_body(doc,
+        "Para saber quanto o modelo acrescenta a uma regra óbvia, os créditos também foram "
+        "ordenados por uma única variável, sem nenhum modelo, como faria um analista "
+        "experiente: quem pagou em menos dias na semana anterior ou quem pagou menos em "
+        "relação à parcela. Essas regras já funcionam bem, o que confirma a força dos sinais "
+        "vistos no Capítulo 6, e capturam até 64% dos defaults no dia 14 e 74% no dia 21. O "
+        "modelo de Fine e Gray acrescenta cerca de 8 pontos a esse resultado, e a vantagem é "
+        "consistente: ele superou a melhor regra simples em todas as 15 partições no dia 14 e "
+        "em 13 das 15 no dia 21, com AUC maior em todas elas. O ganho do modelo vem de "
+        "combinar vários sinais ao mesmo tempo, e não de um único indicador.")
+    add_body(doc,
+        "A regressão logística teve desempenho praticamente igual ao do modelo de Fine e Gray. "
+        "Isso é esperado: na fotografia do dia 21, quase todos os créditos já têm o desfecho "
+        "conhecido, e estimar a incidência acumulada de default até o fim do seguimento "
+        "equivale, na prática, a estimar a probabilidade de o crédito terminar em default. A "
+        "abordagem de sobrevivência se justifica por outros dois motivos. Primeiro, ela trata "
+        "corretamente os 758 créditos ainda abertos, que a regressão logística precisa "
+        "considerar como bons pagadores ou descartar. Segundo, ela descreve quando o default "
+        "acontece, o que permite acompanhar a incidência acumulada de cada grupo de risco ao "
+        "longo do tempo, como na Figura {fig:cif}, e não apenas a probabilidade final.")
     add_body(doc,
         "O modelo que usa apenas o histórico do cliente e os dados do contrato, informação "
         "disponível praticamente no dia do desembolso, ainda captura 36% dos defaults no top "
@@ -1604,15 +1626,22 @@ def build_capitulo_7(doc):
 
     add_heading(doc, "7.5  Limitações e Próximos Passos", level=2)
     add_body_italico(doc,
-        "Estes resultados são da primeira rodada de modelagem e têm limitações conhecidas. O "
-        "modelo de Fine e Gray foi ajustado sem os pesos de censura; a validação foi por "
-        "cliente, mas ainda não temporal, isto é, treinando com créditos antigos e testando "
-        "com os mais recentes; e faltam as variáveis macroeconômicas e sociais. Os próximos "
-        "Sprints tratam desses pontos e comparam o modelo de Fine e Gray com o modelo de "
-        "fração de cura (*mixture cure model*), com o *Random Survival Forest* e com o "
-        "DeepHit (Lee et al., 2018), sempre com a mesma "
-        "validação por cliente e as mesmas métricas, e acrescentam a interpretação das "
-        "previsões com valores SHAP.")
+        "Estes resultados são da primeira rodada de modelagem e têm limitações conhecidas. A "
+        "mais importante é que a validação foi por cliente, mas ainda não temporal. Como a "
+        "carteira cresceu muito e atravessou a pandemia, a prova mais exigente é treinar o "
+        "modelo com os créditos de 2020 a 2024 e testá-lo com os de 2025 e 2026, simulando o "
+        "uso real; essa validação é a prioridade do próximo Sprint. Além disso, o modelo de "
+        "Fine e Gray foi ajustado sem os pesos de censura, faltam as variáveis "
+        "macroeconômicas e sociais, e, com 200 defaults, os resultados têm variação "
+        "considerável entre partições.")
+    add_body_italico(doc,
+        "Os próximos Sprints comparam o modelo de Fine e Gray com o modelo de fração de cura "
+        "(*mixture cure model*), com o *Random Survival Forest* e com o DeepHit (Lee et al., "
+        "2018), sempre com a mesma validação e as mesmas métricas, e acrescentam a "
+        "interpretação das previsões com valores SHAP. Com apenas 200 eventos, modelos muito "
+        "flexíveis como o DeepHit correm o risco de sobreajuste, e é possível que não superem o "
+        "modelo de Fine e Gray. Esse resultado também será relatado, porque mostra até onde a "
+        "complexidade compensa com o volume de dados disponível.")
 
 def build_secao_7(doc):
     add_heading(doc, "8  CRONOGRAMA INTEGRADO DE PESQUISA", level=1)
@@ -1648,9 +1677,10 @@ def build_secao_7(doc):
          "exclusão dos vales de funcionários e correção do leakage da parcela de 1 real. "
          "Cox cause-specific tempo-variante e modelo de Fine-Gray em landmark (dias 14 e 21), "
          "com regressão logística como comparação e validação cruzada agrupada por cliente. "
-         "Adiantamento enviado à tutora em 8 de novembro de 2026."),
+         "Adiantamento a ser enviado à tutora em 8 de novembro de 2026."),
         ("Sprint 5 (9 a 22 nov. 2026), covariáveis de contexto e modelos de comparação [PENDENTE]:",
-         "Covariáveis macroeconômicas e sociais (Selic, IPCA, desemprego, programas de "
+         "Validação temporal (treino com créditos de 2020 a 2024 e teste com os de 2025 e "
+         "2026), prioridade do Sprint; covariáveis macroeconômicas e sociais (Selic, IPCA, desemprego, programas de "
          "transferência de renda e o período da pandemia), com os dias de jogos do Brasil na "
          "Copa de 2022 em análise descritiva; modelo de Fine-Gray com ponderação pela "
          "probabilidade inversa de censura; modelo de fração de cura (mixture cure model), "
@@ -1667,7 +1697,7 @@ def build_secao_7(doc):
          "validação temporal e interpretabilidade (SHAP)."),
         ("Sprint 7 (7 a 18 dez. 2026), redação final [PENDENTE]:",
          "Redação de Resultados, Discussão, Conclusão, Limitações e Trabalhos Futuros; "
-         "metodologia organizada pelas fases do CRISP-DM e seção curta sobre ética e LGPD; "
+         "metodologia organizada pelas fases do CRISP-DS e seção curta sobre ética e LGPD; "
          "revisão bibliográfica pelo método de revisão sistemática da literatura; "
          "incorporação completa do feedback da avaliação de Metodologia e Projeto II "
          "(padronização de itálico e pontuação); revisão integral pelo orientador. Marco: "
@@ -1707,7 +1737,7 @@ def build_referencias(doc):
         [("ALTMAN, E. I.; SABATO, G. Modeling Credit Risk for SMEs: Evidence from the US Market. ", False),
          ("Abacus", True),
          (", v. 43, n. 3, p. 332-357, 2007.", False)],
-        [("ANDERSON, P. K.; GILL, R. D. Cox's regression model for counting processes: a large "
+        [("ANDERSEN, P. K.; GILL, R. D. Cox's regression model for counting processes: a large "
           "sample study. ", False),
          ("The Annals of Statistics", True),
          (", v. 10, n. 4, p. 1100-1120, 1982.", False)],

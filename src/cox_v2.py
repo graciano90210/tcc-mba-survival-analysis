@@ -88,6 +88,12 @@ ESPECIFICACIONES = {
     "A_completo":        ["dias_cobro_sin_pagar"] + BASE,
     "B_alerta_temprana": BASE,
 }
+REGRAS_SIMPLES = {                          # coluna, sinal (+1: maior = mais risco)
+    "regra_atraso":             ("ratio_atraso", 1),
+    "regra_dias_sem_pagamento": ("dias_con_abono_prev", -1),
+    "regra_pagamento_relativo": ("pago_relativo_prev", -1),
+    "regra_saldo":              ("saldo_relativo", 1),
+}
 CON_IMPUTACION = ["ult_pontualidade", "ult_razao_prazo", "ult_log_pago_final",
                   "hist_pct_parcela_incompleta"]
 
@@ -273,6 +279,18 @@ def _landmark(bloque: int) -> tuple[pd.DataFrame, pd.DataFrame]:
                 c = pd.DataFrame({"razon": np.exp(m.coef_[0])}, index=covs)
             coefs.append(c.assign(bloque=bloque, landmark=L, modelo=nombre,
                                   medida="SHR" if tipo == "fg" else "OR"))
+        # Regras simples, sem modelo: ordenar os créditos por uma única variável.
+        # Respondem à pergunta "quanto o modelo acrescenta a uma regra óbvia?".
+        # Empates desfeitos ao acaso (semente fixa), senão a ordem do arquivo decidiria.
+        rng = np.random.default_rng(SEMILLA)
+        for nombre, (col, sinal) in REGRAS_SIMPLES.items():
+            for r, k, prueba in _particiones(df["codigo_cliente"].unique()):
+                te = foto[foto["codigo_cliente"].isin(prueba)]
+                y = te["y"].values
+                riesgo = sinal * te[col].fillna(0).values + 1e-9 * rng.random(len(te))
+                filas.append({"bloque": bloque, "landmark": L, "modelo": nombre,
+                              "repeticion": r, "particion": k, "defaults_prueba": int(y.sum()),
+                              "auc": roc_auc_score(y, riesgo), "captura_top10": _captura_top(y, riesgo)})
         logging.info("  landmark día %d (bloque %d) listo", L, bloque)
     return pd.DataFrame(filas), pd.concat(coefs)
 

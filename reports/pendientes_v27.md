@@ -88,6 +88,17 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
       listas de figuras, tablas y siglas.
 - [ ] Seguir en la Lista de Símbolos (pág. 10 del visor) y luego Introdução, Objetivos, cap. 4 a 7, cronograma, apéndice.
 
+## Revisión externa (otra ventana de Claude, 04/11)
+- [x] Abstract con frase rota, Anderson a Andersen, §2.2 con snapshots de 10 días, "Seção 3.6", cap. 1 con
+      los capítulos 6 y 7, CRISP-DM en el Sprint 7, Sprint 4 "enviado" en futuro.
+- [x] Regras simples como baseline (cox_v2.py, REGRAS_SIMPLES): Fine-Gray +8 pp de captura sobre la mejor
+      regla, mejor en 15/15 particiones (día 14) y 13/15 (día 21). Desvío de la captura en la tabla.
+- [x] Explicado qué aporta supervivencia frente a la logística (censurados y el "cuándo").
+- [ ] **Validación temporal (entrenar 2020 a 2024, probar 2025 y 2026): prioridad del Sprint 5, antes que DeepHit.**
+- [ ] Figura de incidencia acumulada de default por grupo de riesgo previsto (muestra el "cuándo").
+- [ ] Ética: frase explícita de que la institución autorizó la extracción y el uso de los datos (esperando confirmación de Juan).
+- [ ] "45 f." contra "46 p." de la ficha: se resuelve con la ficha nueva al final.
+
 ## Análisis socioeconómico mejor (decidido 04/11; Juan no está convencido del análisis por DDD)
 - [ ] Decidir §6.2 para el adelanto: (a) quitar la tabla de regiones por DDD y anunciar el análisis por renta (recomendado)
       o (b) dejarla como primera aproximación.
