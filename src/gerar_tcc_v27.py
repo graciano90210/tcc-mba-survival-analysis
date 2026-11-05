@@ -814,27 +814,23 @@ def build_listas(doc):
                     _set_font(p.add_run(trecho), size=12, italic=i % 2 == 1)
     page_break(doc)
 
-    # Lista de Símbolos
+    # Lista de Símbolos: só os símbolos que aparecem no texto, na ordem em que
+    # aparecem (NBR 14724), com o mesmo formato da lista de siglas.
     add_heading(doc, "LISTA DE SÍMBOLOS", level=1)
     simbolos = [
-        ("S(t)",  "Função de sobrevivência: probabilidade de o evento não ter ocorrido até t"),
-        ("h(t)",  "Função de risco (hazard): taxa instantânea de ocorrência do evento no tempo t"),
-        ("H(t)",  "Função de risco acumulado (cumulative hazard function)"),
-        ("F(t)",  "Função de distribuição acumulada do tempo até o evento T"),
-        ("T",     "Variável aleatória tempo até o evento"),
-        ("t_start, t_stop", "Limites inferior e superior de um intervalo no formato Counting Process"),
-        ("δ (delta)", "Indicador de evento no intervalo (1 = evento; 0 = censura)"),
-        ("E_i",   "Indicador de default do crédito i (variável evento)"),
-        ("Ŝ(t)",  "Estimador de Kaplan-Meier da função de sobrevivência"),
-        ("p",     "Valor-p do teste de hipótese (ex.: teste de log-rank)"),
-        ("r",     "Coeficiente de correlação linear de Pearson"),
+        ("S(t)", "Função de sobrevivência: probabilidade de o evento ainda não ter ocorrido no dia t"),
+        ("P",    "Probabilidade"),
+        ("T",    "Dia em que o evento ocorre, contado a partir do desembolso do crédito"),
+        ("t",    "Um dia qualquer, contado a partir do desembolso do crédito"),
+        ("h(t)", "Função de risco: chance de o evento ocorrer no dia t entre os créditos que chegaram até esse dia sem ele"),
     ]
     for simbolo, desc in simbolos:
         p = doc.add_paragraph()
         _set_spacing(p, multiple=1.0)
-        p.paragraph_format.first_line_indent = Cm(0)
-        run = p.add_run(f"{simbolo}\t– {desc}")
-        _set_font(run, size=12)
+        p.paragraph_format.left_indent = Cm(3)
+        p.paragraph_format.first_line_indent = Cm(-3)
+        p.paragraph_format.tab_stops.add_tab_stop(Cm(3))
+        _set_font(p.add_run(f"{simbolo}\t{desc}"), size=12)
     page_break(doc)
 
 
@@ -952,7 +948,7 @@ def build_secao_2_revisao_bibliografica(doc):
         "Moeschberger (2003) reúnem esse ferramental (Kaplan-Meier, log-rank e suas extensões) nos dois tratamentos de referência utilizados ao longo deste trabalho para dados "
         "censurados e truncados. A peça que conecta essa base clássica ao problema de alta "
         "frequência tratado aqui é o formato de Processo de Contagem de Andersen e Gill (1982): "
-        "ao reescrever o Modelo de Riscos Proporcionais de Cox em intervalos (t_start, t_stop], "
+        "ao reescrever o Modelo de Riscos Proporcionais de Cox em intervalos de tempo consecutivos, "
         "ele permite que covariáveis como o atraso e o saldo devedor variem a "
         "cada bloco de tempo, em vez de permanecerem fixas como em uma especificação clássica "
         "de Cox. Por fim, os diagnósticos de Therneau e Grambsch (2000), em particular os resíduos de Schoenfeld, serão o critério para checar, já na fase de modelagem (Capítulo 7), "

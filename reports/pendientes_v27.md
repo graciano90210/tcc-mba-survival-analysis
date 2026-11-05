@@ -19,7 +19,7 @@ Se marca con [x] cuando queda resuelto. Última actualización: 04/11/2026.
       (Fine-Gray landmark día 21: AUC 0,93, 81% de los volados en el 10% de mayor riesgo).
 - [x] Sumário, Lista de Ilustrações y Lista de Tabelas automáticas con página.
 - [x] Lista de Siglas automática (solo las usadas en el texto).
-- [ ] **Lista de Símbolos: revisarla cuando reescribamos las fórmulas de la §5.** Quitar
+- [x] **Lista de Símbolos revisada (05/11).** Quitar
       "t_start, t_stop" (nombres de código), "E_i", "p" y "r"; dejar solo los símbolos de
       las fórmulas que queden (S(t), h(t), H(t), F(t), T…).
 - [x] Números de página desde la Introdução (contando desde la folha de rosto).
@@ -115,7 +115,7 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
       Ojo: el AalenJohansenFitter de lifelines mete ruido en los tiempos; se usa un estimador propio.
 - [x] Cap. 7: estrategia landmark, validación, resultados (tablas de AUC/top 10%, 7 contra 10 días,
       razones de riesgo de Fine-Gray) y limitaciones. Objetivos (cap. 3) alineados.
-- [ ] Lista de Símbolos: hoy solo quedan S(t), P y T en el texto; rehacer la lista.
+- [x] Lista de Símbolos rehecha (05/11): S(t), P, T, t, h(t), en orden de aparición y sin guion.
 - [ ] Cap. 2 (Revisão Bibliográfica) todavía menciona DeepSurv y "Seção 8"; se reescribe el viernes.
 - [ ] Citar Ishwaran et al. (2008) para el RSF cuando se confirme la referencia.
 
