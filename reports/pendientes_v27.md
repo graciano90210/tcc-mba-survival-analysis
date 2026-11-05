@@ -100,7 +100,7 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
 - [ ] "45 f." contra "46 p." de la ficha: se resuelve con la ficha nueva al final.
 
 ## Análisis socioeconómico mejor (decidido 04/11; Juan no está convencido del análisis por DDD)
-- [ ] Decidir §6.2 para el adelanto: (a) quitar la tabla de regiones por DDD y anunciar el análisis por renta (recomendado)
+- [x] §6.2 (05/11): tabla de regiones por DDD quitada; párrafo anuncia el análisis por renta del setor censitário (opción a)
       o (b) dejarla como primera aproximación.
 - [ ] Juan: descargar del IBGE la malha de setores censitários 2022 de SP, RJ y SC y la renta por setor
       (Agregados por Setores Censitários, rendimento do responsável; si no hay 2022, Censo 2010 Básico V005 + malha 2010).

@@ -1387,7 +1387,7 @@ def build_capitulo_6(doc):
     add_figure(doc, FIG_EDA / "fig_cif_desfechos.png",
                "Incidência acumulada de quitação e de default ao longo do tempo", "cif", largura=16)
 
-    add_heading(doc, "6.2  Diferenças entre Escritórios e Regiões", level=2)
+    add_heading(doc, "6.2  Diferenças entre Escritórios", level=2)
     add_body(doc,
         "O risco não é igual em toda a carteira (Tabela {tab:escritorios} e Figura "
         "{fig:escritorio}). O escritório Sociedades Brasil, que reúne as rotas de Santa "
@@ -1405,25 +1405,13 @@ def build_capitulo_6(doc):
     add_figure(doc, FIG_EDA / "fig_default_escritorio.png",
                "Incidência acumulada de default por escritório", "escritorio", largura=15)
     add_body(doc,
-        "Olhando para a região do cliente, identificada pelo código de área (DDD) do "
-        "celular, a diferença é ainda maior (Tabela {tab:regioes}): no Vale do Itajaí e Litoral "
-        "Norte de Santa Catarina, 19,9% dos clientes abandonaram algum crédito, contra 1,1% "
-        "na Região dos Lagos, no Rio de Janeiro. Esse é um primeiro passo para a comparação "
-        "socioeconômica entre regiões e classes sociais; o passo seguinte, em andamento, é "
-        "cruzar a localização dos clientes com a renda por setor censitário do IBGE.")
-    add_table_data(doc,
-        ["Região do cliente (DDD)", "Clientes", "Clientes que abandonaram algum crédito"],
-        [["Vale do Itajaí / Litoral Norte (SC)", "307", "19,9%"],
-         ["Baixada Santista (SP)", "212", "7,1%"],
-         ["Rio de Janeiro, região metropolitana", "672", "4,0%"],
-         ["Grande São Paulo", "973", "3,3%"],
-         ["Vale do Paraíba (SP)", "343", "2,6%"],
-         ["Campinas (SP)", "121", "2,5%"],
-         ["Serrana / Sul Fluminense (RJ)", "167", "1,8%"],
-         ["Região dos Lagos / Norte Fluminense (RJ)", "543", "1,1%"]],
-        "Abandono por região do cliente (regiões com pelo menos 100 clientes)", "regioes",
-        fonte="Elaborada pelo autor (2026). Não inclui 618 clientes sem DDD válido.",
-        larguras=[8.0, 2.5, 5.5])
+        "A comparação socioeconômica entre os clientes será feita com uma medida mais "
+        "precisa do que o escritório. A localização de cada cliente, disponível para 94% "
+        "deles a partir das coordenadas registradas nos pagamentos, será cruzada com a renda "
+        "média dos domicílios do setor censitário do IBGE em que ele está. Isso permitirá "
+        "comparar a taxa de abandono entre faixas de renda e incluir a renda do entorno como "
+        "variável nos modelos, na próxima etapa do trabalho. O cruzamento é feito localmente, "
+        "sem enviar endereços ou coordenadas a serviços externos.")
 
     add_heading(doc, "6.3  Comportamento nas Primeiras Semanas", level=2)
     add_body(doc,
@@ -1481,7 +1469,7 @@ def build_capitulo_6(doc):
         "aparecem nas primeiras semanas; daí a ideia de dar o alerta em datas fixas da vida "
         "do crédito, nos dias 14 e 21, com variáveis atualizadas a cada semana. Terceiro, o "
         "histórico do cliente já informa sobre o risco antes do desembolso, o que justifica "
-        "as variáveis de histórico. Quarto, as diferenças entre escritórios e regiões indicam "
+        "as variáveis de histórico. Quarto, as diferenças entre escritórios indicam "
         "que a localização precisa entrar no modelo.")
     add_body_italico(doc,
         "Por fim, várias relações observadas não são lineares: a taxa de default pouco muda "
@@ -1868,7 +1856,7 @@ def build_apendice_a(doc):
              "Chrome exige confirmação do usuário por padrão",
              "Chrome prefs: automatic_downloads: 1, prompt_for_download: False"],
         ],
-        "Barreiras técnicas do Sistema ATLAS e soluções implementadas no pipeline RPA",
+        "Detalhe técnico das soluções da extração",
         table_num=1,
     )
 
@@ -2084,7 +2072,7 @@ def build_apendice_a(doc):
             ["id_ruta",    "String", '"114"',        "ID da rota em extração"],
             ["fecha",      "String", '"2023-07-15"', "Última data de início de bloco processada com sucesso"],
         ],
-        "Estrutura do arquivo de checkpoint JSON (.checkpoint.json)",
+        "Estrutura do arquivo de controle da extração",
         table_num=5,
     )
 
