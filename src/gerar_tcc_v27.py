@@ -1152,22 +1152,22 @@ def build_secao_3(doc):
         ["Controle de Governança", "Implementação", "Artigo LGPD"],
         [
             ["Exclusão do versionamento (git)",
-             "data/raw/, data/processed/ e .env no .gitignore",
+             "Dados brutos, dados processados e credenciais fora do repositório público",
              "Art. 46 (medidas de segurança)"],
             ["Gestão de credenciais",
-             "ATLAS_USER e ATLAS_PASS apenas em .env (nunca no código-fonte)",
+             "Usuário e senha guardados em arquivo local, nunca no código",
              "Art. 46 (proteção de acesso)"],
             ["Pseudonimização",
-             "CÓDIGO CRÉDITO como chave, sem nome, CPF, endereço ou dados de identificação direta",
+             "Clientes e créditos identificados só por códigos, sem nome, CPF ou endereço nos dados dos modelos",
              "Art. 13 (pseudonimização)"],
             ["Minimização de dados",
-             "Silver Layer contém apenas variáveis necessárias para o modelo de sobrevivência",
+             "A base de análise contém apenas as variáveis necessárias para os modelos",
              "Art. 6 (necessidade)"],
             ["Finalidade definida",
              "Dados utilizados exclusivamente para pesquisa acadêmica de risco de crédito",
              "Art. 6 (finalidade)"],
             ["Rastreabilidade",
-             "arquivo_origen em cada linha da Matriz Mestra identifica a fonte exata do dado",
+             "Cada linha da Matriz Mestra guarda o relatório de origem do dado",
              "Art. 37 (registro das operações)"],
         ],
         "Conformidade LGPD e governança de dados no pipeline ETL",
@@ -1199,7 +1199,7 @@ def build_secao_3(doc):
          "Validação cruzada agrupada por cliente, AUC, captura dos defaults no top 10% de "
          "risco e índice de concordância (Seção 7.2)."),
         ("(6) Implantação:",
-         "Lista semanal de clientes priorizados por risco para a operação. [trabalho futuro]"),
+         "Lista semanal de clientes priorizados por risco para a operação (trabalho futuro)."),
     ]
     for label, text in fases:
         add_labeled(doc, label, text)
@@ -1207,11 +1207,11 @@ def build_secao_3(doc):
     add_body(doc,
         "A gestão de riscos do projeto seguiu as sete categorias identificadas na literatura "
         "de gerenciamento ágil de projetos de Ciência de Dados (Louzada Neto, 2026): "
-        "(1) qualidade dos dados: mitigada pelo filtro anti-zero e validação do visualizadorRelatorio; "
+        "(1) qualidade dos dados: mitigada pela verificação de relatórios vazios e pela auditoria dos dados (Seção 4.3); "
         "(2) orçamento: controlado pela solução in-house de web scraping, eliminando licenças "
         "externas; (3) comprometimento: gerenciado com entregas iterativas por Sprint; "
         "(4) recursos humanos: risco baixo por ser pesquisa individual; "
-        "(5) fornecedores: mitigado pela independência do Sistema ATLAS (solução in-house); "
+        "(5) fornecedores: mitigado porque a extração foi desenvolvida pelo próprio autor, sem depender de ferramentas de terceiros; "
         "(6) segurança da informação: LGPD, exclusão dos dados do repositório e pseudonimização; "
         "(7) expectativas de tempo: cronograma CRISP-DS com 7 Sprints Scrum.")
     add_body(doc,
