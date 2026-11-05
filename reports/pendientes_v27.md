@@ -86,7 +86,9 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
 - [x] Portada, folha de rosto (modelo oficial: Monografia, Ciências de Dados, USP – São Carlos), dedicatoria
       (alineada a la izquierda), Resumo y Abstract (sin "robô", sin regiones, con resultado del historial y conclusión),
       listas de figuras, tablas y siglas.
-- [ ] Seguir en la Lista de Símbolos (pág. 10 del visor) y luego Introdução, Objetivos, cap. 4 a 7, cronograma, apéndice.
+- [x] Lista de Símbolos y Sumário (05/11): sumário como el modelo oficial (sin sangría, apéndice sin subsecciones),
+      REFERÊNCIAS, APÊNDICE A en minúsculas, cap. 8 = CONSIDERAÇÕES FINAIS (8.1 conclusiones parciales, 8.2 cronograma).
+- [ ] Seguir con la Introdução (pág. 12) y luego cap. 2 a 8 y apéndice.
 
 ## Revisión externa (otra ventana de Claude, 04/11)
 - [x] Abstract con frase rota, Anderson a Andersen, §2.2 con snapshots de 10 días, "Seção 3.6", cap. 1 con

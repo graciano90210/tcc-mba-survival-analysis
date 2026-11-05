@@ -166,7 +166,7 @@ def add_body_italico(doc, text, indent_first=True):
     return p
 
 
-def add_heading(doc, text, level=1):
+def add_heading(doc, text, level=1, maiusculas=True):
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
     _set_spacing(p, multiple=1.0)
@@ -175,7 +175,7 @@ def add_heading(doc, text, level=1):
     p.paragraph_format.first_line_indent = Cm(0)
     p.paragraph_format.keep_with_next    = True
     sizes = {1: 16, 2: 14, 3: 12, 4: 12}
-    label = text.upper() if level == 1 else text
+    label = text.upper() if level == 1 and maiusculas else text
     if REGISTRO["ativo"]:
         REGISTRO["titulos"].append((level, label))
     run = p.add_run(label)
@@ -836,9 +836,13 @@ def build_listas(doc):
 
 def build_sumario(doc):
     add_heading(doc, "SUMÁRIO", level=1)
+    # Como no modelo oficial do MBA: todos os títulos na margem esquerda e, do
+    # apêndice, só o título (sem as subseções A.1, A.2...).
     for i, (nivel, titulo) in enumerate(REGISTRO["titulos"]):
+        if re.match(r"^[A-Z]\.\d", titulo):
+            continue
         _linha_com_pagina(doc, titulo, _pagina(("titulo", i)),
-                          recuo=(nivel - 1) * 0.75, negrito=(nivel == 1))
+                          recuo=0, negrito=(nivel == 1))
     # A numeração visível começa na Introdução (seção própria com cabeçalho).
     secao = doc.add_section(WD_SECTION.NEW_PAGE)
     _numerar_paginas(secao)
@@ -902,7 +906,8 @@ def build_secao_1(doc):
         "literatura e o Capítulo 3, os objetivos. O Capítulo 4 descreve como os dados foram "
         "obtidos e organizados, e o Capítulo 5 explica o tratamento dos dados e a definição do "
         "evento estudado. O Capítulo 6 apresenta a análise exploratória, o Capítulo 7 traz os "
-        "modelos e os resultados, e o Capítulo 8 apresenta o cronograma.")
+        "modelos e os resultados, e o Capítulo 8 reúne as considerações finais e os próximos "
+        "passos.")
 
 
 # ── SEÇÃO 2 — REVISÃO BIBLIOGRÁFICA ──────────────────────────────────────────
@@ -1634,7 +1639,33 @@ def build_capitulo_7(doc):
         "complexidade compensa com o volume de dados disponível.")
 
 def build_secao_7(doc):
-    add_heading(doc, "8  CRONOGRAMA INTEGRADO DE PESQUISA", level=1)
+    add_heading(doc, "8  CONSIDERAÇÕES FINAIS", level=1)
+
+    add_heading(doc, "8.1  Conclusões Parciais", level=2)
+    add_body(doc,
+        "Os resultados obtidos até esta etapa permitem algumas conclusões. A primeira é que "
+        "os pagamentos diários trazem sinais fortes e precoces de abandono: com a informação "
+        "disponível no 21º dia do crédito, o modelo de Fine e Gray reúne 81% dos futuros "
+        "defaults entre os 10% de clientes de maior risco, cerca de quatro meses antes de a "
+        "regra dos 120 dias confirmar a perda. A segunda é que o modelo acrescenta cerca de "
+        "8 pontos de captura a regras simples baseadas em uma única variável; o ganho é "
+        "moderado, mas se repete em quase todas as partições, o que mostra que combinar vários "
+        "sinais compensa.")
+    add_body(doc,
+        "A terceira conclusão é que o histórico do cliente nos créditos anteriores já informa "
+        "sobre o risco no dia do desembolso, reunindo 36% dos futuros defaults entre os 10% de "
+        "maior risco, o que abre a possibilidade de apoiar a decisão de conceder ou não um novo "
+        "crédito. A quarta é metodológica: como a quitação impede o default, tratá-la como "
+        "risco competitivo é necessário, e tratá-la como simples censura superestimaria o "
+        "risco. Por fim, a qualidade dos dados exigiu tanto trabalho quanto a modelagem: campos "
+        "que mostram o estado do dia da descarga, renegociações e lançamentos contábeis teriam "
+        "levado a resultados enganosos sem a auditoria descrita no Capítulo 4.")
+    add_body(doc,
+        "Essas conclusões ainda são parciais. Elas dependem da validação temporal, da inclusão "
+        "das variáveis de contexto e socioeconômicas e da comparação com os modelos de "
+        "aprendizado de máquina, previstas para as próximas etapas e descritas a seguir.")
+
+    add_heading(doc, "8.2  Próximos Passos e Cronograma", level=2)
     add_body(doc,
         "O projeto segue estruturado em Sprints Scrum (Louzada Neto, 2026), com entregas "
         "iterativas que permitem ajustes de escopo sem comprometer o prazo final. A entrega "
@@ -1716,7 +1747,7 @@ def build_secao_7(doc):
 def build_referencias(doc):
     """Referências conforme ABNT NBR 6023: sem negrito; título do periódico/livro
     (o 'veículo') em itálico; demais elementos em fonte regular."""
-    add_heading(doc, "REFERÊNCIAS BIBLIOGRÁFICAS", level=1)
+    add_heading(doc, "REFERÊNCIAS", level=1)
     refs = [
         [("ABREU, C. Inadimplência de pequenos negócios cai, e aprovação de crédito atinge maior "
           "nível desde 2022. ", False),
@@ -1805,7 +1836,8 @@ def build_apendice_a(doc):
     corpo do texto a pedido da tutora e da aula de Metodologia: o capítulo 4
     explica o pipeline em linguagem simples e remete a este apêndice."""
     doc.add_page_break()
-    add_heading(doc, "APÊNDICE A – DETALHAMENTO TÉCNICO DO PIPELINE DE EXTRAÇÃO", level=1)
+    add_heading(doc, "APÊNDICE A – Detalhamento técnico do pipeline de extração", level=1,
+                maiusculas=False)
     add_body_italico(doc,
         "Este apêndice reúne os detalhes de implementação do pipeline de extração e da "
         "consolidação dos relatórios, resumidos no capítulo 4. O código completo está no "
