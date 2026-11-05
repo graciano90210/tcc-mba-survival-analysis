@@ -1291,11 +1291,16 @@ def build_secao_4(doc):
     add_body(doc,
         "O limite de 120 dias é a regra que a própria instituição usa para considerar um "
         "crédito perdido. Ele separa o atraso passageiro do abandono: um comerciante pode "
-        "ficar doente ou viajar por um ou dois meses e depois voltar a pagar, e nos dados há "
-        "créditos que se recuperam depois de mais de um mês sem pagamento. Meses depois do "
-        "abandono, a instituição faz a baixa contábil do crédito com um lançamento pelo "
-        "saldo; esse lançamento não é pagamento do cliente e não altera o desfecho, que já "
-        "foi marcado no dia 120.")
+        "ficar doente ou viajar por um ou dois meses e depois voltar a pagar. Os dados "
+        "confirmam isso: 476 créditos ficaram 30 dias ou mais sem nenhum pagamento e ainda "
+        "assim foram quitados, 235 ficaram 60 dias ou mais e 100 ficaram 90 dias ou mais. Com "
+        "um limite de 60 dias, esses 235 créditos teriam sido marcados como default, mais do "
+        "que os 200 defaults da base. Já o limite de 98%, e não de 100%, para a quitação "
+        "absorve pequenas diferenças de arredondamento e ajustes no último pagamento.")
+    add_body(doc,
+        "Meses depois do abandono, a instituição faz a baixa contábil do crédito com um "
+        "lançamento pelo saldo; esse lançamento não é pagamento do cliente e não altera o "
+        "desfecho, que já foi marcado no dia 120.")
     add_body(doc,
         "O default é raro: 200 créditos em 28.149, ou 0,71%. Essa raridade orienta a escolha "
         "das métricas de avaliação, que precisam medir se o modelo encontra esses poucos "
