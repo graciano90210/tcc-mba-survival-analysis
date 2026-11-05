@@ -88,7 +88,8 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
       listas de figuras, tablas y siglas.
 - [x] Lista de Símbolos y Sumário (05/11): sumário como el modelo oficial (sin sangría, apéndice sin subsecciones),
       REFERÊNCIAS, APÊNDICE A en minúsculas, cap. 8 = CONSIDERAÇÕES FINAIS (8.1 conclusiones parciales, 8.2 cronograma).
-- [ ] Seguir con la Introdução (pág. 12) y luego cap. 2 a 8 y apéndice.
+- [x] Introdução, Objetivos, cap. 4 completo y §5.1–5.2 revisados (05/11).
+- [ ] Seguir la revisión en la §5.3 (bloques de 7 días, explicar con calma) y luego 5.4, cap. 6, 7, 8 y apéndice.
 
 ## Revisión externa (otra ventana de Claude, 04/11)
 - [x] Abstract con frase rota, Anderson a Andersen, §2.2 con snapshots de 10 días, "Seção 3.6", cap. 1 con
