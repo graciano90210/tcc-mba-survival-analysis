@@ -1331,7 +1331,18 @@ def build_secao_4(doc):
         "cliente que paga bem na primeira semana e passa a pagar metade da parcela na "
         "terceira tem o risco aumentado já na terceira semana. É a mesma lógica do "
         "acompanhamento que a operação faz: a cada semana, uma lista dos clientes que mais "
-        "precisam de atenção, para priorizar contatos e visitas antes que o atraso vire perda.")
+        "precisam de atenção, para priorizar contatos e visitas antes que o atraso vire perda. "
+        "A Tabela {tab:exemplo_semanas} ilustra a ideia com um crédito fictício de R$ 1.200, "
+        "pago em 20 parcelas diárias de R$ 60.")
+    add_table_data(doc,
+        ["Bloco", "Dias", "Informação disponível no início do bloco", "Leitura do risco"],
+        [["1", "0 a 7", "Crédito recém-desembolsado, ainda sem pagamentos", "Só o contrato e o histórico do cliente"],
+         ["2", "7 a 14", "Na semana anterior pagou em 6 de 6 dias de cobrança, parcela completa", "Risco baixo"],
+         ["3", "14 a 21", "Na semana anterior pagou em 3 dias, metade da parcela", "O risco sobe"],
+         ["4", "21 a 28", "Na semana anterior pagou em 1 dia; 40% de atraso acumulado", "Risco alto: entra na lista da semana"]],
+        "Exemplo de um crédito acompanhado semana a semana", "exemplo_semanas",
+        fonte="Elaborada pelo autor (2026). Exemplo ilustrativo, sem dados de clientes reais.",
+        larguras=[1.6, 2.0, 7.4, 5.0])
 
     add_heading(doc, "5.4  Variáveis dos Modelos", level=2)
     add_body(doc,
