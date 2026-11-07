@@ -1455,7 +1455,9 @@ def build_capitulo_6(doc):
         "em até 70% dos dias esperados (1,22%), usou mais de 1,2 vez o prazo pactuado (1,00%) "
         "ou fechou o crédito com um pagamento final de mais de nove parcelas, típico de quem "
         "junta o saldo de uma vez apenas para conseguir renovar (0,86%, contra 0,23% quando o "
-        "último pagamento foi de até uma parcela e meia).")
+        "último pagamento foi de até uma parcela e meia). Essas comparações consideram uma "
+        "variável de cada vez. Como várias delas estão relacionadas entre si, o Capítulo 7 "
+        "mede o efeito de cada uma mantendo as demais constantes.")
     add_figure(doc, FIG_EDA / "fig_historico_cliente.png",
                "Taxa de default segundo o histórico do cliente no crédito anterior", "historico", largura=16)
 
