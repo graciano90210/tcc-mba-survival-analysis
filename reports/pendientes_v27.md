@@ -48,7 +48,7 @@ Recomendaciones de Isadora y dónde se atienden:
 - [x] 7. Tratamiento de datos ausentes o inconsistentes: §4.3 con tabla de auditoría (02/11).
 - [x] 8. Itálico automático en términos extranjeros (07/11): lista ESTRANGEIROS en el generador; nombres propios y siglas en redondo.
 - [x] 9. Párrafo de transición del EDA a los modelos (§6.6, 02/11).
-- [ ] Nota corta para Isadora en portugués (cuerpo del email y de Moodle): qué se cambió por cada recomendación (sáb 7).
+- [x] Nota para Isadora redactada (07/11): reports/nota_isadora_adiantamento.md.
 - [ ] Exportar la V27 a PDF y enviarla por Moodle y por email (dom 8).
 - [ ] Referencias: Claude las busca (título, autor, año, enlace) y Juan confirma (vie 6).
 
