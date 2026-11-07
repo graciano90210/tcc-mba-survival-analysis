@@ -924,73 +924,104 @@ def build_secao_1(doc):
 def build_secao_2_revisao_bibliografica(doc):
     add_heading(doc, "2  REVISÃO BIBLIOGRÁFICA", level=1)
     add_body(doc,
-        "Esta seção situa o presente trabalho no corpo de literatura que sustenta suas três "
-        "frentes: (i) a modelagem de risco de crédito para tomadores de baixa formalidade, "
-        "(ii) os fundamentos estatísticos da Análise de Sobrevivência e sua extensão a "
-        "covariáveis tempo-variantes, e (iii) as arquiteturas de Deep Learning aplicadas a dados "
-        "censurados. Adota-se o sistema de chamada autor-data (ABNT NBR 10520), consistente com "
-        "as citações utilizadas nas demais seções deste documento.")
+        "Este capítulo apresenta a literatura que sustenta o trabalho em cinco partes: o "
+        "crédito para pequenos negócios, a passagem dos modelos estáticos de crédito para a "
+        "análise do tempo até o default, os métodos de sobrevivência com riscos competitivos, "
+        "os modelos de aprendizado de máquina para sobrevivência e as formas de avaliar e "
+        "interpretar esses modelos.")
 
-    add_heading(doc, "2.1  Risco de Crédito para Microempreendedores: da Escassez de Dados ao "
-                     "Comportamento Dinâmico", level=2)
-    add_body(doc,
-        "A literatura clássica de credit scoring para pequenas e médias empresas, como o "
-        "modelo de Altman e Sabato (2007) para o mercado americano, demonstra que indicadores "
-        "contábeis estáticos têm poder preditivo limitado quando aplicados a tomadores sem "
-        "histórico formal consolidado (o segmento thin-file). Banerjee e Duflo (2007), ao "
-        "descreverem a vida econômica dos pobres, evidenciam que a renda e o fluxo de caixa "
-        "desse público são inerentemente irregulares e de alta frequência, o que é incompatível "
-        "com fotografias mensais ou anuais de risco. Já Schreiner (2002), ao propor um arcabouço "
-        "de avaliação do alcance social do microcrédito (outreach), reforça que a profundidade e "
-        "a frequência do relacionamento entre credor e tomador, e não apenas o desfecho binário "
-        "de inadimplência, são dimensões centrais para avaliar risco e impacto nesse segmento. "
-        "Em conjunto, esses três trabalhos delimitam a lacuna que esta pesquisa busca preencher: "
-        "modelos de credit scoring tradicionais, estáticos e binários, não capturam a dinâmica "
-        "diária de pagamentos parciais que caracteriza o microcrédito informal, motivando a "
-        "adoção de uma abordagem longitudinal e orientada ao tempo até o evento.")
+    add_heading(doc, "2.1  Crédito para Pequenos Negócios", level=2)
+    add_body_italico(doc,
+        "Os pequenos negócios são numerosos no Brasil, com 25,4 milhões de empresas ativas, "
+        "das quais 13,6 milhões são microempreendedores individuais (BRASIL, 2026), mas o "
+        "acesso ao crédito continua difícil: menos da metade dos que buscaram crédito o "
+        "conseguiram, e um em cada quatro tinha dívidas em atraso em 2026 (ABREU, 2026). O "
+        "Banco Central acompanha a inclusão financeira desses microempreendedores, inclusive "
+        "por atividade econômica, no Relatório de Cidadania Financeira (BANCO CENTRAL DO "
+        "BRASIL, 2025). Parte "
+        "do problema é a falta de informação adequada sobre esse público. Altman e Sabato "
+        "(2007) mostram que indicadores contábeis têm poder preditivo limitado para empresas "
+        "sem histórico formal consolidado, o chamado segmento *thin-file*. Banerjee e Duflo "
+        "(2007) descrevem que a renda das famílias mais pobres é irregular e de alta "
+        "frequência, e Schreiner (2002) destaca que, no microcrédito, a frequência e a "
+        "profundidade da relação entre credor e tomador importam tanto quanto o simples "
+        "desfecho de pagar ou não. Esses trabalhos indicam a lacuna que esta pesquisa busca "
+        "preencher: aproveitar o histórico diário de pagamentos para medir um risco que muda "
+        "ao longo do tempo.")
 
-    add_heading(doc, "2.2  Fundamentos da Análise de Sobrevivência e Extensão a Covariáveis "
-                     "Tempo-Variantes", level=2)
+    add_heading(doc, "2.2  Do Credit Scoring Estático ao Tempo até o Default", level=2)
+    add_body_italico(doc,
+        "Os modelos tradicionais de *credit scoring* respondem se o cliente vai deixar de pagar "
+        "em um horizonte fixo. Stepanova e Thomas (2002) mostraram que a análise de "
+        "sobrevivência permite responder também quando isso acontece, o que é útil para "
+        "avaliar a rentabilidade do crédito, e não apenas o risco. Bellotti e Crook (2009), "
+        "com dados de cartões de crédito, verificaram que os modelos de sobrevivência são "
+        "competitivos com a regressão logística e permitem incluir variáveis "
+        "macroeconômicas que mudam ao longo do tempo, como juros e desemprego, o que melhorou "
+        "as previsões de default; essa ideia orienta a inclusão de variáveis de contexto "
+        "prevista para a próxima etapa deste trabalho. Mais recentemente, Dirick, Claeskens "
+        "e Baesens (2017) compararam diversas técnicas de sobrevivência em dez bases reais de "
+        "crédito da Bélgica e do Reino Unido e encontraram bom desempenho dos modelos com "
+        "*splines* e do modelo de fração de cura (*mixture cure model*), que considera que "
+        "parte dos clientes nunca entrará em default, o que justifica incluí-lo entre os "
+        "modelos de comparação.")
     add_body(doc,
-        "A base estatística deste trabalho parte de Kaplan e Meier (1958): o estimador não "
-        "paramétrico da função de sobrevivência que dispensa qualquer suposição sobre a forma da "
-        "distribuição de T, condição necessária quando (como na carteira de microcrédito aqui "
-        "analisada) não há motivo teórico para assumir um formato específico para o tempo até o "
-        "default. Para comparar grupos dentro dessa carteira, como escritórios com taxas de "
-        "inadimplência distintas, recorre-se ao teste de log-rank de Mantel (1966), que dispensa "
-        "igualmente pressupostos paramétricos. Kalbfleisch e Prentice (2002) e Klein e "
-        "Moeschberger (2003) reúnem esse ferramental (Kaplan-Meier, log-rank e suas extensões) nos dois tratamentos de referência utilizados ao longo deste trabalho para dados "
-        "censurados e truncados. A peça que conecta essa base clássica ao problema de alta "
-        "frequência tratado aqui é o formato de Processo de Contagem de Andersen e Gill (1982): "
-        "ao reescrever o Modelo de Riscos Proporcionais de Cox em intervalos de tempo consecutivos, "
-        "ele permite que covariáveis como o atraso e o saldo devedor variem a "
-        "cada bloco de tempo, em vez de permanecerem fixas como em uma especificação clássica "
-        "de Cox. Por fim, os diagnósticos de Therneau e Grambsch (2000), em particular os resíduos de Schoenfeld, serão o critério para checar, já na fase de modelagem (Capítulo 7), "
-        "se a suposição de riscos proporcionais se sustenta nesse regime tempo-variante.")
+        "A forma de medir o risco de crédito também mudou na regulação brasileira. A "
+        "Resolução CMN nº 4.966 (BRASIL, 2021), alinhada à norma internacional IFRS 9 e em "
+        "vigor desde 2025, substituiu a Resolução nº 2.682, de 1999, que classificava a "
+        "carteira a partir de eventos passados, como o atraso já ocorrido, por um modelo de "
+        "perda esperada, que exige estimar de forma prospectiva a probabilidade de default ao "
+        "longo da vida do crédito. Modelos que estimam quando o default pode ocorrer, como os "
+        "de sobrevivência, encaixam-se naturalmente nessa nova exigência.")
 
-    add_heading(doc, "2.3  Deep Learning em Análise de Sobrevivência", level=2)
+    add_heading(doc, "2.3  Análise de Sobrevivência e Riscos Competitivos", level=2)
     add_body(doc,
-        "Katzman et al. (2018) tratam o problema de linearidade do Cox por outro caminho: em vez "
-        "de assumir que o log-hazard é uma combinação linear das covariáveis, o DeepSurv usa uma "
-        "rede neural para aprender essa função diretamente da verossimilhança parcial de Cox, "
-        "dispensando a especificação manual de interações entre variáveis, ponto relevante aqui, "
-        "dado o número elevado de covariáveis tempo-variantes derivadas do histórico de "
-        "pagamentos. Kim (2026) mapeia esse campo em expansão, incluindo variantes recorrentes "
-        "(LSTM/GRU) pensadas para sequências longas, como as séries diárias de pagamentos "
-        "observadas neste portfólio, e aponta abordagens multimodais como direção "
-        "futura. É esse mapeamento que orienta a comparação prevista para o Sprint 5 (Seção 8) "
-        "entre o baseline de Cox e uma arquitetura de Deep Learning sob censura.")
+        "A base estatística do trabalho é o estimador de Kaplan e Meier (1958), a comparação "
+        "de grupos pelo teste de log-rank (MANTEL, 1966) e o modelo de riscos proporcionais "
+        "de Cox (1972), apresentados de forma completa em Kalbfleisch e Prentice (2002) e em "
+        "Klein e Moeschberger (2003). O processo de contagem de Andersen e Gill (1982) "
+        "permite que as variáveis de cada crédito mudem ao longo do tempo, como acontece com "
+        "o atraso e o saldo devedor.")
+    add_body_italico(doc,
+        "Quando cada indivíduo pode terminar de mais de uma forma, a análise precisa considerar "
+        "riscos competitivos. Putter, Fiocco e Geskus (2007) mostram que, nesse caso, a "
+        "probabilidade correta de cada desfecho é dada pela função de incidência acumulada, e "
+        "não pelo complemento da curva de Kaplan-Meier. Fine e Gray (1999) propuseram um "
+        "modelo de regressão para essa incidência acumulada, e Gray (1988) um teste para "
+        "comparar as incidências entre grupos. Em crédito, Frydman e Matuszyk (2022) mostraram "
+        "que ignorar o pagamento antecipado, que compete com o default, leva a superestimar a "
+        "probabilidade de default; é o mesmo fenômeno que aparece neste trabalho com a "
+        "quitação. Por fim, a abordagem de *landmark* de van Houwelingen (2007) atualiza as "
+        "previsões ao longo do acompanhamento, ajustando o modelo aos indivíduos ainda em "
+        "risco em datas fixas, ideia usada aqui nos dias 14 e 21 de cada crédito.")
 
-    add_heading(doc, "2.4  Gestão Ágil de Projetos de Ciência de Dados como Framework "
-                     "Metodológico", level=2)
-    add_body(doc,
-        "Do ponto de vista da condução do projeto, Louzada Neto (2026) caracteriza projetos de "
-        "Ciência de Dados e Inteligência Artificial como empreendimentos de alto risco e médio "
-        "a longo prazo, propondo a adoção conjunta do ciclo CRISP-DS (Cross Industry Standard "
-        "Process for Data Science) e de práticas ágeis de gestão (Scrum) como mitigadores desse "
-        "risco. Esse referencial é adotado neste trabalho tanto para estruturar o pipeline de "
-        "dados em seis etapas (Seção 4.5) quanto para organizar o cronograma de pesquisa em "
-        "Sprints com entregas incrementais (Seção 8).")
+    add_heading(doc, "2.4  Aprendizado de Máquina para Análise de Sobrevivência", level=2)
+    add_body_italico(doc,
+        "Os modelos de aprendizado de máquina relaxam as suposições dos modelos clássicos, "
+        "como a proporcionalidade dos riscos e a relação linear entre as variáveis e o risco. "
+        "O DeepHit (LEE et al., 2018) usa uma rede neural para aprender diretamente a "
+        "distribuição conjunta do tempo e do tipo de desfecho, sem supor riscos "
+        "proporcionais, e foi desenhado para riscos competitivos. As florestas aleatórias de "
+        "sobrevivência foram adaptadas a riscos competitivos em crédito por Frydman e "
+        "Matuszyk (2022). Blumenstock, Lessmann e Seow (2022), com uma grande base de "
+        "hipotecas dos Estados Unidos, mostraram que o DeepHit e o *Random Survival Forest* "
+        "preveem o default e o pagamento antecipado melhor do que os modelos de Cox e de Fine "
+        "e Gray, inclusive em períodos de crise, sem exigir mais dados de treino. Como a base "
+        "deste trabalho tem apenas 200 defaults, uma das perguntas da próxima etapa é se essa "
+        "vantagem se mantém com tão poucos eventos.")
+
+    add_heading(doc, "2.5  Avaliação e Interpretação dos Modelos", level=2)
+    add_body_italico(doc,
+        "As métricas de avaliação também evoluíram. Medidas clássicas de classificação, como "
+        "a acurácia, não consideram a censura nem a raridade do evento. Uno et al. (2011) "
+        "propuseram uma versão do índice de concordância que continua correta quando há "
+        "censura, e a avaliação de modelos de sobrevivência passou a usar medidas que "
+        "dependem do tempo. Neste trabalho, essas medidas são combinadas com uma métrica de "
+        "negócio, a porcentagem de defaults capturados entre os clientes de maior risco. A "
+        "interpretação também ganhou importância, porque decisões de crédito precisam ser "
+        "explicáveis: os valores SHAP (LUNDBERG; LEE, 2017) distribuem cada previsão entre as "
+        "variáveis que a explicam e serão usados para mostrar por que um cliente foi "
+        "classificado como de alto risco.")
 
 
 # ── SEÇÃO 3 — OBJETIVOS ───────────────────────────────────────────────────────
@@ -1773,6 +1804,53 @@ def build_referencias(doc):
     (o 'veículo') em itálico; demais elementos em fonte regular."""
     add_heading(doc, "REFERÊNCIAS", level=1)
     refs = [
+        [("BANCO CENTRAL DO BRASIL. ", False),
+         ("Relatório de Cidadania Financeira 2025", True),
+         (". Brasília: BCB, 2025. Disponível em: https://www.bcb.gov.br/content/"
+          "cidadaniafinanceira/documentos_cidadania/RIF/relatorio_de_cidadania_financeira_2025.pdf. "
+          "Acesso em: 6 nov. 2026.", False)],
+        [("BRASIL. Conselho Monetário Nacional. ", False),
+         ("Resolução CMN nº 4.966, de 25 de novembro de 2021", True),
+         (". Dispõe sobre os conceitos e os critérios contábeis aplicáveis a instrumentos "
+          "financeiros. Brasília: Banco Central do Brasil, 2021.", False)],
+        [("BELLOTTI, T.; CROOK, J. Credit scoring with macroeconomic variables using survival "
+          "analysis. ", False),
+         ("Journal of the Operational Research Society", True),
+         (", v. 60, n. 12, p. 1699-1707, 2009. DOI: 10.1057/jors.2008.130.", False)],
+        [("BLUMENSTOCK, G.; LESSMANN, S.; SEOW, H.-V. Deep learning for survival and competing "
+          "risk modelling. ", False),
+         ("Journal of the Operational Research Society", True),
+         (", v. 73, n. 1, p. 26-38, 2022. DOI: 10.1080/01605682.2020.1838960.", False)],
+        [("DIRICK, L.; CLAESKENS, G.; BAESENS, B. Time to default in credit scoring using "
+          "survival analysis: a benchmark study. ", False),
+         ("Journal of the Operational Research Society", True),
+         (", v. 68, n. 6, p. 652-665, 2017. DOI: 10.1057/s41274-016-0128-9.", False)],
+        [("FRYDMAN, H.; MATUSZYK, A. Random survival forest for competing credit risks. ", False),
+         ("Journal of the Operational Research Society", True),
+         (", v. 73, n. 1, p. 15-25, 2022. DOI: 10.1080/01605682.2020.1759385.", False)],
+        [("GRAY, R. J. A class of K-sample tests for comparing the cumulative incidence of a "
+          "competing risk. ", False),
+         ("The Annals of Statistics", True),
+         (", v. 16, n. 3, p. 1141-1154, 1988. DOI: 10.1214/aos/1176350951.", False)],
+        [("LUNDBERG, S. M.; LEE, S.-I. A unified approach to interpreting model predictions. "
+          "In: ADVANCES IN NEURAL INFORMATION PROCESSING SYSTEMS, 30., 2017, Long Beach. ", False),
+         ("Proceedings [...]", True),
+         (". [S.l.]: Curran Associates, 2017. p. 4765-4774.", False)],
+        [("PUTTER, H.; FIOCCO, M.; GESKUS, R. B. Tutorial in biostatistics: competing risks and "
+          "multi-state models. ", False),
+         ("Statistics in Medicine", True),
+         (", v. 26, n. 11, p. 2389-2430, 2007. DOI: 10.1002/sim.2712.", False)],
+        [("STEPANOVA, M.; THOMAS, L. C. Survival analysis methods for personal loan data. ", False),
+         ("Operations Research", True),
+         (", v. 50, n. 2, p. 277-289, 2002. DOI: 10.1287/opre.50.2.277.426.", False)],
+        [("UNO, H. et al. On the C-statistics for evaluating overall adequacy of risk "
+          "prediction procedures with censored survival data. ", False),
+         ("Statistics in Medicine", True),
+         (", v. 30, n. 10, p. 1105-1117, 2011. DOI: 10.1002/sim.4154.", False)],
+        [("VAN HOUWELINGEN, H. C. Dynamic prediction by landmarking in event history "
+          "analysis. ", False),
+         ("Scandinavian Journal of Statistics", True),
+         (", v. 34, n. 1, p. 70-85, 2007. DOI: 10.1111/j.1467-9469.2006.00529.x.", False)],
         [("ABREU, C. Inadimplência de pequenos negócios cai, e aprovação de crédito atinge maior "
           "nível desde 2022. ", False),
          ("Agência Sebrae de Notícias", True),
@@ -1812,13 +1890,6 @@ def build_referencias(doc):
         [("KAPLAN, E. L.; MEIER, P. Nonparametric estimation from incomplete observations. ", False),
          ("Journal of the American Statistical Association", True),
          (", v. 53, n. 282, p. 457-481, 1958.", False)],
-        [("KATZMAN, J. L. et al. DeepSurv: personalized treatment recommender system using a Cox "
-          "proportional hazards deep neural network. ", False),
-         ("BMC Medical Research Methodology", True),
-         (", v. 18, n. 24, 2018.", False)],
-        [("KIM, Jong-Min. ", False),
-         ("Deep Learning in Survival Analysis: Recent Advances and Multimodal Approaches", True),
-         (". 2026.", False)],
         [("KLEIN, J. P.; MOESCHBERGER, M. L. ", False),
          ("Survival Analysis: Techniques for Censored and Truncated Data", True),
          (". 2. ed. New York: Springer, 2003.", False)],
@@ -1838,11 +1909,12 @@ def build_referencias(doc):
           "of microfinance. ", False),
          ("Journal of International Development", True),
          (", v. 14, n. 5, p. 591-603, 2002.", False)],
-        [("THERNEAU, T. M.; GRAMBSCH, P. M. ", False),
-         ("Modeling Survival Data: Extending the Cox Model", True),
-         (". New York: Springer, 2000.", False)],
     ]
-    for segments in refs:
+    import unicodedata
+    def _chave(segs):
+        t = unicodedata.normalize("NFKD", segs[0][0]).encode("ascii", "ignore").decode()
+        return t.upper()
+    for segments in sorted(refs, key=_chave):
         p = doc.add_paragraph()
         _set_spacing(p, multiple=1.0)
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT

@@ -26,7 +26,8 @@ Se marca con [x] cuando queda resuelto. Última actualización: 04/11/2026.
 
 ## Corpo del texto
 - [x] Introdução reescrita (fuentes Mapa de Empresas y Sebrae 2026).
-- [ ] Revisão Bibliográfica: nueva estructura + referencias que Juan debe buscar (ver chat 16/10).
+- [x] Revisão Bibliográfica reescrita (06/11): 5 secciones, 12 referencias nuevas confirmadas por Juan, Referências en orden alfabético automático.
+- [ ] Confirmar y agregar Ishwaran et al. (2008, RSF) y Granzotto (2008, UFSCar, fração de cura).
 - [ ] Títulos de figuras y tablas: quitar "vs.", "—", nombres de código (se corrige al reescribir cada sección).
 - [x] "Fonte:" debajo de cada figura y tabla (02/11, automático; por defecto "Elaborada pelo autor (2026)."). Título de figura arriba (NBR 14724).
 - [ ] Revisar si cada capítulo (sección primaria) debe empezar en página nueva.
@@ -39,10 +40,10 @@ Recomendaciones de Isadora y dónde se atienden:
 - [x] 1. Resumo simple (V26); barreras de la extracción explicadas sin jerga y *Data Stitching* definido (§4.1 y §4.2, 02/11).
 - [x] 2. Justificar granularidad diaria contra mensual (§5.3, 02/11): 7 días alerta antes que 10 (73% contra 61%
       en el día 14); lo mensual no ve pago incompleto ni domingos/feriados.
-- [ ] 3. Referencias recientes, contexto socioeconómico, comparación entre clases sociales (§2, vie 6; regiones
+- [x] 3. Referencias recientes y contexto brasileño en el cap. 2 (06/11: Mapa de Empresas, Sebrae, BCB 2025, CMN 4.966). Clases sociales: análisis por renta en el Sprint 5. (antes: regiones
       por DDD ya disponibles, clases con CNEFE/renta como trabajo en curso).
 - [x] 4. Reducir travessões (hecho el 02/11 en toda la V27).
-- [ ] 5. Artículos contemporáneos de supervivencia y métricas de crédito después de 2002 (§2, vie 6).
+- [x] 5. Artículos contemporáneos (Dirick 2017, Frydman 2022, Blumenstock 2022) y métricas/regulación después de 2002 (Uno 2011, CMN 4.966) en el cap. 2 (06/11).
 - [x] 6. Sentido práctico de covariables que cambian por bloque: riesgo actualizado cada semana (§5.3, 02/11).
 - [x] 7. Tratamiento de datos ausentes o inconsistentes: §4.3 con tabla de auditoría (02/11).
 - [ ] 8. Itálico en todos los términos extranjeros (sáb 7).
@@ -120,7 +121,7 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
 - [x] Cap. 7: estrategia landmark, validación, resultados (tablas de AUC/top 10%, 7 contra 10 días,
       razones de riesgo de Fine-Gray) y limitaciones. Objetivos (cap. 3) alineados.
 - [x] Lista de Símbolos rehecha (05/11): S(t), P, T, t, h(t), en orden de aparición y sin guion.
-- [ ] Cap. 2 (Revisão Bibliográfica) todavía menciona DeepSurv y "Seção 8"; se reescribe el viernes.
+- [x] Cap. 2 sin DeepSurv ni referencias viejas (06/11).
 - [ ] Citar Ishwaran et al. (2008) para el RSF cuando se confirme la referencia.
 
 ## Sprint 4 en el texto (V27)
