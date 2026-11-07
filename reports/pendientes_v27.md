@@ -49,7 +49,7 @@ Recomendaciones de Isadora y dónde se atienden:
 - [x] 8. Itálico automático en términos extranjeros (07/11): lista ESTRANGEIROS en el generador; nombres propios y siglas en redondo.
 - [x] 9. Párrafo de transición del EDA a los modelos (§6.6, 02/11).
 - [x] Nota para Isadora redactada (07/11): reports/nota_isadora_adiantamento.md.
-- [ ] Exportar la V27 a PDF y enviarla por Moodle y por email (dom 8).
+- [x] PDF final generado (07/11): documentotcc/TCC_Juan_Graciano_Adiantamento_V27.pdf (49 págs). Juan lo envía por Moodle y email el 07/11.
 - [ ] Referencias: Claude las busca (título, autor, año, enlace) y Juan confirma (vie 6).
 
 ## Materias del MBA aplicadas al TCC (revisión 02/11/2026)
