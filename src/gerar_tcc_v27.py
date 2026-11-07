@@ -1544,7 +1544,7 @@ def build_capitulo_7(doc):
         "foram divididos em cinco partes, e cada parte serviu uma vez de conjunto de teste "
         "enquanto as outras quatro treinavam o modelo; o processo foi repetido três vezes com "
         "sorteios diferentes. Assim, nenhum cliente aparece ao mesmo tempo no treino e no "
-        "teste, o que evitaria um resultado otimista para quem tem vários créditos. A "
+        "teste, o que evita um resultado otimista para quem tem vários créditos. A "
         "padronização das variáveis e o preenchimento de valores ausentes usaram apenas os "
         "dados de treino de cada partição.")
     add_body(doc,
