@@ -1625,7 +1625,8 @@ def build_capitulo_7(doc):
 
     add_heading(doc, "7.4  Interpretação das Variáveis", level=2)
     add_body_italico(doc,
-        "A Tabela {tab:shr} mostra as razões de risco do modelo de Fine e Gray no dia 21, "
+        "A Tabela {tab:shr} mostra as razões de risco da subdistribuição (*subdistribution "
+        "hazard ratios*) do modelo de Fine e Gray no dia 21, "
         "para as variáveis com efeito estatisticamente significativo. Como as variáveis foram "
         "padronizadas, cada razão indica quanto o risco de default se multiplica quando a "
         "variável aumenta um desvio-padrão, mantidas as demais. Um atraso relativo maior "
