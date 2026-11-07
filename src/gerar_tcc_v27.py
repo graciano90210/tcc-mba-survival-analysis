@@ -142,14 +142,45 @@ def _set_font(run, size=12, bold=False, italic=False):
     run.font.italic = italic
 
 
+# Termos em língua estrangeira que vão em itálico (NBR 14724, recomendação da
+# tutora). Nomes próprios de métodos, programas e siglas ficam em redondo.
+ESTRANGEIROS = [
+    "credit scoring", "thin-file", "outreach", "pipelines", "pipeline", "web scraping",
+    "Data Stitching", "chunked loading", "chunks", "landmarking", "landmark",
+    "defaults", "default", "splines", "mixture cure model", "Random Survival Forest",
+    "Deep Learning", "subdistribution hazard ratios", "hazard ratios", "hazard ratio",
+    "cumulative incidence function", "outliers", "embeddings", "Sprints", "Sprint",
+    "Scrum", "framework", "in-house", "Data Lake", "Data Lineage", "Silver Layer",
+    "frameset", "checkpoint", "Auto-Discovery", "batch", "dropdown", "widget",
+    "iframe", "login", "download", "staging area", "crash", "broadcasting",
+]
+_RE_ESTRANGEIROS = re.compile(
+    r"(?<![\w*])(" + "|".join(re.escape(t) for t in sorted(ESTRANGEIROS, key=len, reverse=True))
+    + r")(?![\w*])", re.IGNORECASE)
+
+
+def _marcar(texto):
+    """Põe entre asteriscos os termos estrangeiros fora dos trechos já marcados."""
+    partes = texto.split("*")
+    for i in range(0, len(partes), 2):
+        partes[i] = _RE_ESTRANGEIROS.sub(r"*\1*", partes[i])
+    return "*".join(partes).replace("**", "")
+
+
+def _runs(p, texto, **fonte):
+    """Escreve o texto no parágrafo; trechos entre asteriscos saem em itálico."""
+    for i, trecho in enumerate(_marcar(_refs(texto)).split("*")):
+        if trecho:
+            _set_font(p.add_run(trecho), italic=i % 2 == 1, **fonte)
+
+
 def add_body(doc, text, align=WD_ALIGN_PARAGRAPH.JUSTIFY, indent_first=True):
     p = doc.add_paragraph()
     _set_spacing(p)
     p.alignment = align
     if indent_first:
         p.paragraph_format.first_line_indent = Cm(1.25)
-    run = p.add_run(_refs(text))
-    _set_font(run)
+    _runs(p, text)
     return p
 
 
@@ -160,9 +191,7 @@ def add_body_italico(doc, text, indent_first=True):
     _set_spacing(p)
     p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p.paragraph_format.first_line_indent = Cm(1.25) if indent_first else Cm(0)
-    for i, trecho in enumerate(_refs(text).split("*")):
-        if trecho:
-            _set_font(p.add_run(trecho), italic=i % 2 == 1)
+    _runs(p, text)
     return p
 
 
@@ -178,8 +207,7 @@ def add_heading(doc, text, level=1, maiusculas=True):
     label = text.upper() if level == 1 and maiusculas else text
     if REGISTRO["ativo"]:
         REGISTRO["titulos"].append((level, label))
-    run = p.add_run(label)
-    _set_font(run, size=sizes.get(level, 12), bold=True)
+    _runs(p, label, size=sizes.get(level, 12), bold=True)
     return p
 
 
@@ -209,15 +237,11 @@ def add_table_data(doc, headers, rows, caption_text, table_num, fonte=FONTE_PADR
     table.style = "Table Grid"
     hdr_cells = table.rows[0].cells
     for i, h in enumerate(headers):
-        hdr_cells[i].text = h
-        for r in hdr_cells[i].paragraphs[0].runs:
-            r.font.name = "Arial"; r.font.size = Pt(10); r.font.bold = True
+        _runs(hdr_cells[i].paragraphs[0], h, size=10, bold=True)
     for r_idx, row_data in enumerate(rows):
         cells = table.rows[r_idx + 1].cells
         for c_idx, val in enumerate(row_data):
-            cells[c_idx].text = _refs(str(val))
-            for r in cells[c_idx].paragraphs[0].runs:
-                r.font.name = "Arial"; r.font.size = Pt(10)
+            _runs(cells[c_idx].paragraphs[0], str(val), size=10)
     # Nenhuma linha se divide entre páginas e, se a tabela continuar na página
     # seguinte, o cabeçalho se repete.
     for i, row in enumerate(table.rows):
@@ -303,10 +327,8 @@ def add_labeled(doc, label, text):
     _set_spacing(p)
     p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p.paragraph_format.first_line_indent = Cm(1.25)
-    r1 = p.add_run(label + " ")
-    _set_font(r1, bold=True)
-    r2 = p.add_run(_refs(text))
-    _set_font(r2)
+    _runs(p, label + " ", bold=True)
+    _runs(p, text)
 
 
 def page_break(doc):
@@ -321,7 +343,8 @@ def _linha_com_pagina(doc, texto, pagina, recuo=0.0, negrito=False):
     pf.first_line_indent = Cm(0)
     pf.left_indent = Cm(recuo)
     pf.tab_stops.add_tab_stop(Cm(16), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.DOTS)
-    _set_font(p.add_run(f"{texto}\t{pagina}"), size=12, bold=negrito)
+    _runs(p, texto, size=12, bold=negrito)
+    _set_font(p.add_run(f"\t{pagina}"), size=12, bold=negrito)
     return p
 
 

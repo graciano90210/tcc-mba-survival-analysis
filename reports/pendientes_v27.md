@@ -46,7 +46,7 @@ Recomendaciones de Isadora y dónde se atienden:
 - [x] 5. Artículos contemporáneos (Dirick 2017, Frydman 2022, Blumenstock 2022) y métricas/regulación después de 2002 (Uno 2011, CMN 4.966) en el cap. 2 (06/11).
 - [x] 6. Sentido práctico de covariables que cambian por bloque: riesgo actualizado cada semana (§5.3, 02/11).
 - [x] 7. Tratamiento de datos ausentes o inconsistentes: §4.3 con tabla de auditoría (02/11).
-- [ ] 8. Itálico en todos los términos extranjeros (sáb 7).
+- [x] 8. Itálico automático en términos extranjeros (07/11): lista ESTRANGEIROS en el generador; nombres propios y siglas en redondo.
 - [x] 9. Párrafo de transición del EDA a los modelos (§6.6, 02/11).
 - [ ] Nota corta para Isadora en portugués (cuerpo del email y de Moodle): qué se cambió por cada recomendación (sáb 7).
 - [ ] Exportar la V27 a PDF y enviarla por Moodle y por email (dom 8).
