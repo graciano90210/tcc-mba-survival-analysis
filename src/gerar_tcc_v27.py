@@ -218,6 +218,13 @@ def add_table_data(doc, headers, rows, caption_text, table_num, fonte=FONTE_PADR
             cells[c_idx].text = _refs(str(val))
             for r in cells[c_idx].paragraphs[0].runs:
                 r.font.name = "Arial"; r.font.size = Pt(10)
+    # Nenhuma linha se divide entre páginas e, se a tabela continuar na página
+    # seguinte, o cabeçalho se repete.
+    for i, row in enumerate(table.rows):
+        tr_pr = row._tr.get_or_add_trPr()
+        tr_pr.append(OxmlElement("w:cantSplit"))
+        if i == 0:
+            tr_pr.append(OxmlElement("w:tblHeader"))
     if larguras:
         table.autofit = False
         for col, w in zip(table.columns, larguras):
