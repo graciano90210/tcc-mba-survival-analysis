@@ -1706,57 +1706,50 @@ def build_secao_7(doc):
         "Os quatro primeiros Sprints estão concluídos, e os três seguintes, de duas semanas "
         "cada, organizam o trabalho restante:")
     sprints = [
-        ("Sprint 1 (jan. a mar. 2026), ETL e pipeline [CONCLUÍDO]:",
-         "Desenvolvimento do extrator Selenium (AtlasDataExtractor e AtlasMasivoExtractor), "
-         "extração de 3.962 arquivos Excel (3 escritórios, 17 rotas, 2020 a 2026), Data Lake "
-         "hierárquico (~14 GB), sistema de checkpoint JSON, consolidação da Matriz Mestra "
-         "(344.869 linhas e 2.358 colunas) e otimização de memória via chunked loading com máscara NumPy (redução de 49% no uso de RAM)."),
-        ("Sprint 2 (mar. a mai. 2026), Feature Engineering e EDA [CONCLUÍDO]:",
-         "Primeira versão do dataset de sobrevivência no formato Counting Process, "
-         "definição do cronômetro dias_sem_pagar, análise exploratória com figuras de "
-         "diagnóstico e elaboração do relatório metodológico (Seções 4 e 5 do TCC)."),
-        ("Sprint 3 (jun. a set. 2026), auditoria do target e Riscos Competitivos [CONCLUÍDO]:",
-         "Auditoria de integridade do target (§5.8), pivô metodológico para Riscos "
-         "Competitivos (§5.9) e baseline Cox cause-specific preliminar. Reconstrução do "
-         "dataset a partir dos pagamentos diários (src/reconstruir_dataset.py), que mede o "
-         "silêncio de pagamento entre as datas reais dos abonos, fixa o fechamento do "
-         "crédito pela data do último abono registrado pelo sistema, recalcula as "
-         "covariáveis apenas com informação disponível no início de cada intervalo e exclui "
-         "os créditos sem nenhum movimento."),
-        ("Sprint 4 (29 set. a 2 nov. 2026), reprocessamento e modelos de base [CONCLUÍDO]:",
-         "Blocos de 7 dias (10 dias como análise de sensibilidade), calendário de dias de "
-         "cobrança sem domingos nem feriados, histórico do cliente nos créditos anteriores, "
-         "exclusão dos vales de funcionários e correção do leakage da parcela de 1 real. "
-         "Cox cause-specific tempo-variante e modelo de Fine-Gray em landmark (dias 14 e 21), "
-         "com regressão logística como comparação e validação cruzada agrupada por cliente. "
-         "Adiantamento a ser enviado à tutora em 8 de novembro de 2026."),
-        ("Sprint 5 (9 a 22 nov. 2026), covariáveis de contexto e modelos de comparação [PENDENTE]:",
-         "Validação temporal (treino com créditos de 2020 a 2024 e teste com os de 2025 e "
-         "2026), prioridade do Sprint; covariáveis macroeconômicas e sociais (Selic, IPCA, desemprego, programas de "
-         "transferência de renda e o período da pandemia), com os dias de jogos do Brasil na "
-         "Copa de 2022 em análise descritiva; modelo de Fine-Gray com ponderação pela "
-         "probabilidade inversa de censura; modelo de fração de cura (mixture cure model), "
-         "visto na disciplina de Aprendizado Dinâmico, como comparação; Random Survival "
-         "Forest, a partir do conteúdo de florestas aleatórias da disciplina de Aprendizado "
-         "de Máquina; submissão de uma versão à autochecagem Turnitin do ICMC até 18 de "
+        ("Sprint 1 (jan. a mar. 2026), extração dos dados (concluído):",
+         "Processo automatizado de extração dos 3.962 relatórios de 3 escritórios e 17 rotas, "
+         "de 2020 a 2026, com retomada automática em caso de falha, e consolidação em uma "
+         "única base, a Matriz Mestra (Capítulo 4 e Apêndice A)."),
+        ("Sprint 2 (mar. a mai. 2026), primeira base e análise exploratória (concluído):",
+         "Primeira versão da base de sobrevivência, primeira análise exploratória e "
+         "elaboração do projeto de pesquisa."),
+        ("Sprint 3 (jun. a set. 2026), auditoria e reconstrução da base (concluído):",
+         "Auditoria dos dados, que revelou desfechos mal classificados na primeira versão, "
+         "adoção dos riscos competitivos e reconstrução de todos os desfechos a partir das "
+         "datas reais dos pagamentos, usando nas variáveis apenas a informação disponível em "
+         "cada momento."),
+        ("Sprint 4 (29 set. a 2 nov. 2026), modelos de base (concluído):",
+         "Blocos de 7 dias (10 dias como comparação), calendário de dias de cobrança, "
+         "histórico do cliente, exclusão dos empréstimos a funcionários e correção da parcela "
+         "de 1 real (Capítulo 5); análise exploratória da base reconstruída (Capítulo 6); "
+         "modelo de Fine e Gray, regressão logística, Cox tempo-variante e regras simples, "
+         "com validação cruzada por cliente (Capítulo 7). Adiantamento a ser enviado à "
+         "tutora em 8 de novembro de 2026."),
+        ("Sprint 5 (9 a 22 nov. 2026), validação temporal, contexto e renda (pendente):",
+         "Validação temporal, com treino nos créditos de 2020 a 2024 e teste nos de 2025 e "
+         "2026, prioridade do Sprint; renda do entorno de cada cliente pelo setor censitário "
+         "do IBGE, para a comparação entre faixas de renda; variáveis macroeconômicas e "
+         "sociais (Selic, IPCA, desemprego, programas de transferência de renda e pandemia); "
+         "modelo de Fine e Gray com ponderação pela censura e teste de Gray para comparar as "
+         "curvas de incidência; modelo de fração de cura, visto na disciplina de Aprendizado "
+         "Dinâmico; Random Survival Forest, a partir das florestas aleatórias da disciplina "
+         "de Aprendizado de Máquina; submissão à autochecagem Turnitin do ICMC até 18 de "
          "novembro de 2026."),
-        ("Sprint 6 (23 nov. a 6 dez. 2026), Deep Learning e avaliação comparativa [PENDENTE]:",
+        ("Sprint 6 (23 nov. a 6 dez. 2026), Deep Learning e comparação final (pendente):",
          "DeepHit para riscos competitivos, com embeddings de rota e escritório e uma "
          "variante com rede recorrente (LSTM) sobre a sequência diária de pagamentos, "
          "conforme a disciplina de Aprendizado Profundo; comparação de todos os modelos com "
-         "C-index dependente do tempo, Brier Score com ponderação pela probabilidade inversa "
-         "de censura e porcentagem de defaults capturados entre os 10% de maior risco; "
-         "validação temporal e interpretabilidade (SHAP)."),
-        ("Sprint 7 (7 a 18 dez. 2026), redação final [PENDENTE]:",
-         "Redação de Resultados, Discussão, Conclusão, Limitações e Trabalhos Futuros; "
-         "metodologia organizada pelas fases do CRISP-DS e seção curta sobre ética e LGPD; "
-         "revisão bibliográfica pelo método de revisão sistemática da literatura; "
+         "as mesmas métricas e a mesma validação; interpretação das previsões com valores "
+         "SHAP."),
+        ("Sprint 7 (7 a 18 dez. 2026), redação final (pendente):",
+         "Redação final de resultados, discussão e conclusões; revisão bibliográfica pelo "
+         "método de revisão sistemática da literatura; revisão da seção de ética e LGPD; "
          "incorporação completa do feedback da avaliação de Metodologia e Projeto II "
          "(padronização de itálico e pontuação); revisão integral pelo orientador. Marco: "
          "versão final concluída em 18 de dezembro de 2026."),
-        ("Margem (jan. a fev. 2027), entrega [PENDENTE]:",
-         "Ajustes finais solicitados pelo orientador, atualização da ficha catalográfica, "
-         "geração do PDF final e entrega oficial."),
+        ("Margem (jan. a fev. 2027), entrega (pendente):",
+         "Ajustes finais solicitados pelo orientador, nova ficha catalográfica, geração do "
+         "PDF final e entrega oficial."),
     ]
     for label, text in sprints:
         add_labeled(doc, label, text)
