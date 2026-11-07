@@ -1493,7 +1493,8 @@ def build_capitulo_6(doc):
         "do crédito, nos dias 14 e 21, com variáveis atualizadas a cada semana. Terceiro, o "
         "histórico do cliente já informa sobre o risco antes do desembolso, o que justifica "
         "as variáveis de histórico. Quarto, as diferenças entre escritórios indicam "
-        "que a localização precisa entrar no modelo.")
+        "que a localização, e futuramente a renda do entorno do cliente, precisa entrar no "
+        "modelo.")
     add_body_italico(doc,
         "Por fim, várias relações observadas não são lineares: a taxa de default pouco muda "
         "entre faixas intermediárias e salta nos extremos, como no atraso acima de 50%, e o "
