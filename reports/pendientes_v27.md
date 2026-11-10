@@ -99,7 +99,10 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
 - [x] Regras simples como baseline (cox_v2.py, REGRAS_SIMPLES): Fine-Gray +8 pp de captura sobre la mejor
       regla, mejor en 15/15 particiones (día 14) y 13/15 (día 21). Desvío de la captura en la tabla.
 - [x] Explicado qué aporta supervivencia frente a la logística (censurados y el "cuándo").
-- [ ] **Validación temporal (entrenar 2020 a 2024, probar 2025 y 2026): prioridad del Sprint 5, antes que DeepHit.**
+- [x] **Validación temporal (10/11, src/validacao_temporal.py):** treino 2020-2024 (150 defaults), teste jan-set 2025 (42).
+      Fine-Gray día 21: AUC 0,950 (0,927-0,970), top 10% 88% (78-97); día 14: 0,912 y 76%. No se degrada en el futuro.
+      Pero contra la mejor regla simple: día 14 empate (-1,7 pp, IC -10,6 a 6,3); día 21 +7,5 pp (IC -4,7 a 20,0; P=0,86).
+      Con 42 defaults la ventaja del modelo no es significativa fuera del tiempo. Llevar a la V28 (cap. 7).
 - [ ] Figura de incidencia acumulada de default por grupo de riesgo previsto (muestra el "cuándo").
 - [x] Ética: §4.4 dice que el dueño de la institución autorizó y suministró el acceso a los datos (confirmado por Juan 04/11).
 - [ ] "45 f." contra "46 p." de la ficha: se resuelve con la ficha nueva al final.

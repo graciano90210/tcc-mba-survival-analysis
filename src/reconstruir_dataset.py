@@ -331,14 +331,14 @@ def construir(path: Path = MATRIZ, bloques=BLOQUES_SENSIBILIDAD) -> tuple[dict, 
         dias_pago = np.array([(f - fc).days for f in fechas], dtype=int)
         for b in bloques:
             filas[b].extend(_intervalos(cred, fila, dias_pago, valores, T, tipo, b))
-        resumen.append((cred, fila["CÓDIGO CLIENTE"], T, tipo, motivo))
+        resumen.append((cred, fila["CÓDIGO CLIENTE"], fc.date(), T, tipo, motivo))
 
     estaticas = creditos[["CÓDIGO CLIENTE", "TOTAL CRÉDITO", "cuota_modelo",
                           "cuotas_modelo", "renegociado_1real", "ofi_id", "rta_id"]].rename(columns={
         "CÓDIGO CLIENTE": "codigo_cliente", "TOTAL CRÉDITO": "total_credito",
         "cuota_modelo": "valor_cuota", "cuotas_modelo": "cuotas_pactadas"})
     desenlaces = pd.DataFrame(resumen, columns=["CÓDIGO CRÉDITO", "codigo_cliente",
-                                                "T", "evento_tipo", "motivo"])
+                                                "fecha_credito", "T", "evento_tipo", "motivo"])
     datasets = {}
     for b in bloques:
         df = pd.DataFrame(filas.pop(b)).merge(estaticas, left_on="CÓDIGO CRÉDITO",
