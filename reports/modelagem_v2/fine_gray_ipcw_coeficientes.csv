@@ -1,0 +1,16 @@
+covariate,shr,ic95_inf,ic95_sup,p_boot
+ratio_atraso,1.3728,0.9914,9.7382,0.07
+saldo_relativo,1.1714,0.602,1.8767,0.59
+dias_con_abono_prev,0.3935,0.2953,0.5382,0.03
+pago_relativo_prev,0.7884,0.5327,2.8804,0.21
+pct_abono_incompleto,1.1763,0.97,1.3715,0.08
+dias_sin_cobro_bloque,1.1039,0.9634,1.2197,0.15
+log_total_credito,1.0899,0.8958,1.3209,0.37
+plazo_dias,0.9433,0.7096,1.344,0.74
+ofi_31,1.5476,1.3442,1.8895,0.0
+ofi_44,0.8604,0.7233,1.0373,0.16
+primeiro_credito,1.1226,0.9556,1.304,0.16
+ult_pontualidade,1.0391,0.8712,1.1944,0.54
+ult_razao_prazo,1.0128,0.8632,1.1354,0.88
+ult_log_pago_final,1.2166,0.9813,1.4685,0.08
+hist_pct_parcela_incompleta,0.8167,0.6144,1.0506,0.1
