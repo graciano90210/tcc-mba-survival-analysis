@@ -12,3 +12,4 @@ openpyxl
 holidays
 geopandas
 pyogrio
+statsmodels

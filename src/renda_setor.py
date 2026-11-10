@@ -6,8 +6,8 @@ Renda do entorno de cada cliente pelo setor censitário do IBGE (Sprint 5).
    setores de SP, RJ e SC. O cruzamento é feito localmente: nenhuma coordenada
    ou endereço sai do computador (LGPD).
 2. Quando o arquivo de renda por setor estiver disponível
-   (Agregados_por_setores_renda_responsavel_BR, variável V06004: renda média do
-   responsável em salários mínimos), une a renda pelo código do setor.
+   (Agregados_por_setores_renda_responsavel_BR, variável V06004: rendimento
+   médio do responsável, em reais), une a renda pelo código do setor.
 
 Entradas (em ~/Descargas, baixadas do IBGE pelo autor):
     {SP,RJ,SC}_setores_CD2022.gpkg
@@ -41,17 +41,18 @@ def _malhas() -> gpd.GeoDataFrame:
 
 
 def _renda() -> pd.DataFrame | None:
-    for nome in ("Agregados_por_setores_renda_responsavel_BR.csv",
-                 "Agregados_por_setores_renda_responsavel_BR.zip"):
-        caminho = DESCARGAS / nome
-        if caminho.exists():
-            r = pd.read_csv(caminho, sep=None, engine="python", dtype={"CD_SETOR": str},
-                            decimal=",", na_values=["X", "."])
-            r = r[["CD_SETOR", "V06004"]].rename(columns={"V06004": "renda_responsavel_sm"})
-            logging.info("  renda: %d setores", len(r))
-            return r
-    logging.info("  arquivo de renda por setor ainda não encontrado em %s", DESCARGAS)
-    return None
+    """Renda por setor: V06004 = rendimento médio do responsável (R$) e
+    V06006 = mediana (R$). Conferir no dicionário de variáveis do IBGE."""
+    arquivos = sorted(DESCARGAS.glob("Agregados_por_setores_renda_responsavel_BR*"))
+    if not arquivos:
+        logging.info("  arquivo de renda por setor ainda não encontrado em %s", DESCARGAS)
+        return None
+    r = pd.read_csv(arquivos[-1], sep=";", dtype={"CD_SETOR": str}, decimal=".",
+                    na_values=["X", "."], encoding="latin-1")
+    r = r[["CD_SETOR", "V06004", "V06006"]].rename(
+        columns={"V06004": "renda_media_setor", "V06006": "renda_mediana_setor"})
+    logging.info("  renda: %d setores (%s)", len(r), arquivos[-1].name)
+    return r
 
 
 def main():
@@ -68,7 +69,7 @@ def main():
     renda = _renda()
     if renda is not None:
         x = x.merge(renda, on="CD_SETOR", how="left")
-        logging.info("  com renda do setor: %d", x["renda_responsavel_sm"].notna().sum())
+        logging.info("  com renda do setor: %d", x["renda_media_setor"].notna().sum())
     x.drop(columns=["geometry", "lat", "lon"]).to_csv(SAIDA, index=False)
     logging.info("Guardado %s", SAIDA.name)
 

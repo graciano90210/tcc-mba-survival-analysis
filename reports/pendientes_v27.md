@@ -110,7 +110,10 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
 ## Análisis socioeconómico mejor (decidido 04/11; Juan no está convencido del análisis por DDD)
 - [x] §6.2 (05/11): tabla de regiones por DDD quitada; párrafo anuncia el análisis por renta del setor censitário (opción a)
       o (b) dejarla como primera aproximación.
-- [ ] Juan: descargar del IBGE la malha de setores censitários 2022 de SP, RJ y SC y la renta por setor
+- [x] (10/11) Malhas SP/RJ/SC y renta por setor descargadas; 3.768 clientes ubicados, 3.606 con renta (src/renda_setor.py, src/analise_renda.py).
+      Resultado: SIN gradiente de renta (dentro de SP y RJ 3-4% en todos los quintiles; OR al duplicar renta 1,15, p=0,24 con escritorio);
+      el pico del Q4 es Santa Catarina (~19% en todos los quintiles). Llevar a §6.2 de la V28. Confirmar en diccionario IBGE que V06004 = rendimento médio (R$).
+- [ ] (antes) Juan: descargar del IBGE la malha de setores censitários 2022 de SP, RJ y SC y la renta por setor
       (Agregados por Setores Censitários, rendimento do responsável; si no hay 2022, Censo 2010 Básico V005 + malha 2010).
 - [ ] Cruce local GPS del cliente (3.781 de 4.024, 94%) con el setor censitário (geopandas, sin servicios externos):
       quintiles de renta, tasa de abandono por quintil y renta como variable del modelo (Sprint 5).
