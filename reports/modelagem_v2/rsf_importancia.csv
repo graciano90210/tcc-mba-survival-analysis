@@ -1,0 +1,16 @@
+,queda_cindex,dp
+ratio_atraso,0.0213,0.0065
+pago_relativo_prev,0.0191,0.0032
+dias_con_abono_prev,0.0119,0.0047
+saldo_relativo,0.0117,0.0035
+ofi_31,0.0089,0.0025
+hist_pct_parcela_incompleta,0.0026,0.0006
+ult_razao_prazo,0.0022,0.0009
+pct_abono_incompleto,0.0015,0.0013
+dias_sin_cobro_bloque,0.001,0.001
+plazo_dias,0.0009,0.0003
+ult_log_pago_final,-0.0,0.0007
+ofi_44,-0.0002,0.0004
+primeiro_credito,-0.0008,0.0011
+log_total_credito,-0.001,0.0009
+ult_pontualidade,-0.0014,0.001
