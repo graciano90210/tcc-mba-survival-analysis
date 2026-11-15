@@ -1,0 +1,4 @@
+modelo,auc,auc_ic_inf,auc_ic_sup,captura_top10,captura_ic_inf,captura_ic_sup
+fracao_cura,0.9427,0.9063,0.9668,0.8571,0.7499,0.9574
+fine_gray,0.9499,0.9233,0.9699,0.881,0.7714,0.973
+dif_cura_menos_fg,,,,-0.0238,-0.0889,0.0588
