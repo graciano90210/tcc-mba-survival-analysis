@@ -2047,10 +2047,10 @@ def build_referencias(doc):
           "cidadaniafinanceira/documentos_cidadania/RIF/relatorio_de_cidadania_financeira_2025.pdf. "
           "Acesso em: 6 nov. 2026.", False)],
         [("BANCO CENTRAL DO BRASIL. ", False),
-         ("Sistema Gerenciador de Séries Temporais (SGS)", True),
-         (": séries 432 (meta Selic), 13522 (IPCA acumulado em 12 meses) e 24369 (taxa de "
-          "desocupação). Brasília: BCB, 2026. Disponível em: https://www3.bcb.gov.br/sgspub/. "
-          "Acesso em: 15 nov. 2026.", False)],
+         ("Portal de Dados Abertos do Banco Central do Brasil", True),
+         (": Sistema Gerenciador de Séries Temporais (SGS), séries 432 (meta Selic), 13522 "
+          "(IPCA acumulado em 12 meses) e 24369 (taxa de desocupação). Brasília: BCB, 2026. "
+          "Disponível em: https://dadosabertos.bcb.gov.br/. Acesso em: 15 nov. 2026.", False)],
         [("BRASIL. Conselho Monetário Nacional. ", False),
          ("Resolução CMN nº 4.966, de 25 de novembro de 2021", True),
          (". Dispõe sobre os conceitos e os critérios contábeis aplicáveis a instrumentos "
