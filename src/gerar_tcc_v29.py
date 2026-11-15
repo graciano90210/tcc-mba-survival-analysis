@@ -266,6 +266,13 @@ def add_table_data(doc, headers, rows, caption_text, table_num, fonte=FONTE_PADR
         tr_pr.append(OxmlElement("w:cantSplit"))
         if i == 0:
             tr_pr.append(OxmlElement("w:tblHeader"))
+    # Tabelas curtas não se dividem: cada linha fica com a seguinte e a última
+    # com a linha da Fonte (as longas continuam na página seguinte).
+    if len(rows) <= 12:
+        for row in table.rows:
+            for cell in row.cells:
+                for par in cell.paragraphs:
+                    par.paragraph_format.keep_with_next = True
     if larguras:
         table.autofit = False
         for col, w in zip(table.columns, larguras):
@@ -766,21 +773,17 @@ def build_resumo(doc):
         "comerciantes formais e informais. Como o sistema da instituição não oferece acesso "
         "direto aos dados, foi desenvolvido um processo automatizado de extração (*web scraping*) "
         "que reuniu seis anos de "
-        "pagamentos, de 2020 a 2026, de três escritórios. Os arquivos foram unidos em uma única "
-        "base e revisados com cuidado, e o abandono do crédito foi definido como 120 dias "
-        "seguidos sem nenhum pagamento. A base final tem 28.149 créditos, dos quais 200, ou "
+        "pagamentos, de 2020 a 2026, de três escritórios. O abandono do crédito foi definido "
+        "como 120 dias seguidos sem nenhum pagamento. A base final tem 28.149 créditos, dos quais 200, ou "
         "0,71%, terminaram em abandono. Como um crédito pode terminar de duas formas, pelo "
         "abandono ou pela quitação, o risco é estudado com análise de sobrevivência para riscos "
         "competitivos, pelo modelo de Fine e Gray, comparado com a regressão logística, com o "
         "modelo de fração de cura e com o *Random Survival Forest*. Com as informações disponíveis "
         "no 21º dia do crédito, o modelo coloca 81% dos futuros abandonos entre os 10% de "
         "clientes de maior risco, cerca de quatro meses antes de o abandono se confirmar. "
-        "Treinado com os créditos de 2020 a 2024, ele manteve o desempenho nos créditos de "
-        "2025, e os modelos mais complexos não o superaram. O "
-        "histórico do cliente também informa: usando apenas a informação disponível no dia do "
-        "desembolso, o modelo reúne "
-        "36% dos futuros abandonos entre os 10% de maior risco, mais de três vezes o esperado "
-        "ao acaso. Os resultados indicam que o histórico pode apoiar a decisão de conceder o "
+        "O desempenho se manteve nos créditos de 2025, e os modelos mais complexos não o "
+        "superaram. Usando apenas o histórico do cliente, disponível no dia do desembolso, o "
+        "modelo reúne 36% dos futuros abandonos entre os 10% de maior risco. Os resultados indicam que o histórico pode apoiar a decisão de conceder o "
         "crédito e que o acompanhamento semanal dos pagamentos permite identificar cedo os "
         "clientes em dificuldade, antes que o atraso se transforme em perda.",
         indent_first=False)
@@ -811,22 +814,18 @@ def build_abstract(doc):
         "serves formal and informal merchants. Because the institution's system does not offer "
         "direct access to its data, an automated extraction process (web scraping) was developed "
         "to collect six years "
-        "of payments, from 2020 to 2026, from three offices. The files were merged into a single "
-        "database and carefully reviewed, and loan abandonment was defined as 120 consecutive "
-        "days without any payment. The final database has 28,149 loans, of which 200, or 0.71%, ended "
+        "of payments, from 2020 to 2026, from three offices. Loan abandonment was defined as "
+        "120 consecutive days without any payment. The final database has 28,149 loans, of which 200, or 0.71%, ended "
         "in abandonment. Since a loan can end in two ways, abandonment or full repayment, the "
         "risk is studied with survival analysis for competing risks, using the Fine and Gray "
         "model, compared with logistic regression, the mixture cure model and the Random "
         "Survival Forest. With "
         "the information available on the 21st day of the loan, the "
         "model places 81% of future abandonments among the 10% of clients with the highest "
-        "risk, about four months before the abandonment is confirmed. Trained on loans from "
-        "2020 to 2024, it kept its performance on loans from 2025, and the more complex "
-        "models did not outperform it. "
-        "The client's history is also informative: using only the information available on the "
-        "disbursement day, the model places "
-        "36% of future abandonments among the 10% with the highest risk, more than three times "
-        "what would be expected by chance. The results indicate that the history can support "
+        "risk, about four months before the abandonment is confirmed. Its performance held on "
+        "loans from 2025, and the more complex models did not outperform it. Using only the "
+        "client's history, available on the disbursement day, the model places 36% of future "
+        "abandonments among the 10% with the highest risk. The results indicate that the history can support "
         "the decision to grant credit and that weekly monitoring of payments makes it possible "
         "to identify clients in difficulty early, before the delay turns into a loss.",
         indent_first=False)
