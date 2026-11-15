@@ -27,7 +27,7 @@ Se marca con [x] cuando queda resuelto. Última actualización: 04/11/2026.
 ## Corpo del texto
 - [x] Introdução reescrita (fuentes Mapa de Empresas y Sebrae 2026).
 - [x] Revisão Bibliográfica reescrita (06/11): 5 secciones, 12 referencias nuevas confirmadas por Juan, Referências en orden alfabético automático.
-- [ ] Confirmar y agregar Ishwaran et al. (2008, RSF) y Granzotto (2008, UFSCar, fração de cura).
+- [x] Ishwaran et al. (2008) agregado en la V28. [ ] Granzotto (2008, UFSCar, fração de cura): falta confirmar.
 - [ ] Títulos de figuras y tablas: quitar "vs.", "—", nombres de código (se corrige al reescribir cada sección).
 - [x] "Fonte:" debajo de cada figura y tabla (02/11, automático; por defecto "Elaborada pelo autor (2026)."). Título de figura arriba (NBR 14724).
 - [ ] Revisar si cada capítulo (sección primaria) debe empezar en página nueva.
@@ -115,7 +115,7 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
       el pico del Q4 es Santa Catarina (~19% en todos los quintiles). Llevar a §6.2 de la V28. Confirmar en diccionario IBGE que V06004 = rendimento médio (R$).
 - [ ] (antes) Juan: descargar del IBGE la malha de setores censitários 2022 de SP, RJ y SC y la renta por setor
       (Agregados por Setores Censitários, rendimento do responsável; si no hay 2022, Censo 2010 Básico V005 + malha 2010).
-- [ ] Cruce local GPS del cliente (3.781 de 4.024, 94%) con el setor censitário (geopandas, sin servicios externos):
+- [x] (V28, §6.2: sin gradiente de renta; efecto regional de SC) Cruce local GPS del cliente (3.781 de 4.024, 94%) con el setor censitário (geopandas, sin servicios externos):
       quintiles de renta, tasa de abandono por quintil y renta como variable del modelo (Sprint 5).
 - [ ] Opcional: actividad del negocio a partir del nombre (1/3 identificable): belleza 6,6%, alimentación 5,3%,
       vestuario 1,8% de clientes que se volaron.
@@ -128,7 +128,7 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
       razones de riesgo de Fine-Gray) y limitaciones. Objetivos (cap. 3) alineados.
 - [x] Lista de Símbolos rehecha (05/11): S(t), P, T, t, h(t), en orden de aparición y sin guion.
 - [x] Cap. 2 sin DeepSurv ni referencias viejas (06/11).
-- [ ] Citar Ishwaran et al. (2008) para el RSF cuando se confirme la referencia.
+- [x] (V28) Citar Ishwaran et al. (2008) para el RSF cuando se confirme la referencia.
 
 ## Sprint 4 en el texto (V27)
 - [ ] §3: dataset reconstruido (vales excluidos, calendario de cobro, cuota de 1 real = renegociación,
@@ -138,7 +138,7 @@ Para los sprints siguientes (ya en el cronograma §8 de la V27):
 - [ ] §5: tablas y figuras nuevas (CIF por oficina, AUC/captura por día y bloque, razones de riesgo).
 - [ ] §5.8 Auditoría: reescribir con las trampas encontradas (campos del día de descarga, limpiezas, vales,
       cuota de 1 real, cuadres).
-- [ ] Fine-Gray formal con pesos de censura (hoy aproximado: 2,7% de censura).
+- [x] (V28: IPCW con bootstrap; ordena igual que el simplificado) Fine-Gray formal con pesos de censura (hoy aproximado: 2,7% de censura).
 - [ ] Confirmar fechas de los partidos de Brasil en la Copa 2022 (gov.br) y artículo de la Res. CMN 4.966.
 - [ ] Repositorio: decidir privado o limpieza antes del push (nombre real del sistema, URL, rutas, usuario de limpieza, término del producto).
 
