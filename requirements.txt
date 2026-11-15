@@ -3,6 +3,7 @@ numpy
 lifelines
 scikit-learn
 scikit-survival
+shap
 selenium
 webdriver-manager
 python-dotenv

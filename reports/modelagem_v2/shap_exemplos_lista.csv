@@ -1,0 +1,7 @@
+posicao,risco_relativo,terminou_em_default,motivo_1,motivo_2,motivo_3
+1,117.7,sim,parcelas atrasadas equivalentes a 90% do total de parcelas,pagou em 0 de 7 dias na semana anterior,pagou 0% da parcela por dia na semana anterior
+25,56.0,não,pagou em 0 de 7 dias na semana anterior,parcelas atrasadas equivalentes a 78% do total de parcelas,pagou 0% da parcela por dia na semana anterior
+75,32.1,sim,pagou em 1 de 7 dias na semana anterior,parcelas atrasadas equivalentes a 52% do total de parcelas,pagou 12% da parcela por dia na semana anterior
+150,19.3,não,parcelas atrasadas equivalentes a 56% do total de parcelas,ainda deve 96% do total,pagou em 2 de 7 dias na semana anterior
+250,10.2,não,parcelas atrasadas equivalentes a 55% do total de parcelas,pagou em 2 de 7 dias na semana anterior,pagou 29% da parcela por dia na semana anterior
+381,5.7,não,pagou em 1 de 7 dias na semana anterior,ainda deve 86% do total,parcelas atrasadas equivalentes a 43% do total de parcelas

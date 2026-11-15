@@ -1,0 +1,16 @@
+variavel,media_shap_abs
+Dias com pagamento na semana anterior,0.4126
+Atraso relativo,0.2795
+Pagamento em relação à parcela,0.2662
+Saldo relativo a pagar,0.2019
+Escritório Sociedades Brasil,0.1908
+Histórico de parcelas incompletas,0.1092
+Valor do crédito (log),0.093
+Dias sem cobrança na semana,0.0555
+Proporção de pagamentos incompletos,0.0488
+Pagamento final do crédito anterior (log),0.0467
+Prazo do crédito,0.0452
+Primeiro crédito do cliente,0.0317
+Prazo usado no crédito anterior,0.0162
+Escritório Cabo Frio,0.0117
+Pontualidade no crédito anterior,0.0074
