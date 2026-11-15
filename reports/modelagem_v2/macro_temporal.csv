@@ -1,0 +1,4 @@
+modelo,auc,captura_top10,captura_ic_inf,captura_ic_sup
+fine_gray,0.9499,0.881,,
+fine_gray_macro,0.9498,0.881,,
+dif_macro_menos_base,,0.0,0.0,0.0
