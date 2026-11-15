@@ -4,6 +4,8 @@ lifelines
 scikit-learn
 scikit-survival
 shap
+torch  # versão CPU: pip install torch --index-url https://download.pytorch.org/whl/cpu
+pycox
 selenium
 webdriver-manager
 python-dotenv
