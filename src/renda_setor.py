@@ -41,8 +41,10 @@ def _malhas() -> gpd.GeoDataFrame:
 
 
 def _renda() -> pd.DataFrame | None:
-    """Renda por setor: V06004 = rendimento médio do responsável (R$) e
-    V06006 = mediana (R$). Conferir no dicionário de variáveis do IBGE."""
+    """Renda por setor (dicionario_de_dados_renda_responsavel_20260508.xlsx do IBGE):
+    V06004 = valor do rendimento nominal médio mensal das pessoas responsáveis com
+    rendimentos por domicílios particulares permanentes ocupados (R$);
+    V06006 = o mesmo valor, mediano (R$)."""
     arquivos = sorted(DESCARGAS.glob("Agregados_por_setores_renda_responsavel_BR*"))
     if not arquivos:
         logging.info("  arquivo de renda por setor ainda não encontrado em %s", DESCARGAS)
